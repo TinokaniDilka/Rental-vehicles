@@ -5,43 +5,41 @@ export default function CustomerDashboard() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
 
-  // Navigation state
+  // Navigation
   const [activePage, setActivePage] = useState("dashboard");
 
-  // Core data states
+  // Core Data
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Search filter states
+  // Search
   const [searchCategory, setSearchCategory] = useState("all");
   const [searchLocation, setSearchLocation] = useState("");
-  const [searchStartDate, setSearchStartDate] = useState("");
-  const [searchEndDate, setSearchEndDate] = useState("");
 
   // Stats
   const [bookedCount, setBookedCount] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
 
-  // Profile Form states
+  // Profile
   const [profileName, setProfileName] = useState(user.name || "");
   const [profileEmail, setProfileEmail] = useState(user.email || "");
   const [profilePassword, setProfilePassword] = useState("");
-const [showProfileMenu, setShowProfileMenu] = useState(false);
-  // Booking Modal States
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Booking Modal
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [bookingStartDate, setBookingStartDate] = useState("");
   const [bookingEndDate, setBookingEndDate] = useState("");
   const [bookingHasDriver, setBookingHasDriver] = useState(false);
   const [bookingError, setBookingError] = useState("");
-  const [bookingLoading, setBookingLoading] = useState(false);
   const [vehicleBookedDates, setVehicleBookedDates] = useState([]);
 
-  // Payment Modal States
+  // Payment Modal (Payment-First Flow)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedBookingForPay, setSelectedBookingForPay] = useState(null);
+  const [tempBookingData, setTempBookingData] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
@@ -50,20 +48,19 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
 
-  // Feedback Modal States
+  // Feedback Modal
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [selectedBookingForFeedback, setSelectedBookingForFeedback] = useState(null);
   const [feedbackType, setFeedbackType] = useState("feedback");
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState("");
 
-  // Fetch initial data
+  // Fetch Data
   useEffect(() => {
     fetchVehicles();
     fetchBookings();
     fetchFeedbacks();
   }, []);
-
 
   const fetchVehicles = async () => {
     try {
@@ -82,12 +79,10 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
         headers: { Authorization: `Bearer ${token}` }
       });
       setBookings(res.data);
-
-      // Calculate stats
       setBookedCount(res.data.length);
       const spent = res.data
         .filter(b => ["confirmed", "ongoing", "completed"].includes(b.status))
-        .reduce((sum, b) => sum + b.totalAmount, 0);
+        .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
       setTotalSpent(spent);
     } catch (err) {
       console.error("Error fetching bookings:", err);
@@ -105,7 +100,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
     }
   };
 
-  // Open booking flow
+  // Booking Modal
   const handleOpenBookingModal = async (vehicle) => {
     setSelectedVehicle(vehicle);
     setBookingStartDate("");
@@ -116,21 +111,14 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
     setShowBookingModal(true);
 
     try {
-      // Get booked dates for overlap check
       const res = await axios.get(`http://localhost:5000/api/bookings/vehicle/${vehicle._id}`);
-      setVehicleBookedDates(res.data);
+      setVehicleBookedDates(res.data || []);
     } catch (err) {
-      console.error("Error fetching vehicle bookings:", err);
+      console.error("Error fetching booked dates:", err);
     }
   };
 
-const handleLogout = () => {
-  localStorage.removeItem("user");
-  localStorage.removeItem("token");
-  window.location.href = "/login";
-};
-
-  const handleCreateBooking = async () => {
+  const handleProceedToPayment = () => {
     if (!bookingStartDate || !bookingEndDate) {
       setBookingError("Please select both start and end dates");
       return;
@@ -149,7 +137,6 @@ const handleLogout = () => {
       return;
     }
 
-    // Check availability client-side
     const hasOverlap = vehicleBookedDates.some(b => {
       const bStart = new Date(b.startDate);
       const bEnd = new Date(b.endDate);
@@ -161,32 +148,29 @@ const handleLogout = () => {
       return;
     }
 
-    setBookingLoading(true);
-    setBookingError("");
+    const baseAmount = selectedVehicle.pricePerDay * days;
+    const driverCharge = bookingHasDriver ? 50 * days : 0;
 
-    try {
-      await axios.post(
-        "http://localhost:5000/api/bookings",
-        {
-          vehicleId: selectedVehicle._id,
-          startDate: bookingStartDate,
-          endDate: bookingEndDate,
-          hasDriver: bookingHasDriver
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    setTempBookingData({
+      vehicleId: selectedVehicle._id,
+      startDate: bookingStartDate,
+      endDate: bookingEndDate,
+      hasDriver: bookingHasDriver,
+      baseAmount,
+      driverCharge,
+      totalAmountBeforePromo: baseAmount + driverCharge,
+    });
 
-      alert("🎉 Booking request submitted! The staff will review it shortly.");
-      setShowBookingModal(false);
-      fetchBookings();
-    } catch (err) {
-      setBookingError(err.response?.data?.message || "Booking failed");
-    } finally {
-      setBookingLoading(false);
-    }
+    setShowBookingModal(false);
+    setShowPaymentModal(true);
   };
 
-  // Profile Update handler
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
@@ -203,7 +187,6 @@ const handleLogout = () => {
     }
   };
 
-  // Promo Code Handler
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return;
     setPromoError("");
@@ -221,42 +204,43 @@ const handleLogout = () => {
     }
   };
 
-  // Open Payment Flow
-  const handleOpenPaymentModal = (booking) => {
-    setSelectedBookingForPay(booking);
-    setPaymentMethod("credit_card");
-    setCardNumber("");
-    setCardHolder("");
-    setPromoCode("");
-    setPromoDiscountPercent(0);
-    setPromoApplied(false);
-    setPromoError("");
-    setShowPaymentModal(true);
-  };
-
   const handleProcessPayment = async () => {
+    if (!tempBookingData) return;
+
     try {
-      // Calculate final total if promo applied
-      let finalAmount = selectedBookingForPay.totalAmount;
+      let finalAmount = tempBookingData.totalAmountBeforePromo;
       if (promoApplied && promoDiscountPercent > 0) {
-        finalAmount = Math.max(0, finalAmount - (finalAmount * promoDiscountPercent) / 100);
+        finalAmount = Math.max(0, finalAmount * (1 - promoDiscountPercent / 100));
       }
 
-      await axios.put(
-        `http://localhost:5000/api/bookings/${selectedBookingForPay._id}/pay`,
-        { paymentMethod, amount: finalAmount },
+      await axios.post(
+        "http://localhost:5000/api/bookings/create-with-payment",
+        {
+          vehicleId: tempBookingData.vehicleId,
+          startDate: tempBookingData.startDate,
+          endDate: tempBookingData.endDate,
+          hasDriver: tempBookingData.hasDriver,
+          paymentMethod,
+          amount: finalAmount,
+          promoCode: promoApplied ? promoCode : null
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("💳 Payment successful! Booking is now confirmed.");
+      alert("🎉 Payment successful! Booking confirmed.");
       setShowPaymentModal(false);
+      setTempBookingData(null);
+      setPromoApplied(false);
+      setPromoCode("");
+      setPromoDiscountPercent(0);
+
       fetchBookings();
+      fetchVehicles();
     } catch (err) {
       alert(err.response?.data?.message || "Payment failed");
     }
   };
 
-  // Feedback Submission handler
   const handleOpenFeedbackModal = (booking) => {
     setSelectedBookingForFeedback(booking);
     setFeedbackType("feedback");
@@ -280,7 +264,6 @@ const handleLogout = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       alert(`✅ ${feedbackType === "feedback" ? "Feedback" : "Complaint"} submitted successfully!`);
       setShowFeedbackModal(false);
       fetchFeedbacks();
@@ -288,15 +271,15 @@ const handleLogout = () => {
       alert(err.response?.data?.message || "Failed to submit feedback");
     }
   };
-useEffect(() => {
-  const handleClickOutside = () => {
-    setShowProfileMenu(false);
-  };
 
-  document.addEventListener("click", handleClickOutside);
-  return () => document.removeEventListener("click", handleClickOutside);
-}, []);
-  // Search Filter logic
+  // Close profile dropdown
+  useEffect(() => {
+    const handleClickOutside = () => setShowProfileMenu(false);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  // Filtered Vehicles
   const filteredVehicles = vehicles.filter(v => {
     const matchesCategory = searchCategory === "all" || v.type === searchCategory;
     const matchesLocation = !searchLocation.trim() || v.location.toLowerCase().includes(searchLocation.toLowerCase());
@@ -308,7 +291,7 @@ useEffect(() => {
       <div style={glowOrb1}></div>
       <div style={glowOrb2}></div>
 
-      {/* Navigation Bar */}
+      {/* Navbar */}
       <nav style={navBar}>
         <div style={navContainer}>
           <div style={logo}>
@@ -324,64 +307,32 @@ useEffect(() => {
             <NavItem label="Profile" active={activePage === "profile"} onClick={() => setActivePage("profile")} />
           </div>
 
-         <div style={{ position: "relative" }}>
-  <div
-    style={profileSection}
-    onClick={(e) => {
-      e.stopPropagation(); // ✅ prevent auto-close
-      setShowProfileMenu(!showProfileMenu);
-    }}
-  >
-    <span style={{ fontSize: "18px", marginRight: "6px" }}>👤</span>
-    <span style={userNameStyle}>{user.name || "Customer"}</span>
-    <span style={{ marginLeft: "6px" }}>▼</span>
-  </div>
+          <div style={{ position: "relative" }}>
+            <div style={profileSection} onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
+              <span style={{ fontSize: "18px", marginRight: "6px" }}>👤</span>
+              <span style={userNameStyle}>{user.name || "Customer"}</span>
+              <span style={{ marginLeft: "6px" }}>▼</span>
+            </div>
 
-  {showProfileMenu && (
-    <div
-      style={profileDropdown}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div style={profileHeader}>
-        <div style={profileAvatar}>👤</div>
-        <h3 style={{ margin: "10px 0 0" }}>{user.name}</h3>
-        <p style={{ color: "#64748b", fontSize: "14px" }}>
-          {user.email}
-        </p>
-      </div>
+            {showProfileMenu && (
+              <div style={profileDropdown} onClick={(e) => e.stopPropagation()}>
+                <div style={profileHeader}>
+                  <div style={profileAvatar}>👤</div>
+                  <h3 style={{ margin: "10px 0 0" }}>{user.name}</h3>
+                  <p style={{ color: "#64748b", fontSize: "14px" }}>{user.email}</p>
+                </div>
+                <div style={profileMenuItem}>📷 Change Profile Picture</div>
+                <div style={profileMenuItem} onClick={() => { setActivePage("profile"); setShowProfileMenu(false); }}>👤 Edit Profile</div>
+                <div style={profileMenuItem}>🔑 Change Password</div>
+                <div style={profileLogout} onClick={handleLogout}>Logout</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
 
-      <div style={profileMenuItem}>
-        📷 Change Profile Picture
-      </div>
-
-      <div
-        style={profileMenuItem}
-        onClick={() => {
-          setActivePage("profile");
-          setShowProfileMenu(false);
-        }}
-      >
-        👤 Edit Profile
-      </div>
-
-      <div style={profileMenuItem}>
-        🔑 Change Password
-      </div>
-
-      <div style={profileLogout} onClick={handleLogout}>
-        Logout
-      </div>
-    </div>
-  )}
-  </div>
-</div>
-</nav>
-
-
-      {/* Main Content */}
       <main style={mainContent}>
-        
-        {/* DASHBOARD PAGE */}
+        {/* Dashboard */}
         {activePage === "dashboard" && (
           <div style={fadeAnimation}>
             <div style={welcomeBanner}>
@@ -408,7 +359,7 @@ useEffect(() => {
           </div>
         )}
 
-        {/* SEARCH VEHICLES */}
+        {/* Search Vehicles */}
         {activePage === "search" && (
           <div style={fadeAnimation}>
             <h2>Search and Book Vehicles 🔍</h2>
@@ -425,16 +376,9 @@ useEffect(() => {
                   <option value="scooter">Scooter</option>
                 </select>
               </div>
-
               <div style={searchField}>
                 <label style={fieldLabel}>LOCATION</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Colombo"
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                  style={inputStyle}
-                />
+                <input type="text" placeholder="e.g. Colombo" value={searchLocation} onChange={(e) => setSearchLocation(e.target.value)} style={inputStyle} />
               </div>
             </div>
 
@@ -449,11 +393,7 @@ useEffect(() => {
                 filteredVehicles.map(v => (
                   <div key={v._id} style={vehicleCard}>
                     <div style={cardImageWrapper}>
-                      {v.image ? (
-                        <img src={`http://localhost:5000${v.image}`} alt={v.name} style={cardImage} />
-                      ) : (
-                        <div style={placeholderImage}>🚗 No Image</div>
-                      )}
+                      {v.image ? <img src={`http://localhost:5000${v.image}`} alt={v.name} style={cardImage} /> : <div style={placeholderImage}>🚗 No Image</div>}
                       <div style={cardBadge}>{v.isAvailable ? "Available Now" : "Rented"}</div>
                     </div>
                     <div style={cardBody}>
@@ -470,7 +410,7 @@ useEffect(() => {
           </div>
         )}
 
-        {/* MY BOOKINGS */}
+        {/* My Bookings */}
         {activePage === "bookings" && (
           <div style={fadeAnimation}>
             <h2>My Booking History 📋</h2>
@@ -493,8 +433,6 @@ useEffect(() => {
                         <h4 style={{ margin: "0 0 5px", fontSize: "18px" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
                         <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>📅 Rental Period: {start} - {end}</p>
                         {b.driverName && <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#4f46e5" }}>👨‍✈️ Driver: {b.driverName}</p>}
-                        
-                        {/* Show Return Inspection Details for Completed rentals */}
                         {b.status === "completed" && (
                           <div style={inspectionBox}>
                             <h5>🔧 Return Inspection Details</h5>
@@ -504,7 +442,6 @@ useEffect(() => {
                         )}
                       </div>
 
-                      {/* Financial billing summary */}
                       <div style={{ flex: 1, minWidth: "150px" }}>
                         <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>BILLING DETAILS</p>
                         <p style={{ margin: "2px 0 0", fontSize: "14px" }}>Base Price: ${b.baseCharge}</p>
@@ -518,11 +455,6 @@ useEffect(() => {
 
                       <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "10px", alignItems: "end" }}>
                         <span style={getStatusBadgeStyle(b.status)}>{b.status.toUpperCase()}</span>
-                        
-                        {b.status === "approved" && (
-                          <button style={payNowBtn} onClick={() => handleOpenPaymentModal(b)}>💳 Pay Invoice</button>
-                        )}
-
                         {b.status === "completed" && (
                           <button style={feedbackBtn} onClick={() => handleOpenFeedbackModal(b)}>⭐ Review / Complain</button>
                         )}
@@ -535,7 +467,7 @@ useEffect(() => {
           </div>
         )}
 
-        {/* FEEDBACK HISTORY */}
+        {/* Feedback History */}
         {activePage === "feedback" && (
           <div style={fadeAnimation}>
             <h2>Feedback & Complaint Submissions 📣</h2>
@@ -558,7 +490,6 @@ useEffect(() => {
                       <p style={{ margin: "5px 0", fontSize: "15px" }}>"{f.comment}"</p>
                       <p style={{ fontSize: "12px", color: "#64748b" }}>Submitted for: {f.bookingId?.vehicleId?.name || "Vehicle"}</p>
                     </div>
-
                     {f.type === "complaint" && (
                       <div style={{ flex: 1, borderLeft: "1px solid #e2e8f0", paddingLeft: "20px" }}>
                         <p style={{ margin: 0, fontSize: "13px" }}>Status: <strong style={{ color: f.complaintStatus === "Resolved" ? "#10b981" : "#f59e0b" }}>{f.complaintStatus}</strong></p>
@@ -568,7 +499,7 @@ useEffect(() => {
                             <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#475569" }}>{f.staffResponse}</p>
                           </div>
                         ) : (
-                          <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#94a3b8", italic: "true" }}>Awaiting staff response...</p>
+                          <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#94a3b8" }}>Awaiting staff response...</p>
                         )}
                       </div>
                     )}
@@ -579,13 +510,12 @@ useEffect(() => {
           </div>
         )}
 
-        {/* PROFILE PAGE */}
+        {/* Profile */}
         {activePage === "profile" && (
           <div style={fadeAnimation}>
             <div style={formWrapper}>
               <h2 style={{ textAlign: "center", marginBottom: "10px" }}>👤 Edit Customer Profile</h2>
               <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "30px" }}>Update your contact information and password.</p>
-
               <form onSubmit={handleUpdateProfile} style={formStyle}>
                 <div style={formGroup}>
                   <label style={formLabel}>Full Name</label>
@@ -604,10 +534,9 @@ useEffect(() => {
             </div>
           </div>
         )}
-
       </main>
 
-      {/* BOOKING MODAL */}
+      {/* Booking Modal */}
       {showBookingModal && selectedVehicle && (
         <div style={overlay} onClick={() => setShowBookingModal(false)}>
           <div style={modal} onClick={(e) => e.stopPropagation()}>
@@ -627,16 +556,8 @@ useEffect(() => {
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "20px 0" }}>
-                <input
-                  type="checkbox"
-                  id="hasDriver"
-                  checked={bookingHasDriver}
-                  onChange={(e) => setBookingHasDriver(e.target.checked)}
-                  style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                />
-                <label htmlFor="hasDriver" style={{ cursor: "pointer", fontWeight: "500" }}>
-                  Add a personal driver ($50/day driver fee)
-                </label>
+                <input type="checkbox" id="hasDriver" checked={bookingHasDriver} onChange={(e) => setBookingHasDriver(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
+                <label htmlFor="hasDriver" style={{ cursor: "pointer", fontWeight: "500" }}>Add a personal driver ($50/day driver fee)</label>
               </div>
             </div>
 
@@ -644,81 +565,40 @@ useEffect(() => {
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
               <button style={cancelBtn} onClick={() => setShowBookingModal(false)}>Cancel</button>
-              <button style={submitBtn} onClick={handleCreateBooking} disabled={bookingLoading}>
-                {bookingLoading ? "Requesting..." : "Submit Booking Request"}
-              </button>
+              <button style={submitBtn} onClick={handleProceedToPayment}>Proceed to Payment</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* PAYMENT MODAL */}
-      {showPaymentModal && selectedBookingForPay && (
+      {/* Payment Modal */}
+      {showPaymentModal && tempBookingData && (
         <div style={overlay} onClick={() => setShowPaymentModal(false)}>
           <div style={modal} onClick={(e) => e.stopPropagation()}>
-            <h3>💳 Invoice Payment</h3>
-            <p style={{ color: "#64748b", marginBottom: "20px" }}>Booking ID: {selectedBookingForPay._id}</p>
+            <h3>💳 Complete Payment</h3>
+            <p style={{ color: "#64748b", marginBottom: "20px" }}>Booking for: {selectedVehicle?.name}</p>
 
             <div style={invoiceDetailBox}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span>Rental Charge:</span>
-                <span>${selectedBookingForPay.baseCharge}</span>
+                <span>${tempBookingData.baseAmount}</span>
               </div>
-              {selectedBookingForPay.driverCharge > 0 && (
+              {tempBookingData.driverCharge > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>Driver Charge:</span>
-                  <span>${selectedBookingForPay.driverCharge}</span>
+                  <span>${tempBookingData.driverCharge}</span>
                 </div>
               )}
-              {selectedBookingForPay.additionalFees > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Service/Extra Fees:</span>
-                  <span>${selectedBookingForPay.additionalFees}</span>
-                </div>
-              )}
-              {selectedBookingForPay.discount > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#10b981" }}>
-                  <span>Staff Discount:</span>
-                  <span>-${selectedBookingForPay.discount}</span>
-                </div>
-              )}
-
-              {promoApplied && promoDiscountPercent > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#10b981" }}>
-                  <span>Promo Discount ({promoDiscountPercent}%):</span>
-                  <span>-${((selectedBookingForPay.totalAmount * promoDiscountPercent) / 100).toFixed(2)}</span>
-                </div>
-              )}
-
               <hr />
               <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "18px" }}>
-                <span>Total Amount:</span>
-                <span>
-                  $
-                  {(
-                    selectedBookingForPay.totalAmount -
-                    (promoApplied ? (selectedBookingForPay.totalAmount * promoDiscountPercent) / 100 : 0)
-                  ).toFixed(2)}
-                </span>
+                <span>Total:</span>
+                <span>${(tempBookingData.totalAmountBeforePromo - (promoApplied ? (tempBookingData.totalAmountBeforePromo * promoDiscountPercent) / 100 : 0)).toFixed(2)}</span>
               </div>
             </div>
 
-            {/* Promo Code Fields */}
             <div style={{ display: "flex", gap: "10px", margin: "20px 0" }}>
-              <input
-                type="text"
-                placeholder="PROMO CODE"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                style={modalInput}
-                disabled={promoApplied}
-              />
-              <button
-                type="button"
-                onClick={handleApplyPromo}
-                style={promoApplied ? appliedBtn : applyBtn}
-                disabled={promoApplied}
-              >
+              <input type="text" placeholder="PROMO CODE" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} style={modalInput} disabled={promoApplied} />
+              <button type="button" onClick={handleApplyPromo} style={promoApplied ? appliedBtn : applyBtn} disabled={promoApplied}>
                 {promoApplied ? "Applied" : "Apply"}
               </button>
             </div>
@@ -736,29 +616,9 @@ useEffect(() => {
 
             {["credit_card", "debit_card"].includes(paymentMethod) && (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-                <input
-                  type="text"
-                  placeholder="Card Number"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  style={modalInput}
-                />
-                <input
-                  type="text"
-                  placeholder="Cardholder Name"
-                  value={cardHolder}
-                  onChange={(e) => setCardHolder(e.target.value)}
-                  style={modalInput}
-                />
+                <input type="text" placeholder="Card Number" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} style={modalInput} />
+                <input type="text" placeholder="Cardholder Name" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} style={modalInput} />
               </div>
-            )}
-
-            {paymentMethod === "bank_transfer" && (
-              <p style={helpTextBox}>🏦 Transfer to QuickRide bank account: <strong>123-456-7890 (HNB)</strong> and click Complete.</p>
-            )}
-
-            {paymentMethod === "cash" && (
-              <p style={helpTextBox}>💵 Complete payment at the QuickRide counter upon picking up the vehicle.</p>
             )}
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
@@ -769,7 +629,7 @@ useEffect(() => {
         </div>
       )}
 
-      {/* FEEDBACK / COMPLAINT MODAL */}
+      {/* Feedback Modal */}
       {showFeedbackModal && selectedBookingForFeedback && (
         <div style={overlay} onClick={() => setShowFeedbackModal(false)}>
           <div style={modal} onClick={(e) => e.stopPropagation()}>
@@ -800,14 +660,7 @@ useEffect(() => {
 
               <div style={formGroup}>
                 <label style={formLabel}>Comments / Details</label>
-                <textarea
-                  placeholder="Provide details about your rental experience..."
-                  value={feedbackComment}
-                  onChange={(e) => setFeedbackComment(e.target.value)}
-                  style={formTextarea}
-                  rows={4}
-                  required
-                />
+                <textarea placeholder="Provide details about your rental experience..." value={feedbackComment} onChange={(e) => setFeedbackComment(e.target.value)} style={formTextarea} rows={4} required />
               </div>
 
               <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
@@ -818,12 +671,12 @@ useEffect(() => {
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
-// Styling Helpers
+// ==================== STYLES & HELPERS ====================
+
 const getStatusBadgeStyle = (status) => {
   const base = { padding: "6px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "700" };
   switch (status) {
@@ -863,7 +716,7 @@ const DashboardCard = ({ icon, title, value, color }) => (
   </div>
 );
 
-// Styles layout
+// All Styles
 const dashboardWrapper = { minHeight: "100vh", background: "#f8fafc", position: "relative", overflow: "hidden", fontFamily: "'Outfit', 'Inter', sans-serif" };
 const glowOrb1 = { position: "absolute", top: "-150px", left: "-150px", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, rgba(255,255,255,0) 70%)", zIndex: 0, pointerEvents: "none" };
 const glowOrb2 = { position: "absolute", bottom: "-100px", right: "-100px", width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, rgba(255,255,255,0) 70%)", zIndex: 0, pointerEvents: "none" };
@@ -917,15 +770,14 @@ const formGroup = { display: "flex", flexDirection: "column", gap: "4px" };
 const formLabel = { fontSize: "13px", fontWeight: "600", color: "#475569" };
 const formInput = { padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" };
 const formTextarea = { padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", resize: "vertical" };
-const submitBtn = { background: "#4f46e5", color: "white", border: "none", padding: "12px", borderRadius: "8px", fontWeight: "600", cursor: "pointer", flex: 2 };
-const cancelBtn = { background: "#f1f5f9", color: "#475569", border: "none", padding: "12px", borderRadius: "8px", fontWeight: "600", cursor: "pointer", flex: 1 };
+const submitBtn = { background: "#4f46e5", color: "white", border: "none", padding: "12px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
+const cancelBtn = { background: "#f1f5f9", color: "#475569", border: "none", padding: "12px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
 
 const overlay = { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 };
 const modal = { background: "white", padding: "30px", borderRadius: "16px", width: "500px", maxWidth: "90%", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" };
 const modalInput = { width: "100%", padding: "10px", boxSizing: "border-box", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" };
 
 const invoiceDetailBox = { background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "8px" };
-const helpTextBox = { fontSize: "13px", color: "#475569", background: "#eff6ff", padding: "10px", borderRadius: "8px", border: "1px solid #bfdbfe", margin: "10px 0" };
 
 const applyBtn = { background: "#4f46e5", color: "white", border: "none", padding: "10px 18px", borderRadius: "8px", cursor: "pointer", fontWeight: "600" };
 const appliedBtn = { background: "#10b981", color: "white", border: "none", padding: "10px 18px", borderRadius: "8px", fontWeight: "600" };
@@ -937,50 +789,9 @@ const primaryBtn = { ...bookBtn, padding: "12px 24px" };
 const secondaryBtn = { background: "white", color: "#1e1b4b", border: "1px solid #e2e8f0", padding: "12px 24px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
 
 const fadeAnimation = { animation: "fadeIn 0.3s ease-out" };
-const profileDropdown = {
-  position: "absolute",
-  top: "60px",
-  right: 0,
-  width: "260px",
-  background: "white",
-  borderRadius: "12px",
-  boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-  overflow: "hidden",
-  zIndex: 9999
-};
 
-const profileHeader = {
-  textAlign: "center",
-  padding: "20px",
-  borderBottom: "1px solid #e5e7eb"
-};
-
-const profileAvatar = {
-  width: "70px",
-  height: "70px",
-  borderRadius: "50%",
-  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "32px",
-  color: "white",
-  margin: "0 auto"
-};
-
-const profileMenuItem = {
-  padding: "12px 18px",
-  cursor: "pointer",
-  fontSize: "14px",
-  borderBottom: "1px solid #f1f5f9",
-  color: "#374151",
-  transition: "all 0.2s"
-};
-
-
-const profileLogout = {
-  padding: "14px 18px",
-  cursor: "pointer",
-  color: "red",
-  fontWeight: "600"
-};
+const profileDropdown = { position: "absolute", top: "60px", right: 0, width: "260px", background: "white", borderRadius: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", overflow: "hidden", zIndex: 9999 };
+const profileHeader = { textAlign: "center", padding: "20px", borderBottom: "1px solid #e5e7eb" };
+const profileAvatar = { width: "70px", height: "70px", borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", color: "white", margin: "0 auto" };
+const profileMenuItem = { padding: "12px 18px", cursor: "pointer", fontSize: "14px", borderBottom: "1px solid #f1f5f9", color: "#374151" };
+const profileLogout = { padding: "14px 18px", cursor: "pointer", color: "red", fontWeight: "600" };

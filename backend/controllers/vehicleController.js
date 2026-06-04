@@ -93,11 +93,10 @@ const getAllVehicles = async (req, res) => {
 };
 
 // Get vehicles belonging to the logged-in renter
+// AFTER
 const getMyVehicles = async (req, res) => {
   try {
-    const renterId = req.user.id;
-    const query = (req.user.role === "admin" || req.user.role === "staff") ? {} : { owner: renterId };
-    const vehicles = await Vehicle.find(query).populate("owner");
+    const vehicles = await Vehicle.find({ owner: req.user.id }).populate("owner");
     res.json(vehicles);
   } catch (err) {
     console.error("Error fetching my vehicles:", err);

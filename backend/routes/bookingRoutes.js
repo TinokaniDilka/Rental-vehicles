@@ -8,11 +8,13 @@ const {
   reviewBooking,
   payBooking,
   pickupBooking,
-  returnBooking
+  returnBooking,
+  createBookingWithPayment
 } = require("../controllers/bookingController");
 
 // Customer routes
 router.post("/", protect, createBooking);
+router.post("/create-with-payment", protect, createBookingWithPayment);
 router.get("/customer", protect, getCustomerBookings);
 
 // Staff/Admin routes
@@ -35,5 +37,4 @@ router.get("/vehicle/:vehicleId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 module.exports = router;

@@ -54,12 +54,28 @@ const getCustomerBookings = async (req, res) => {
 };
 
 // Get all bookings (Staff/Admin view)
+// AFTER
 const getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find()
-      .populate("vehicleId")
-      .populate("customerId")
-      .sort({ createdAt: -1 });
+    let bookings;
+
+    if (req.user.role === "admin") {
+      // Admin sees all bookings
+      bookings = await Booking.find()
+        .populate("vehicleId")
+        .populate("customerId")
+        .sort({ createdAt: -1 });
+    } else {
+      // Staff only sees bookings for vehicles they own
+      const staffVehicles = await Vehicle.find({ owner: req.user.id }).select("_id");
+      const vehicleIds = staffVehicles.map(v => v._id);
+
+      bookings = await Booking.find({ vehicleId: { $in: vehicleIds } })
+        .populate("vehicleId")
+        .populate("customerId")
+        .sort({ createdAt: -1 });
+    }
+
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: "Error retrieving bookings" });
@@ -233,7 +249,69 @@ const returnBooking = async (req, res) => {
     res.status(500).json({ message: "Error finalizing return", error: err.message });
   }
 };
+// Create booking + payment in one step (Customer payment-first flow)
+const createBookingWithPayment = async (req, res) => {
+  try {
+    const { vehicleId, startDate, endDate, hasDriver, paymentMethod, amount, promoCode } = req.body;
+    const customerId = req.user.id;
 
+    if (!vehicleId || !startDate || !endDate || !paymentMethod) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Check date overlap
+    const overlap = await Booking.findOne({
+      vehicleId,
+      status: { $in: ["confirmed", "ongoing"] },
+      startDate: { $lte: new Date(endDate) },
+      endDate: { $gte: new Date(startDate) }
+    });
+
+    if (overlap) {
+      return res.status(400).json({ message: "Vehicle is already booked for these dates." });
+    }
+
+    // Calculate charges
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const vehicle = await Vehicle.findById(vehicleId);
+    const baseCharge = vehicle.pricePerDay * days;
+    const driverCharge = hasDriver ? 50 * days : 0;
+    const totalAmount = amount || (baseCharge + driverCharge);
+
+    // Create booking as confirmed directly
+    const booking = new Booking({
+      vehicleId,
+      customerId,
+      startDate,
+      endDate,
+      hasDriver,
+      status: "confirmed",
+      paymentMethod,
+      baseCharge,
+      driverCharge,
+      totalAmount
+    });
+    await booking.save();
+
+    // Save payment record
+    const payment = new Payment({
+      bookingId: booking._id,
+      customerId,
+      amount: totalAmount,
+      paymentMethod,
+      status: "completed"
+    });
+    await payment.save();
+
+    res.status(201).json({ message: "Booking confirmed and payment completed ✅", booking });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message || "Payment failed" });
+  }
+};
+// AFTER
 module.exports = {
   createBooking,
   getCustomerBookings,
@@ -241,5 +319,6 @@ module.exports = {
   reviewBooking,
   payBooking,
   pickupBooking,
-  returnBooking
+  returnBooking,
+  createBookingWithPayment
 };
