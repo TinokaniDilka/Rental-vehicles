@@ -55,6 +55,13 @@ export default function CustomerDashboard() {
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState("");
 
+    // NEW: Feedback Edit Modal States
+  const [showEditFeedbackModal, setShowEditFeedbackModal] = useState(false);
+  const [editingFeedback, setEditingFeedback] = useState(null);
+  const [editFeedbackType, setEditFeedbackType] = useState("feedback");
+  const [editFeedbackRating, setEditFeedbackRating] = useState(5);
+  const [editFeedbackComment, setEditFeedbackComment] = useState("");
+
   // Fetch Data
   useEffect(() => {
     fetchVehicles();
@@ -99,7 +106,52 @@ export default function CustomerDashboard() {
       console.error("Error fetching feedback:", err);
     }
   };
+  // ==================== NEW CRUD FUNCTIONS FOR FEEDBACK ====================
 
+  const handleEditFeedback = (feedback) => {
+    setEditingFeedback(feedback);
+    setEditFeedbackType(feedback.type || "feedback");
+    setEditFeedbackRating(feedback.rating || 5);
+    setEditFeedbackComment(feedback.comment || "");
+    setShowEditFeedbackModal(true);
+  };
+
+  const handleUpdateFeedback = async (e) => {
+    e.preventDefault();
+    if (!editFeedbackComment.trim()) return alert("Please enter a comment");
+
+    try {
+      await axios.put(
+        `http://localhost:5000/api/feedback/${editingFeedback._id}`,
+        {
+          type: editFeedbackType,
+          rating: editFeedbackType === "feedback" ? editFeedbackRating : undefined,
+          comment: editFeedbackComment
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("✅ Feedback updated successfully!");
+      setShowEditFeedbackModal(false);
+      fetchFeedbacks(); // Refresh the list
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update feedback");
+    }
+  };
+
+  const handleDeleteFeedback = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/feedback/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("🗑️ Feedback deleted successfully");
+      fetchFeedbacks();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete feedback");
+    }
+  };
   // Booking Modal
   const handleOpenBookingModal = async (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -467,11 +519,13 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* Feedback History */}
+                {/* Feedback History - UPDATED WITH EDIT & DELETE */}
         {activePage === "feedback" && (
           <div style={fadeAnimation}>
             <h2>Feedback & Complaint Submissions 📣</h2>
-            <p style={{ color: "#6b7280", marginBottom: "25px" }}>View details of your complaints and feedback submissions.</p>
+            <p style={{ color: "#6b7280", marginBottom: "25px" }}>
+              View, edit, or delete your complaints and feedback submissions.
+            </p>
 
             {feedbacks.length === 0 ? (
               <div style={emptyStateCard}>
@@ -488,8 +542,23 @@ export default function CustomerDashboard() {
                         {f.type === "feedback" && <span style={{ color: "#fbbf24", fontWeight: "bold" }}>{"★".repeat(f.rating)}</span>}
                       </div>
                       <p style={{ margin: "5px 0", fontSize: "15px" }}>"{f.comment}"</p>
-                      <p style={{ fontSize: "12px", color: "#64748b" }}>Submitted for: {f.bookingId?.vehicleId?.name || "Vehicle"}</p>
+                      <p style={{ fontSize: "12px", color: "#64748b" }}>
+                        Submitted for: {f.bookingId?.vehicleId?.name || f.vehicle?.name || "Vehicle"}
+                      </p>
+                      <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>
+                        {new Date(f.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
+                      <button style={editBtn} onClick={() => handleEditFeedback(f)}>
+                        ✏️ Edit
+                      </button>
+                      <button style={deleteBtn} onClick={() => handleDeleteFeedback(f._id)}>
+                        🗑️ Delete
+                      </button>
+                    </div>
+
                     {f.type === "complaint" && (
                       <div style={{ flex: 1, borderLeft: "1px solid #e2e8f0", paddingLeft: "20px" }}>
                         <p style={{ margin: 0, fontSize: "13px" }}>Status: <strong style={{ color: f.complaintStatus === "Resolved" ? "#10b981" : "#f59e0b" }}>{f.complaintStatus}</strong></p>
@@ -671,6 +740,68 @@ export default function CustomerDashboard() {
           </div>
         </div>
       )}
+
+    {/* ==================== NEW: EDIT FEEDBACK MODAL ==================== */}
+      {showEditFeedbackModal && editingFeedback && (
+        <div style={overlay} onClick={() => setShowEditFeedbackModal(false)}>
+          <div style={modal} onClick={(e) => e.stopPropagation()}>
+            <h3>✏️ Edit Feedback / Complaint</h3>
+
+            <form onSubmit={handleUpdateFeedback} style={{ marginTop: "20px" }}>
+              <div style={formGroup}>
+                <label style={formLabel}>Submission Type</label>
+                <select 
+                  value={editFeedbackType} 
+                  onChange={(e) => setEditFeedbackType(e.target.value)} 
+                  style={selectStyle}
+                >
+                  <option value="feedback">General Feedback & Rating</option>
+                  <option value="complaint">File a Complaint</option>
+                </select>
+              </div>
+
+              {editFeedbackType === "feedback" && (
+                <div style={formGroup}>
+                  <label style={formLabel}>Rating (1-5 Stars)</label>
+                  <select 
+                    value={editFeedbackRating} 
+                    onChange={(e) => setEditFeedbackRating(Number(e.target.value))} 
+                    style={selectStyle}
+                  >
+                    {[1,2,3,4,5].map(n => (
+                      <option key={n} value={n}>{"★".repeat(n)} ({n} Stars)</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div style={formGroup}>
+                <label style={formLabel}>Comments / Details</label>
+                <textarea
+                  value={editFeedbackComment}
+                  onChange={(e) => setEditFeedbackComment(e.target.value)}
+                  style={formTextarea}
+                  rows={5}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "25px" }}>
+                <button 
+                  type="button" 
+                  style={cancelBtn} 
+                  onClick={() => setShowEditFeedbackModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" style={submitBtn}>
+                  Update Feedback
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -688,6 +819,28 @@ const getStatusBadgeStyle = (status) => {
     case "rejected": return { ...base, background: "#fee2e2", color: "#dc2626" };
     default: return base;
   }
+};
+// ==================== NEW STYLES FOR EDIT & DELETE BUTTONS ====================
+const editBtn = {
+  background: "#3b82f6",
+  color: "white",
+  border: "none",
+  padding: "8px 16px",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontSize: "14px",
+  fontWeight: "600"
+};
+
+const deleteBtn = {
+  background: "#ef4444",
+  color: "white",
+  border: "none",
+  padding: "8px 16px",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontSize: "14px",
+  fontWeight: "600"
 };
 
 const NavItem = ({ label, active, onClick }) => (

@@ -112,5 +112,57 @@ router.put("/:id/respond", protect, async (req, res) => {
     res.status(500).json({ message: "Error updating response" });
   }
 });
+// Update feedback (Customer)
+router.put("/:id", protect, async (req, res) => {
+  try {
+    const { type, rating, comment } = req.body;
+
+    const feedback = await Feedback.findById(req.params.id);
+
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    // Ensure only owner can edit
+    if (feedback.customerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    feedback.type = type || feedback.type;
+    feedback.comment = comment || feedback.comment;
+
+    if (type === "feedback") {
+      feedback.rating = rating;
+    }
+
+    await feedback.save();
+
+    res.json({ message: "Feedback updated ✅", feedback });
+
+  } catch (err) {
+    res.status(500).json({ message: "Update failed", error: err.message });
+  }
+});
+// Delete feedback (Customer)
+router.delete("/:id", protect, async (req, res) => {
+  try {
+    const feedback = await Feedback.findById(req.params.id);
+
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    if (feedback.customerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    await feedback.deleteOne();
+
+    res.json({ message: "Feedback deleted ✅" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Delete failed", error: err.message });
+  }
+});
 
 module.exports = router;
