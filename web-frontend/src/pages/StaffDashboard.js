@@ -615,7 +615,7 @@ const handleLogout = () => {
                   <select value={vehicleType} onChange={(e) => setVehicleType(e.target.value)} style={selectStyle}>
                     <option value="car">Car</option>
                     <option value="bike">Bike</option>
-                    <option value="van">Van</option>
+                    <option value="three wheel">Three wheel</option>
                     <option value="scooter">Scooter</option>
                   </select>
                 </div>

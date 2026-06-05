@@ -371,7 +371,7 @@ export default function CustomerDashboard() {
                 <select value={searchCategory} onChange={(e) => setSearchCategory(e.target.value)} style={selectStyle}>
                   <option value="all">All Vehicles</option>
                   <option value="car">Car</option>
-                  <option value="bike">Bike</option>
+                  <option value="bike">Three wheel</option>
                   <option value="van">Van</option>
                   <option value="scooter">Scooter</option>
                 </select>
