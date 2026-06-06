@@ -29,7 +29,7 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected", "confirmed", "ongoing", "completed"],
+    enum: ["pending", "approved", "rejected", "confirmed", "ongoing", "completed", "cancelled"],
     default: "pending"
   },
   paymentMethod: {
@@ -51,7 +51,18 @@ const bookingSchema = new mongoose.Schema({
   returnMileage: { type: Number },
   returnFuelLevel: { type: Number },
   returnCondition: { type: String, default: "" },
-  damages: { type: String, default: "" }
+  damages: { type: String, default: "" },
+
+  // Cancellation and Refund
+  cancelledAt: { type: Date },
+  cancelledReason: { type: String, default: "" },
+  refundStatus: {
+    type: String,
+    enum: ["none", "pending", "processed"],
+    default: "none"
+  },
+  refundAmount: { type: Number, default: 0 },
+  refundedAt: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Booking", bookingSchema);

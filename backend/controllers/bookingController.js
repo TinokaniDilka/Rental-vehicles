@@ -311,6 +311,91 @@ const createBookingWithPayment = async (req, res) => {
     res.status(500).json({ message: err.message || "Payment failed" });
   }
 };
+
+// Cancel booking and process refund (Customer)
+const cancelBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const customerId = req.user.id;
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Verify customer owns this booking
+    if (booking.customerId.toString() !== customerId && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized to cancel this booking" });
+    }
+
+    // Can only cancel bookings that are not already completed or cancelled
+    if (["completed", "cancelled", "rejected"].includes(booking.status)) {
+      return res.status(400).json({ message: `Cannot cancel a ${booking.status} booking` });
+    }
+
+    // Can't cancel ongoing bookings
+    if (booking.status === "ongoing") {
+      return res.status(400).json({ message: "Cannot cancel an ongoing rental" });
+    }
+
+    // Calculate refund based on status and timing
+    let refundPercentage = 0;
+    if (booking.status === "pending" || booking.status === "approved") {
+      // Full refund for pending/approved bookings (no payment yet or not started)
+      refundPercentage = 100;
+    } else if (booking.status === "confirmed") {
+      // Check if rental starts soon (within 24 hours)
+      const startTime = new Date(booking.startDate);
+      const now = new Date();
+      const hoursUntilStart = (startTime - now) / (1000 * 60 * 60);
+
+      if (hoursUntilStart > 24) {
+        // More than 24 hours before start: 80% refund
+        refundPercentage = 80;
+      } else {
+        // Less than 24 hours: 50% refund
+        refundPercentage = 50;
+      }
+    }
+
+    const refundAmount = Math.round((booking.totalAmount * refundPercentage) / 100);
+
+    // Update booking with cancellation info
+    booking.status = "cancelled";
+    booking.cancelledAt = new Date();
+    booking.cancelledReason = reason || "No reason provided";
+    booking.refundStatus = "processed";
+    booking.refundAmount = refundAmount;
+    booking.refundedAt = new Date();
+
+    await booking.save();
+
+    // Create refund record in Payment model
+    const payment = new Payment({
+      bookingId: booking._id,
+      customerId,
+      amount: -refundAmount, // Negative to indicate refund
+      paymentMethod: booking.paymentMethod,
+      status: "completed"
+    });
+    await payment.save();
+
+    res.json({
+      message: `Booking cancelled successfully ✅. Refund of $${refundAmount} (${refundPercentage}%) will be processed.`,
+      booking,
+      refund: {
+        amount: refundAmount,
+        percentage: refundPercentage,
+        originalAmount: booking.totalAmount
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error cancelling booking", error: err.message });
+  }
+};
+
 // AFTER
 module.exports = {
   createBooking,
@@ -320,5 +405,6 @@ module.exports = {
   payBooking,
   pickupBooking,
   returnBooking,
-  createBookingWithPayment
+  createBookingWithPayment,
+  cancelBooking
 };

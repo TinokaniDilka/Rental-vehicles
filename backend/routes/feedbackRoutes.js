@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
 const Feedback = require("../models/Feedback");
 const Booking = require("../models/Booking");
+const Vehicle = require("../models/Vehicle");
 
 // Submit feedback or complaint (Customer)
 router.post("/", protect, async (req, res) => {
@@ -51,7 +52,19 @@ router.get("/", protect, async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const list = await Feedback.find()
+    let query = {};
+
+    if (req.user.role === "staff") {
+      // Only feedback for vehicles owned by this staff member
+      const staffVehicles = await Vehicle.find({ owner: req.user.id }).select("_id");
+      const vehicleIds = staffVehicles.map(v => v._id);
+
+      const bookings = await Booking.find({ vehicleId: { $in: vehicleIds } }).select("_id");
+      const bookingIds = bookings.map(b => b._id);
+      query = { bookingId: { $in: bookingIds } };
+    }
+
+    const list = await Feedback.find(query)
       .populate("customerId", "name email")
       .populate({
         path: "bookingId",
@@ -80,6 +93,46 @@ router.get("/customer", protect, async (req, res) => {
     res.status(500).json({ message: "Error retrieving feedback" });
   }
 });
+
+// Get all customer reviews (Public/Customer accessible)
+router.get("/reviews", async (req, res) => {
+  try {
+    const reviews = await Feedback.find({ type: "feedback" })
+      .populate("customerId", "name")
+      .populate({
+        path: "bookingId",
+        populate: { path: "vehicleId", select: "name type" }
+      })
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: "Error retrieving reviews", error: err.message });
+  }
+});
+
+// Get all reviews for a specific vehicle (Public/Customer accessible)
+router.get("/vehicle/:vehicleId", async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+    // Find all bookings for this vehicle
+    const bookings = await Booking.find({ vehicleId }).select("_id");
+    const bookingIds = bookings.map(b => b._id);
+    
+    // Find all feedbacks for those bookings, type must be "feedback"
+    const reviews = await Feedback.find({ 
+      bookingId: { $in: bookingIds }, 
+      type: "feedback" 
+    })
+    .populate("customerId", "name")
+    .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching vehicle reviews", error: err.message });
+  }
+});
+
 
 // Respond to complaint & update status (Staff/Admin)
 router.put("/:id/respond", protect, async (req, res) => {
@@ -162,6 +215,108 @@ router.delete("/:id", protect, async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ message: "Delete failed", error: err.message });
+  }
+});
+
+// Add staff reply to feedback (Staff/Admin)
+router.post("/:id/staff-reply", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "staff") {
+      return res.status(403).json({ message: "Forbidden - only staff can add replies" });
+    }
+
+    const { replyText } = req.body;
+    if (!replyText || !replyText.trim()) {
+      return res.status(400).json({ message: "Reply text is required" });
+    }
+
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    if (!feedback.staffReplies) {
+      feedback.staffReplies = [];
+    }
+
+    feedback.staffReplies.push({
+      staffId: req.user.id,
+      staffName: req.user.name,
+      replyText: replyText.trim()
+    });
+
+    await feedback.save();
+    res.json({ message: "Reply added successfully ✅", feedback });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding reply", error: err.message });
+  }
+});
+
+// Update staff reply (Staff/Admin)
+router.put("/:id/staff-reply/:replyId", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "staff") {
+      return res.status(403).json({ message: "Forbidden - only staff can update replies" });
+    }
+
+    const { replyText } = req.body;
+    if (!replyText || !replyText.trim()) {
+      return res.status(400).json({ message: "Reply text is required" });
+    }
+
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    const reply = feedback.staffReplies.id(req.params.replyId);
+    if (!reply) {
+      return res.status(404).json({ message: "Reply not found" });
+    }
+
+    // Only the staff member who created the reply can edit it (or admin)
+    if (reply.staffId.toString() !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized to update this reply" });
+    }
+
+    reply.replyText = replyText.trim();
+    reply.updatedAt = Date.now();
+
+    await feedback.save();
+    res.json({ message: "Reply updated successfully ✅", feedback });
+  } catch (err) {
+    res.status(500).json({ message: "Error updating reply", error: err.message });
+  }
+});
+
+// Delete staff reply (Staff/Admin)
+router.delete("/:id/staff-reply/:replyId", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "staff") {
+      return res.status(403).json({ message: "Forbidden - only staff can delete replies" });
+    }
+
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    const reply = feedback.staffReplies.id(req.params.replyId);
+    if (!reply) {
+      return res.status(404).json({ message: "Reply not found" });
+    }
+
+    // Only the staff member who created the reply can delete it (or admin)
+    if (reply.staffId.toString() !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized to delete this reply" });
+    }
+
+    feedback.staffReplies.id(req.params.replyId).deleteOne();
+    await feedback.save();
+
+    res.json({ message: "Reply deleted successfully ✅", feedback });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting reply", error: err.message });
   }
 });
 

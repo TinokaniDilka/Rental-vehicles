@@ -5,7 +5,15 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const navigate = useNavigate();
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 3000); // disappears after 3 sec
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,16 +34,20 @@ export default function Login() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", user.role);
 
-        // Redirect based on role
-        if (user.role === "admin") navigate("/admin");
-        else if (user.role === "staff") navigate("/staff");
-        else navigate("/customer");
+        showToast(`Welcome back, ${user.name}! ✅`, "success");
+        
+        // Redirect after a short delay to show notification
+        setTimeout(() => {
+          if (user.role === "admin") navigate("/admin");
+          else if (user.role === "staff") navigate("/staff");
+          else navigate("/customer");
+        }, 500);
       } else {
-        alert(data.message || "Login failed ❌");
+        showToast(data.message || "Login failed ❌", "error");
       }
     } catch (err) {
       console.error("Login error:", err);
-      alert("Server connection error ❌");
+      showToast("Server connection error ❌", "error");
     } finally {
       setLoading(false);
     }
@@ -87,6 +99,42 @@ export default function Login() {
           Don't have an account? <Link to="/register" style={{ color: "#818cf8", textDecoration: "none", fontWeight: "600" }}>Register here</Link>
         </p>
       </div>
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            padding: "16px 24px",
+            borderRadius: "12px",
+            background: toast.type === "success" ? "#10b981" : "#ef4444",
+            color: "white",
+            fontSize: "14px",
+            fontWeight: "500",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            animation: "slideIn 0.3s ease-out",
+            zIndex: 1000
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(400px);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

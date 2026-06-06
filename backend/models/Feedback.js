@@ -1,5 +1,26 @@
 const mongoose = require("mongoose");
 
+const staffReplySchema = new mongoose.Schema({
+  staffId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  staffName: String,
+  replyText: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const feedbackSchema = new mongoose.Schema({
   bookingId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -33,7 +54,8 @@ const feedbackSchema = new mongoose.Schema({
   staffResponse: {
     type: String,
     default: ""
-  }
+  },
+  staffReplies: [staffReplySchema]
 }, { timestamps: true });
 
 module.exports = mongoose.model("Feedback", feedbackSchema);

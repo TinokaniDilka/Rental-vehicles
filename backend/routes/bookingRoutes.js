@@ -9,13 +9,15 @@ const {
   payBooking,
   pickupBooking,
   returnBooking,
-  createBookingWithPayment
+  createBookingWithPayment,
+  cancelBooking
 } = require("../controllers/bookingController");
 
 // Customer routes
 router.post("/", protect, createBooking);
 router.post("/create-with-payment", protect, createBookingWithPayment);
 router.get("/customer", protect, getCustomerBookings);
+router.put("/:id/cancel", protect, cancelBooking);
 
 // Staff/Admin routes
 router.get("/staff/all", protect, getAllBookings);

@@ -63,6 +63,13 @@ const showToast = (message, type = "success") => {
   const [complaintStatus, setComplaintStatus] = useState("Open");
   const [staffResponse, setStaffResponse] = useState("");
 
+  // Staff Reply state
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [selectedFeedbackForReply, setSelectedFeedbackForReply] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [editingReplyId, setEditingReplyId] = useState(null);
+  const [isEditingReply, setIsEditingReply] = useState(false);
+
   useEffect(() => {
     fetchVehicles();
     fetchBookings();
@@ -318,6 +325,86 @@ const handleLogout = () => {
       fetchFeedbacks();
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to update response", "error");
+    }
+  };
+
+  // Open Reply Modal
+  const handleOpenReplyModal = (feedback) => {
+    setSelectedFeedbackForReply(feedback);
+    setReplyText("");
+    setEditingReplyId(null);
+    setIsEditingReply(false);
+    setShowReplyModal(true);
+  };
+
+  // Add Staff Reply
+  const handleAddReply = async (e) => {
+    e.preventDefault();
+    if (!replyText.trim()) {
+      showToast("Please enter a reply message", "error");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `http://localhost:5000/api/feedback/${selectedFeedbackForReply._id}/staff-reply`,
+        { replyText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast("Reply added successfully ✅");
+      setShowReplyModal(false);
+      setReplyText("");
+      fetchFeedbacks();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to add reply", "error");
+    }
+  };
+
+  // Edit Staff Reply
+  const handleEditReply = (replyId, replyTextValue) => {
+    setEditingReplyId(replyId);
+    setReplyText(replyTextValue);
+    setIsEditingReply(true);
+  };
+
+  // Update Staff Reply
+  const handleUpdateReply = async (e) => {
+    e.preventDefault();
+    if (!replyText.trim()) {
+      showToast("Please enter a reply message", "error");
+      return;
+    }
+
+    try {
+      await axios.put(
+        `http://localhost:5000/api/feedback/${selectedFeedbackForReply._id}/staff-reply/${editingReplyId}`,
+        { replyText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast("Reply updated successfully ✅");
+      setShowReplyModal(false);
+      setReplyText("");
+      setEditingReplyId(null);
+      setIsEditingReply(false);
+      fetchFeedbacks();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to update reply", "error");
+    }
+  };
+
+  // Delete Staff Reply
+  const handleDeleteReply = async (replyId) => {
+    if (!window.confirm("Are you sure you want to delete this reply?")) return;
+
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/feedback/${selectedFeedbackForReply._id}/staff-reply/${replyId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast("Reply deleted successfully ✅");
+      fetchFeedbacks();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to delete reply", "error");
     }
   };
 
@@ -604,9 +691,10 @@ const handleLogout = () => {
                           )}
                           <button style={{ ...editBtn, marginTop: "8px" }} onClick={() => handleOpenComplaintModal(f)}>💬 Resolve / Answer</button>
                         </>
-                      ) : (
-                        <p style={{ italic: "true", color: "#94a3b8", fontSize: "13px" }}>Feedbacks are view-only</p>
-                      )}
+                      ) : null}
+                      <button style={{ ...editBtn, marginTop: f.type === "complaint" ? "8px" : "0" }} onClick={() => handleOpenReplyModal(f)}>
+                        💬 {f.staffReplies?.length > 0 ? `View/Edit Replies (${f.staffReplies.length})` : "Add Reply"}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -858,6 +946,74 @@ const handleLogout = () => {
           </div>
         </div>
       )}
+
+      {/* REPLY MODAL */}
+      {showReplyModal && selectedFeedbackForReply && (
+        <div style={overlay} onClick={() => setShowReplyModal(false)}>
+          <div style={modal} onClick={(e) => e.stopPropagation()}>
+            <h3>💬 {isEditingReply ? "Edit Reply" : "Add Reply"}</h3>
+            <p style={{ color: "#64748b", fontSize: "13px" }}>
+              {selectedFeedbackForReply.type === "feedback" ? "Review" : "Complaint"}: "{selectedFeedbackForReply.comment}"
+            </p>
+
+            {/* Display existing replies */}
+            {selectedFeedbackForReply.staffReplies && selectedFeedbackForReply.staffReplies.length > 0 && (
+              <div style={{ marginBottom: "15px", padding: "12px", background: "#f1f5f9", borderRadius: "8px" }}>
+                <p style={{ margin: "0 0 8px 0", fontWeight: "600", fontSize: "13px" }}>Previous Replies:</p>
+                {selectedFeedbackForReply.staffReplies.map((reply, idx) => (
+                  <div key={reply._id} style={{ marginBottom: "8px", padding: "8px", background: "white", borderRadius: "6px", position: "relative" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ margin: "0 0 4px 0", fontSize: "12px", fontWeight: "600" }}>{reply.staffName} ({new Date(reply.createdAt).toLocaleDateString()})</p>
+                        <p style={{ margin: "0", fontSize: "13px", color: "#475569" }}>{reply.replyText}</p>
+                      </div>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          style={{ ...editBtn, padding: "4px 8px", fontSize: "12px" }}
+                          onClick={() => handleEditReply(reply._id, reply.replyText)}
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          style={{ ...deleteBtn, padding: "4px 8px", fontSize: "12px" }}
+                          onClick={() => handleDeleteReply(reply._id)}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <form onSubmit={isEditingReply ? handleUpdateReply : handleAddReply} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
+              <div style={formGroup}>
+                <label style={formLabel}>{isEditingReply ? "Update Reply" : "Write a Reply"} *</label>
+                <textarea
+                  placeholder="Type your reply message..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  style={formTextarea}
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                <button type="button" style={cancelBtn} onClick={() => {
+                  setShowReplyModal(false);
+                  setReplyText("");
+                  setEditingReplyId(null);
+                  setIsEditingReply(false);
+                }}>Cancel</button>
+                <button type="submit" style={submitBtn}>{isEditingReply ? "Update Reply" : "Add Reply"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 {toast.show && (
   <div
     style={{

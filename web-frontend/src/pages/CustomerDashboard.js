@@ -63,6 +63,8 @@ const showToast = (message, type = "success") => {
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState("");
   const [allFeedbacks, setAllFeedbacks] = useState([]);   // ← NEW: For public reviews
+  const [vehicleReviews, setVehicleReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
     // NEW: Feedback Edit Modal States
   const [showEditFeedbackModal, setShowEditFeedbackModal] = useState(false);
@@ -70,6 +72,12 @@ const showToast = (message, type = "success") => {
   const [editFeedbackType, setEditFeedbackType] = useState("feedback");
   const [editFeedbackRating, setEditFeedbackRating] = useState(5);
   const [editFeedbackComment, setEditFeedbackComment] = useState("");
+
+  // Cancel Booking Modal
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedBookingForCancel, setSelectedBookingForCancel] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancellationInfo, setCancellationInfo] = useState(null);
 
   // Fetch Data
   useEffect(() => {
@@ -82,6 +90,27 @@ const showToast = (message, type = "success") => {
   useEffect(() => {
     fetchAllFeedbacks();
   }, [feedbacks]);
+
+  useEffect(() => {
+    if (activePage.page === "vehicleDetails" && activePage.data?._id) {
+      fetchVehicleReviews(activePage.data._id);
+    }
+  }, [activePage]);
+
+  const fetchVehicleReviews = async (vehicleId) => {
+    setLoadingReviews(true);
+    try {
+      const res = await axios.get(`http://localhost:5000/api/feedback/vehicle/${vehicleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVehicleReviews(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching vehicle reviews:", err);
+      setVehicleReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
 
   const fetchVehicles = async () => {
   try {
@@ -148,7 +177,7 @@ const showToast = (message, type = "success") => {
   const fetchAllFeedbacks = async () => {
     try {
       // Try public endpoint first
-      const res = await axios.get("http://localhost:5000/api/feedback");
+      const res = await axios.get("http://localhost:5000/api/feedback/reviews");
       setAllFeedbacks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.log("Public feedback endpoint failed, using customer feedbacks as fallback");
@@ -265,12 +294,57 @@ const showToast = (message, type = "success") => {
 
     setShowBookingModal(false);
     setShowPaymentModal(true);
+    showToast(`✅ Booking submitted! Vehicle: ${selectedVehicle.name} for ${days} days`, "success");
   };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     window.location.href = "/login";
+  };
+
+  // Cancel Booking
+  const handleOpenCancelModal = (booking) => {
+    // Calculate refund info
+    let refundPercentage = 0;
+    if (["pending", "approved"].includes(booking.status)) {
+      refundPercentage = 100;
+    } else if (booking.status === "confirmed") {
+      const startTime = new Date(booking.startDate);
+      const now = new Date();
+      const hoursUntilStart = (startTime - now) / (1000 * 60 * 60);
+      refundPercentage = hoursUntilStart > 24 ? 80 : 50;
+    }
+
+    const refundAmount = Math.round((booking.totalAmount * refundPercentage) / 100);
+
+    setSelectedBookingForCancel(booking);
+    setCancellationInfo({ percentage: refundPercentage, amount: refundAmount });
+    setCancelReason("");
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!selectedBookingForCancel) return;
+
+    try {
+      const res = await axios.put(
+        `http://localhost:5000/api/bookings/${selectedBookingForCancel._id}/cancel`,
+        { reason: cancelReason || "No reason provided" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      showToast(
+        `✅ Booking cancelled! Refund of $${res.data.refund.amount} (${res.data.refund.percentage}%) will be processed.`,
+        "success"
+      );
+      setShowCancelModal(false);
+      setCancelReason("");
+      setCancellationInfo(null);
+      fetchBookings();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to cancel booking", "error");
+    }
   };
 
   const handleUpdateProfile = async (e) => {
@@ -604,6 +678,7 @@ filteredVehicles.map(v => (
                 {bookings.map(b => {
                   const start = new Date(b.startDate).toLocaleDateString();
                   const end = new Date(b.endDate).toLocaleDateString();
+                  const bookingFeedbacks = feedbacks.filter(f => f.bookingId?._id === b._id && (f.staffResponse || (Array.isArray(f.staffReplies) && f.staffReplies.length > 0)));
                   return (
                     <div key={b._id} style={bookingListItem}>
                       <div style={{ flex: 2 }}>
@@ -615,6 +690,29 @@ filteredVehicles.map(v => (
                             <h5>🔧 Return Inspection Details</h5>
                             <p><strong>Condition:</strong> {b.returnCondition} | <strong>Mileage:</strong> {b.returnMileage} km | <strong>Fuel:</strong> {b.returnFuelLevel}%</p>
                             {b.damages && <p><strong>Damages noted:</strong> {b.damages}</p>}
+                          </div>
+                        )}
+
+                        {bookingFeedbacks.length > 0 && (
+                          <div style={{ marginTop: "16px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "14px" }}>
+                            <p style={{ margin: "0 0 10px 0", fontWeight: "700", color: "#0f172a" }}>Staff Replies:</p>
+                            {bookingFeedbacks.map(f => (
+                              <div key={f._id} style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #e2e8f0" }}>
+                                <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#475569" }}><strong>Your {f.type === "complaint" ? "complaint" : "feedback"}:</strong> {f.comment}</p>
+                                {f.staffResponse && (
+                                  <div style={{ marginTop: "8px", padding: "10px", background: "white", borderRadius: "10px", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}>
+                                    <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#475569" }}><strong>Staff response</strong>:</p>
+                                    <p style={{ margin: 0, fontSize: "13px", color: "#334155" }}>{f.staffResponse}</p>
+                                  </div>
+                                )}
+                                {f.staffReplies && f.staffReplies.length > 0 && f.staffReplies.map(reply => (
+                                  <div key={reply._id} style={{ marginTop: "8px", padding: "10px", background: "white", borderRadius: "10px", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}>
+                                    <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#475569" }}><strong>{reply.staffName || "Staff"}</strong> replied on {new Date(reply.createdAt).toLocaleDateString()}:</p>
+                                    <p style={{ margin: 0, fontSize: "13px", color: "#334155" }}>{reply.replyText}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -633,6 +731,16 @@ filteredVehicles.map(v => (
                       {/* Right Column - Status + Review */}
                       <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "10px", alignItems: "end" }}>
                         <span style={getStatusBadgeStyle(b.status)}>{b.status.toUpperCase()}</span>
+                        
+                        {/* Cancel Booking Button */}
+                        {!["completed", "cancelled", "rejected", "ongoing"].includes(b.status) && (
+                          <button 
+                            style={{ ...deleteBtn, fontSize: "13px", padding: "6px 12px" }} 
+                            onClick={() => handleOpenCancelModal(b)}
+                          >
+                            ❌ Cancel Booking
+                          </button>
+                        )}
                         
                         {b.status === "completed" && (
                           <>
@@ -802,47 +910,43 @@ filteredVehicles.map(v => (
         </div>
       )}
 
-      {/* Customer Reviews Section - ALL REVIEWS */}
-            {/* Customer Reviews Section */}
+      {/* Customer Reviews Section */}
       <div style={{ marginTop: "25px" }}>
         <h4 style={{ marginBottom: "12px", color: "#1e293b" }}>
-          💬 Customer Reviews ({allFeedbacks.length > 0 ? 
-            allFeedbacks.filter(f => 
-              f.bookingId?.vehicleId?._id === activePage.data?._id || 
-              f.vehicle?._id === activePage.data?._id
-            ).length : 0})
+          💬 Customer Reviews ({vehicleReviews.length})
         </h4>
         
-        {allFeedbacks
-          .filter(f => 
-            f.bookingId?.vehicleId?._id === activePage.data?._id || 
-            f.vehicle?._id === activePage.data?._id
-          )
-          .length > 0 ? (
-            allFeedbacks
-              .filter(f => 
-                f.bookingId?.vehicleId?._id === activePage.data?._id || 
-                f.vehicle?._id === activePage.data?._id
-              )
-              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        {loadingReviews ? (
+          <p style={{ color: "#64748b", fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>
+            Loading reviews...
+          </p>
+        ) : vehicleReviews.length > 0 ? (
+            vehicleReviews
               .map(review => (
                 <div key={review._id} style={{
                   background: "#f8fafc",
                   padding: "16px",
                   borderRadius: "10px",
                   marginBottom: "14px",
-                  borderLeft: "4px solid #6366f1"
+                  borderLeft: "4px solid #6366f1",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <strong>{review.type === "feedback" ? "⭐ Review" : "⚠️ Complaint"}</strong>
-                    {review.rating && <div style={{ fontSize: "20px" }}>{renderStars(review.rating)}</div>}
+                    <span style={{ fontWeight: "700", color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
+                      👤 {review.customerId?.name || "Anonymous Customer"}
+                    </span>
+                    <span style={{ fontSize: "14px", color: "#4f46e5", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
+                      Rating: {"⭐".repeat(review.rating || 5)} out of 5
+                    </span>
                   </div>
-                  <p style={{ margin: "0 0 10px", fontSize: "14.5px", color: "#475569", lineHeight: "1.5" }}>
+                  <p style={{ margin: "10px 0 10px", fontSize: "14.5px", color: "#475569", lineHeight: "1.5", fontStyle: "italic" }}>
                     "{review.comment}"
                   </p>
-                  <small style={{ color: "#94a3b8" }}>
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </small>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <small style={{ color: "#94a3b8" }}>
+                      📅 {new Date(review.createdAt).toLocaleDateString()}
+                    </small>
+                  </div>
                 </div>
               ))
           ) : (
@@ -966,6 +1070,73 @@ filteredVehicles.map(v => (
         </div>
       )}
 
+      {/* Cancel Booking Modal */}
+      {showCancelModal && selectedBookingForCancel && cancellationInfo && (
+        <div style={overlay} onClick={() => setShowCancelModal(false)}>
+          <div style={modal} onClick={(e) => e.stopPropagation()}>
+            <h3>❌ Cancel Booking</h3>
+            <p style={{ color: "#64748b", marginBottom: "15px" }}>
+              Vehicle: <strong>{selectedBookingForCancel.vehicleId?.name}</strong> | Status: <strong>{selectedBookingForCancel.status.toUpperCase()}</strong>
+            </p>
+
+            {/* Refund Info */}
+            <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "8px", padding: "12px", marginBottom: "15px" }}>
+              <p style={{ margin: "0 0 8px 0", fontWeight: "600", color: "#22c55e" }}>💰 Refund Information:</p>
+              <p style={{ margin: "0", fontSize: "14px" }}>
+                Original Amount: <strong>${selectedBookingForCancel.totalAmount}</strong>
+              </p>
+              <p style={{ margin: "4px 0 0 0", fontSize: "14px" }}>
+                Refund: <strong style={{ color: "#22c55e" }}>${cancellationInfo.amount} ({cancellationInfo.percentage}%)</strong>
+              </p>
+              <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>
+                {cancellationInfo.percentage === 100 && "Full refund will be processed"}
+                {cancellationInfo.percentage === 80 && "80% refund (cancellation more than 24 hours before rental)"}
+                {cancellationInfo.percentage === 50 && "50% refund (cancellation less than 24 hours before rental)"}
+              </p>
+            </div>
+
+            <form style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={formGroup}>
+                <label style={formLabel}>Cancellation Reason (Optional)</label>
+                <textarea
+                  placeholder="Tell us why you're cancelling..."
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  style={formTextarea}
+                  rows={3}
+                />
+              </div>
+
+              <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
+                <p style={{ margin: "0", fontSize: "13px", color: "#dc2626" }}>
+                  ⚠️ This action cannot be undone. Please confirm your cancellation.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  style={cancelBtn}
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setCancelReason("");
+                  }}
+                >
+                  Keep Booking
+                </button>
+                <button
+                  type="button"
+                  style={{ ...deleteBtn, flex: 1 }}
+                  onClick={handleConfirmCancel}
+                >
+                  Confirm Cancellation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Feedback Modal */}
       {showFeedbackModal && selectedBookingForFeedback && (
         <div style={overlay} onClick={() => setShowFeedbackModal(false)}>
@@ -1070,6 +1241,44 @@ filteredVehicles.map(v => (
           </div>
         </div>
       )}
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "30px",
+            right: "30px",
+            padding: "14px 20px",
+            borderRadius: "10px",
+            color: "white",
+            fontWeight: "600",
+            background:
+              toast.type === "success"
+                ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                : "linear-gradient(135deg, #ef4444, #dc2626)",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+            zIndex: 99999,
+            animation: "slideIn 0.3s ease"
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              transform: translateX(400px);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
