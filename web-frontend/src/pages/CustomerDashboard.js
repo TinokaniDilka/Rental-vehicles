@@ -14,7 +14,7 @@ const showToast = (message, type = "success") => {
 };
 
   // Navigation
-  const [activePage, setActivePage] = useState("dashboard");
+  const [activePage, setActivePage] = useState({ page: "dashboard" });
 
   // Core Data
   const [vehicles, setVehicles] = useState([]);
@@ -62,6 +62,7 @@ const showToast = (message, type = "success") => {
   const [feedbackType, setFeedbackType] = useState("feedback");
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState("");
+  const [allFeedbacks, setAllFeedbacks] = useState([]);   // ← NEW: For public reviews
 
     // NEW: Feedback Edit Modal States
   const [showEditFeedbackModal, setShowEditFeedbackModal] = useState(false);
@@ -75,19 +76,46 @@ const showToast = (message, type = "success") => {
     fetchVehicles();
     fetchBookings();
     fetchFeedbacks();
+    fetchAllFeedbacks();
   }, []);
+  // Refresh all feedbacks when feedbacks change (after submit/edit)
+  useEffect(() => {
+    fetchAllFeedbacks();
+  }, [feedbacks]);
 
   const fetchVehicles = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/vehicles");
-      setVehicles(res.data);
-    } catch (err) {
-      console.error("Error fetching vehicles:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const res = await axios.get("http://localhost:5000/api/vehicles");
 
+    let data = Array.isArray(res.data) ? res.data : [];
+
+    // Calculate average rating from ALL feedbacks
+    data = data.map(vehicle => {
+      const vehicleFeedbacks = allFeedbacks.filter(f => 
+        f.bookingId?.vehicleId?._id === vehicle._id || 
+        f.vehicle?._id === vehicle._id
+      );
+
+      if (vehicleFeedbacks.length > 0) {
+        const total = vehicleFeedbacks.reduce((sum, f) => sum + (f.rating || 0), 0);
+        const avgRating = total / vehicleFeedbacks.length;
+        return {
+          ...vehicle,
+          averageRating: parseFloat(avgRating.toFixed(1)),
+          totalReviews: vehicleFeedbacks.length
+        };
+      }
+      return { ...vehicle, averageRating: 0, totalReviews: 0 };
+    });
+
+    setVehicles(data);
+  } catch (err) {
+    console.error("Error fetching vehicles:", err);
+    setVehicles([]);
+  } finally {
+    setLoading(false);
+  }
+};
   const fetchBookings = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/bookings/customer", {
@@ -104,14 +132,27 @@ const showToast = (message, type = "success") => {
     }
   };
 
-  const fetchFeedbacks = async () => {
+   const fetchFeedbacks = async () => {
     try {
+      // Current user's feedbacks (for their history & edit/delete)
       const res = await axios.get("http://localhost:5000/api/feedback/customer", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFeedbacks(res.data);
     } catch (err) {
-      console.error("Error fetching feedback:", err);
+      console.error("Error fetching customer feedback:", err);
+    }
+  };
+
+    // NEW: Fetch ALL feedbacks (try public, fallback to customer)
+  const fetchAllFeedbacks = async () => {
+    try {
+      // Try public endpoint first
+      const res = await axios.get("http://localhost:5000/api/feedback");
+      setAllFeedbacks(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.log("Public feedback endpoint failed, using customer feedbacks as fallback");
+      setAllFeedbacks(feedbacks); // Fallback to current user's feedbacks for now
     }
   };
   // ==================== NEW CRUD FUNCTIONS FOR FEEDBACK ====================
@@ -141,6 +182,7 @@ const showToast = (message, type = "success") => {
 
       showToast("✅ Feedback updated successfully!", "success");
       setShowEditFeedbackModal(false);
+      fetchAllFeedbacks();
       fetchFeedbacks(); // Refresh the list
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to update feedback", "error");
@@ -325,9 +367,11 @@ const showToast = (message, type = "success") => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      showToast(`✅ ${feedbackType === "feedback" ? "Feedback" : "Complaint"} submitted successfully!`, "success");
+            showToast(`✅ ${feedbackType === "feedback" ? "Feedback" : "Complaint"} submitted successfully!`, "success");
       setShowFeedbackModal(false);
-      fetchFeedbacks();
+      await fetchFeedbacks();
+      await fetchAllFeedbacks();
+      await fetchVehicles();   // Refresh ratings too
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to submit feedback", "error");
     }
@@ -341,12 +385,18 @@ const showToast = (message, type = "success") => {
   }, []);
 
   // Filtered Vehicles
-  const filteredVehicles = vehicles.filter(v => {
-    const matchesCategory = searchCategory === "all" || v.type === searchCategory;
-    const matchesLocation = !searchLocation.trim() || v.location.toLowerCase().includes(searchLocation.toLowerCase());
-    return matchesCategory && matchesLocation;
-  });
+  const filteredVehicles = Array.isArray(vehicles)
+  ? vehicles.filter(v => {
+      const matchesCategory =
+        searchCategory === "all" || v.type === searchCategory;
 
+      const matchesLocation =
+        !searchLocation.trim() ||
+        v.location.toLowerCase().includes(searchLocation.toLowerCase());
+
+      return matchesCategory && matchesLocation;
+    })
+  : [];
   return (
     <div style={dashboardWrapper}>
       <div style={glowOrb1}></div>
@@ -361,12 +411,32 @@ const showToast = (message, type = "success") => {
           </div>
 
           <div style={navLinks}>
-            <NavItem label="Dashboard" active={activePage === "dashboard"} onClick={() => setActivePage("dashboard")} />
-            <NavItem label="Search Vehicles" active={activePage === "search"} onClick={() => setActivePage("search")} />
-            <NavItem label="My Bookings" active={activePage === "bookings"} onClick={() => setActivePage("bookings")} />
-            <NavItem label="Feedback History" active={activePage === "feedback"} onClick={() => setActivePage("feedback")} />
-            <NavItem label="Profile" active={activePage === "profile"} onClick={() => setActivePage("profile")} />
-          </div>
+  <NavItem
+    label="Dashboard"
+    active={activePage.page === "dashboard"}
+    onClick={() => setActivePage({ page: "dashboard" })}
+  />
+  <NavItem
+    label="Search Vehicles"
+    active={activePage.page === "search"}
+    onClick={() => setActivePage({ page: "search" })}
+  />
+  <NavItem
+    label="My Bookings"
+    active={activePage.page === "bookings"}
+    onClick={() => setActivePage({ page: "bookings" })}
+  />
+  <NavItem
+    label="Feedback History"
+    active={activePage.page === "feedback"}
+    onClick={() => setActivePage({ page: "feedback" })}
+  />
+  <NavItem
+    label="Profile"
+    active={activePage.page === "profile"}
+    onClick={() => setActivePage({ page: "profile" })}
+  />
+</div>
 
           <div style={{ position: "relative" }}>
             <div style={profileSection} onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
@@ -383,7 +453,15 @@ const showToast = (message, type = "success") => {
                   <p style={{ color: "#64748b", fontSize: "14px" }}>{user.email}</p>
                 </div>
                 <div style={profileMenuItem}>📷 Change Profile Picture</div>
-                <div style={profileMenuItem} onClick={() => { setActivePage("profile"); setShowProfileMenu(false); }}>👤 Edit Profile</div>
+                <div 
+  style={profileMenuItem} 
+  onClick={() => { 
+    setActivePage({ page: "profile" }); 
+    setShowProfileMenu(false); 
+  }}
+>
+  👤 Edit Profile
+</div>
                 <div style={profileMenuItem}>🔑 Change Password</div>
                 <div style={profileLogout} onClick={handleLogout}>Logout</div>
               </div>
@@ -394,7 +472,7 @@ const showToast = (message, type = "success") => {
 
       <main style={mainContent}>
         {/* Dashboard */}
-        {activePage === "dashboard" && (
+        {activePage.page === "dashboard" && (
           <div style={fadeAnimation}>
             <div style={welcomeBanner}>
               <div>
@@ -413,15 +491,19 @@ const showToast = (message, type = "success") => {
             <div style={sectionCard}>
               <h3>Quick Customer Actions</h3>
               <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", marginTop: "15px" }}>
-                <button style={primaryBtn} onClick={() => setActivePage("search")}>🔍 Search Available Vehicles</button>
-                <button style={secondaryBtn} onClick={() => setActivePage("bookings")}>📋 Check Booking Invoices</button>
+                <button style={primaryBtn} onClick={() => setActivePage({ page: "search" })}>
+  🔍 Search Available Vehicles
+</button>
+<button style={secondaryBtn} onClick={() => setActivePage({ page: "bookings" })}>
+  📋 Check Booking Invoices
+</button>
               </div>
             </div>
           </div>
         )}
 
         {/* Search Vehicles */}
-        {activePage === "search" && (
+        {activePage.page === "search" && (
           <div style={fadeAnimation}>
             <h2>Search and Book Vehicles 🔍</h2>
             <p style={{ color: "#6b7280", marginBottom: "25px" }}>Find vehicles by category, location, and dates.</p>
@@ -451,28 +533,62 @@ const showToast = (message, type = "success") => {
                   <p style={{ color: "#6b7280" }}>Try adjusting your filters.</p>
                 </div>
               ) : (
-                filteredVehicles.map(v => (
-                  <div key={v._id} style={vehicleCard}>
-                    <div style={cardImageWrapper}>
-                      {v.image ? <img src={`http://localhost:5000${v.image}`} alt={v.name} style={cardImage} /> : <div style={placeholderImage}>🚗 No Image</div>}
-                      <div style={cardBadge}>{v.isAvailable ? "Available Now" : "Rented"}</div>
-                    </div>
-                    <div style={cardBody}>
-                      <h4 style={cardName}>{v.name}</h4>
-                      <p style={{ margin: "5px 0", color: "#64748b", fontSize: "14px" }}>📍 {v.location} | 📂 {v.type}</p>
-                      <p style={cardPrice}>${v.pricePerDay}<span style={{ fontSize: "13px", color: "#6b7280" }}>/day</span></p>
-                      <p style={cardDescription}>{v.description || "No description provided."}</p>
-                      <button style={bookBtn} onClick={() => handleOpenBookingModal(v)}>Book Vehicle</button>
-                    </div>
-                  </div>
-                ))
+                Array.isArray(filteredVehicles) &&
+filteredVehicles.map(v => (
+
+  <div key={v._id} style={vehicleCard}>
+
+    {/* CLICKABLE IMAGE */}
+    {/* CLICKABLE IMAGE */}
+<div
+  style={cardImageWrapper}
+  onClick={() => setActivePage({ page: "vehicleDetails", data: v })}
+>
+  {v.image ? (
+    <img
+      src={`http://localhost:5000${v.image}`}
+      alt={v.name}
+      style={cardImage}
+    />
+  ) : (
+    <div style={placeholderImage}>🚗</div>
+  )}
+
+  {/* Availability Badge - Top Right Corner */}
+  <div style={availabilityBadge(v.isAvailable !== false)}>
+    {v.isAvailable !== false ? "✅ Available" : "🚫 Rented"}
+  </div>
+
+    </div>
+
+          {/* NAME + PRICE + AVERAGE RATING */}
+    <div style={cardBody}>
+      <h4 style={cardName}>{v.name}</h4>
+      <p style={cardPrice}>
+        ${v.pricePerDay}
+        <span style={{ fontSize: "13px", color: "#6b7280" }}>/day</span>
+      </p>
+
+      {/* Average Rating Stars - Bottom of Card */}
+      {v.averageRating > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
+          <div style={{ display: "flex" }}>{renderStars(v.averageRating)}</div>
+          <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
+            {v.averageRating} ({v.totalReviews})
+          </span>
+        </div>
+      )}
+    </div>
+
+  </div>
+))
               )}
             </div>
           </div>
         )}
 
         {/* My Bookings */}
-        {activePage === "bookings" && (
+        {activePage.page === "bookings" && (
           <div style={fadeAnimation}>
             <h2>My Booking History 📋</h2>
             <p style={{ color: "#6b7280", marginBottom: "25px" }}>Track statuses, pay invoices, and submit feedback.</p>
@@ -503,7 +619,7 @@ const showToast = (message, type = "success") => {
                         )}
                       </div>
 
-                      <div style={{ flex: 1, minWidth: "150px" }}>
+                                           <div style={{ flex: 1, minWidth: "150px" }}>
                         <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>BILLING DETAILS</p>
                         <p style={{ margin: "2px 0 0", fontSize: "14px" }}>Base Price: ${b.baseCharge}</p>
                         {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "14px" }}>Driver Fee: ${b.driverCharge}</p>}
@@ -514,10 +630,39 @@ const showToast = (message, type = "success") => {
                         <h4 style={{ margin: "5px 0 0", color: "#1e1b4b" }}>Total: ${b.totalAmount}</h4>
                       </div>
 
+                      {/* Right Column - Status + Review */}
                       <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "10px", alignItems: "end" }}>
                         <span style={getStatusBadgeStyle(b.status)}>{b.status.toUpperCase()}</span>
+                        
                         {b.status === "completed" && (
-                          <button style={feedbackBtn} onClick={() => handleOpenFeedbackModal(b)}>⭐ Review / Complain</button>
+                          <>
+                            {feedbacks.some(f => f.bookingId?._id === b._id && f.type === "feedback") ? (
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  {renderStars(
+                                    feedbacks.find(f => f.bookingId?._id === b._id && f.type === "feedback")?.rating || 0
+                                  )}
+                                  <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "500" }}>Reviewed</span>
+                                </div>
+                                <button 
+                                  style={editBtn} 
+                                  onClick={() => {
+                                    const existing = feedbacks.find(f => f.bookingId?._id === b._id && f.type === "feedback");
+                                    if (existing) handleEditFeedback(existing);
+                                  }}
+                                >
+                                  ✏️ Edit Review
+                                </button>
+                              </div>
+                            ) : (
+                              <button 
+                                style={feedbackBtn} 
+                                onClick={() => handleOpenFeedbackModal(b)}
+                              >
+                                ⭐ Review / Complain
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -529,7 +674,7 @@ const showToast = (message, type = "success") => {
         )}
 
                 {/* Feedback History - UPDATED WITH EDIT & DELETE */}
-        {activePage === "feedback" && (
+        {activePage.page === "feedback" && (
           <div style={fadeAnimation}>
             <h2>Feedback & Complaint Submissions 📣</h2>
             <p style={{ color: "#6b7280", marginBottom: "25px" }}>
@@ -589,7 +734,7 @@ const showToast = (message, type = "success") => {
         )}
 
         {/* Profile */}
-        {activePage === "profile" && (
+        {activePage.page === "profile" && (
           <div style={fadeAnimation}>
             <div style={formWrapper}>
               <h2 style={{ textAlign: "center", marginBottom: "10px" }}>👤 Edit Customer Profile</h2>
@@ -612,6 +757,120 @@ const showToast = (message, type = "success") => {
             </div>
           </div>
         )}
+        {/* Vehicle Details Page */}
+        {/* Vehicle Details Page */}
+{activePage.page === "vehicleDetails" && activePage.data && (
+  <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
+
+    {/* LEFT SIDE - IMAGE */}
+    <div style={{ flex: 1 }}>
+      {activePage.data?.image && (
+        <img
+          src={`http://localhost:5000${activePage.data.image}`}
+          alt={activePage.data.name}
+          style={{ width: "100%", borderRadius: "12px" }}
+        />
+      )}
+    </div>
+
+    {/* RIGHT SIDE */}
+    <div style={{ flex: 1 }}>
+      <h2>{activePage.data?.name}</h2>
+
+      <p style={{ color: "#64748b" }}>
+        📍 {activePage.data?.location}
+      </p>
+
+      <h3 style={{ color: "#4f46e5" }}>
+        ${activePage.data?.pricePerDay} / day
+      </h3>
+
+      <p style={{ marginTop: "15px" }}>
+        {activePage.data?.description}
+      </p>
+
+      {/* Average Rating */}
+      {activePage.data?.averageRating > 0 && (
+        <div style={{ margin: "15px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", fontSize: "24px" }}>
+            {renderStars(activePage.data.averageRating)}
+          </div>
+          <span style={{ fontSize: "16px", fontWeight: "600" }}>
+            {activePage.data.averageRating} 
+            <span style={{ color: "#64748b", fontWeight: "normal" }}> ({activePage.data.totalReviews} reviews)</span>
+          </span>
+        </div>
+      )}
+
+      {/* Customer Reviews Section - ALL REVIEWS */}
+            {/* Customer Reviews Section */}
+      <div style={{ marginTop: "25px" }}>
+        <h4 style={{ marginBottom: "12px", color: "#1e293b" }}>
+          💬 Customer Reviews ({allFeedbacks.length > 0 ? 
+            allFeedbacks.filter(f => 
+              f.bookingId?.vehicleId?._id === activePage.data?._id || 
+              f.vehicle?._id === activePage.data?._id
+            ).length : 0})
+        </h4>
+        
+        {allFeedbacks
+          .filter(f => 
+            f.bookingId?.vehicleId?._id === activePage.data?._id || 
+            f.vehicle?._id === activePage.data?._id
+          )
+          .length > 0 ? (
+            allFeedbacks
+              .filter(f => 
+                f.bookingId?.vehicleId?._id === activePage.data?._id || 
+                f.vehicle?._id === activePage.data?._id
+              )
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map(review => (
+                <div key={review._id} style={{
+                  background: "#f8fafc",
+                  padding: "16px",
+                  borderRadius: "10px",
+                  marginBottom: "14px",
+                  borderLeft: "4px solid #6366f1"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <strong>{review.type === "feedback" ? "⭐ Review" : "⚠️ Complaint"}</strong>
+                    {review.rating && <div style={{ fontSize: "20px" }}>{renderStars(review.rating)}</div>}
+                  </div>
+                  <p style={{ margin: "0 0 10px", fontSize: "14.5px", color: "#475569", lineHeight: "1.5" }}>
+                    "{review.comment}"
+                  </p>
+                  <small style={{ color: "#94a3b8" }}>
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </small>
+                </div>
+              ))
+          ) : (
+            <p style={{ color: "#64748b", fontStyle: "italic", textAlign: "center", padding: "40px 0" }}>
+              No reviews yet for this vehicle.<br />Be the first to review after your rental!
+            </p>
+          )}
+      </div>
+
+      {/* BOOK BUTTON */}
+      <button
+        style={{ ...submitBtn, marginTop: "25px" }}
+        onClick={() => handleOpenBookingModal(activePage.data)}
+      >
+        🚗 Book Now
+      </button>
+
+      {/* BACK BUTTON */}
+      <button
+        style={{ ...cancelBtn, marginTop: "10px" }}
+        onClick={() => setActivePage({ page: "search" })}
+      >
+        ⬅ Back
+      </button>
+    </div>
+
+  </div>
+)}
       </main>
 
       {/* Booking Modal */}
@@ -829,6 +1088,19 @@ const getStatusBadgeStyle = (status) => {
     default: return base;
   }
 };
+// ==================== STAR RATING HELPER ====================
+const renderStars = (rating) => {
+  const stars = [];
+  const fullStars = Math.floor(rating || 0);
+  for (let i = 1; i <= 5; i++) {
+    stars.push(
+      <span key={i} style={{ color: i <= fullStars ? "#fbbf24" : "#e5e7eb", fontSize: "18px" }}>
+        ★
+      </span>
+    );
+  }
+  return stars;
+};
 // ==================== NEW STYLES FOR EDIT & DELETE BUTTONS ====================
 const editBtn = {
   background: "#3b82f6",
@@ -964,3 +1236,16 @@ style.innerHTML = `
   to { transform: translateX(0); opacity: 1; }
 }`;
 document.head.appendChild(style);
+const availabilityBadge = (isAvailable) => ({
+  position: "absolute",
+  top: "12px",
+  right: "12px",
+  padding: "6px 12px",
+  borderRadius: "20px",
+  fontSize: "12px",
+  fontWeight: "700",
+  zIndex: 10,
+  background: isAvailable ? "#10b981" : "#ef4444",
+  color: "white",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+});
