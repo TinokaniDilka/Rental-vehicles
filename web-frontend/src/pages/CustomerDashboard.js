@@ -4,6 +4,14 @@ import axios from "axios";
 export default function CustomerDashboard() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
+const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+const showToast = (message, type = "success") => {
+  setToast({ show: true, message, type });
+
+  setTimeout(() => {
+    setToast({ show: false, message: "", type: "success" });
+  }, 3000); // disappears after 3 sec
+};
 
   // Navigation
   const [activePage, setActivePage] = useState("dashboard");
@@ -131,11 +139,11 @@ export default function CustomerDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("✅ Feedback updated successfully!");
+      showToast("✅ Feedback updated successfully!", "success");
       setShowEditFeedbackModal(false);
       fetchFeedbacks(); // Refresh the list
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update feedback");
+      showToast(err.response?.data?.message || "Failed to update feedback", "error");
     }
   };
 
@@ -146,10 +154,10 @@ export default function CustomerDashboard() {
       await axios.delete(`http://localhost:5000/api/feedback/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("🗑️ Feedback deleted successfully");
+      showToast("🗑️ Feedback deleted successfully", "success");
       fetchFeedbacks();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete feedback");
+      showToast(err.response?.data?.message || "Failed to delete feedback", "error");
     }
   };
   // Booking Modal
@@ -232,10 +240,10 @@ export default function CustomerDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      alert("Profile updated successfully ✅");
+      showToast("Profile updated successfully ✅");
       setProfilePassword("");
     } catch (err) {
-      alert(err.response?.data?.message || "Profile update failed");
+      showToast(err.response?.data?.message || "Profile update failed", "error");
     }
   };
 
@@ -248,11 +256,12 @@ export default function CustomerDashboard() {
       });
       setPromoDiscountPercent(res.data.discountPercent);
       setPromoApplied(true);
-      alert(`Promo code applied! ${res.data.discountPercent}% discount.`);
+      showToast(`Promo code applied! ${res.data.discountPercent}% discount.`, "success");
     } catch (err) {
       setPromoError(err.response?.data?.message || "Invalid promo code");
       setPromoDiscountPercent(0);
       setPromoApplied(false);
+      showToast(err.response?.data?.message || "Invalid promo code", "error");
     }
   };
 
@@ -279,7 +288,7 @@ export default function CustomerDashboard() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("🎉 Payment successful! Booking confirmed.");
+      showToast("🎉 Payment successful! Booking confirmed.", "success");
       setShowPaymentModal(false);
       setTempBookingData(null);
       setPromoApplied(false);
@@ -289,7 +298,7 @@ export default function CustomerDashboard() {
       fetchBookings();
       fetchVehicles();
     } catch (err) {
-      alert(err.response?.data?.message || "Payment failed");
+      showToast(err.response?.data?.message || "Payment failed");
     }
   };
 
@@ -316,11 +325,11 @@ export default function CustomerDashboard() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(`✅ ${feedbackType === "feedback" ? "Feedback" : "Complaint"} submitted successfully!`);
+      showToast(`✅ ${feedbackType === "feedback" ? "Feedback" : "Complaint"} submitted successfully!`, "success");
       setShowFeedbackModal(false);
       fetchFeedbacks();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to submit feedback");
+      showToast(err.response?.data?.message || "Failed to submit feedback", "error");
     }
   };
 
@@ -948,3 +957,10 @@ const profileHeader = { textAlign: "center", padding: "20px", borderBottom: "1px
 const profileAvatar = { width: "70px", height: "70px", borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", color: "white", margin: "0 auto" };
 const profileMenuItem = { padding: "12px 18px", cursor: "pointer", fontSize: "14px", borderBottom: "1px solid #f1f5f9", color: "#374151" };
 const profileLogout = { padding: "14px 18px", cursor: "pointer", color: "red", fontWeight: "600" };
+const style = document.createElement("style");
+style.innerHTML = `
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}`;
+document.head.appendChild(style);

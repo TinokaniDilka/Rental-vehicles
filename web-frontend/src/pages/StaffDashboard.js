@@ -5,6 +5,14 @@ export default function StaffDashboard() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
+const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+const showToast = (message, type = "success") => {
+  setToast({ show: true, message, type });
+
+  setTimeout(() => {
+    setToast({ show: false, message: "", type: "success" });
+  }, 3000); // disappears after 3 sec
+};
 
   // Navigation state
   const [activePage, setActivePage] = useState("dashboard");
@@ -14,6 +22,7 @@ export default function StaffDashboard() {
   const [bookings, setBookings] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
   const [stats, setStats] = useState({ active: 0, pending: 0 });
+  const [earnings, setEarnings] = useState(0);
 
   // Profile state
   const [profileName, setProfileName] = useState(user.name || "");
@@ -71,21 +80,33 @@ export default function StaffDashboard() {
     }
   };
 
-  const fetchBookings = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/bookings/staff/all", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBookings(res.data);
+const fetchBookings = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/api/bookings/staff/all", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-      // Calculate simple stats
-      const pendingCount = res.data.filter(b => b.status === "pending").length;
-      const activeCount = res.data.filter(b => b.status === "ongoing").length;
-      setStats({ active: activeCount, pending: pendingCount });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    setBookings(res.data);
+
+    const pendingCount = res.data.filter(b => b.status === "pending").length;
+    const activeCount = res.data.filter(b => b.status === "ongoing").length;
+
+    // ✅ FIXED earnings calculation
+    const totalEarnings = res.data
+      .filter(b =>
+        b.status === "completed" ||
+        b.status === "ongoing" ||
+        b.status === "confirmed"
+      )
+      .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+
+    setStats({ active: activeCount, pending: pendingCount });
+    setEarnings(totalEarnings);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const fetchFeedbacks = async () => {
     try {
@@ -114,10 +135,10 @@ const handleLogout = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      alert("Profile updated successfully ✅");
+      showToast("Profile updated successfully ✅");
       setProfilePassword("");
     } catch (err) {
-      alert(err.response?.data?.message || "Profile update failed");
+      showToast(err.response?.data?.message || "Profile update failed", "error");
     }
   };
 
@@ -165,7 +186,7 @@ const handleLogout = () => {
             Authorization: `Bearer ${token}`
           }
         });
-        alert("Vehicle updated successfully ✅");
+        showToast("Vehicle updated successfully ✅");
       } else {
         await axios.post("http://localhost:5000/api/vehicles", formData, {
           headers: {
@@ -173,12 +194,12 @@ const handleLogout = () => {
             Authorization: `Bearer ${token}`
           }
         });
-        alert("Vehicle added successfully ✅");
+        showToast("Vehicle added successfully ✅");
       }
       setShowVehicleModal(false);
       fetchVehicles();
     } catch (err) {
-      alert(err.response?.data?.message || "Error saving vehicle");
+      showToast(err.response?.data?.message || "Error saving vehicle", "error");
     }
   };
 
@@ -188,10 +209,10 @@ const handleLogout = () => {
       await axios.delete(`http://localhost:5000/api/vehicles/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Vehicle deleted successfully ✅");
+      showToast("Vehicle deleted successfully ✅");
       fetchVehicles();
     } catch (err) {
-      alert(err.response?.data?.message || "Error deleting vehicle");
+      showToast(err.response?.data?.message || "Error deleting vehicle", "error");
     }
   };
 
@@ -218,11 +239,11 @@ const handleLogout = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(`Booking has been ${reviewStatus} ✅`);
+      showToast(`Booking has been ${reviewStatus} ✅`);
       setShowReviewModal(false);
       fetchBookings();
     } catch (err) {
-      alert(err.response?.data?.message || "Review submission failed");
+      showToast(err.response?.data?.message || "Review submission failed", "error");
     }
   };
 
@@ -234,10 +255,10 @@ const handleLogout = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Rental started successfully! Booking is now ongoing 🚗");
+      showToast("Rental started successfully! Booking is now ongoing 🚗");
       fetchBookings();
     } catch (err) {
-      alert(err.response?.data?.message || "Pickup start failed");
+      showToast(err.response?.data?.message || "Pickup start failed", "error");
     }
   };
 
@@ -268,11 +289,11 @@ const handleLogout = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Vehicle return finalized successfully ✅");
+      showToast("Vehicle return finalized successfully ✅");
       setShowReturnModal(false);
       fetchBookings();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to finalize vehicle return");
+      showToast(err.response?.data?.message || "Failed to finalize vehicle return", "error");
     }
   };
 
@@ -292,11 +313,11 @@ const handleLogout = () => {
         { complaintStatus, staffResponse },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Response updated successfully ✅");
+      showToast("Response updated successfully ✅");
       setShowComplaintModal(false);
       fetchFeedbacks();
     } catch (err) {
-      alert("Failed to update response");
+      showToast(err.response?.data?.message || "Failed to update response", "error");
     }
   };
 
@@ -388,10 +409,35 @@ const handleLogout = () => {
             </div>
 
             <div style={dashboardGrid}>
-              <DashboardCard icon="⏳" title="PENDING APPROVALS" value={stats.pending} color="linear-gradient(135deg, #f59e0b, #d97706)" />
-              <DashboardCard icon="🚗" title="ACTIVE RENTALS" value={stats.active} color="linear-gradient(135deg, #6366f1, #4f46e5)" />
-              <DashboardCard icon="📂" title="TOTAL VEHICLES LISTED" value={vehicles.length} color="linear-gradient(135deg, #10b981, #059669)" />
-            </div>
+  <DashboardCard 
+    icon="⏳" 
+    title="PENDING APPROVALS" 
+    value={stats.pending} 
+    color="linear-gradient(135deg, #f59e0b, #d97706)" 
+  />
+
+  <DashboardCard 
+    icon="🚗" 
+    title="ACTIVE RENTALS" 
+    value={stats.active} 
+    color="linear-gradient(135deg, #6366f1, #4f46e5)" 
+  />
+
+  <DashboardCard 
+    icon="📂" 
+    title="TOTAL VEHICLES LISTED" 
+    value={vehicles.length} 
+    color="linear-gradient(135deg, #10b981, #059669)" 
+  />
+
+  {/* ✅ NEW CARD */}
+  <DashboardCard 
+    icon="💰" 
+    title="TOTAL EARNINGS" 
+    value={`$${earnings}`} 
+    color="linear-gradient(135deg, #22c55e, #16a34a)" 
+  />
+</div>
 
             <div style={sectionCard}>
               <h3>Quick Operations Shortcuts</h3>
@@ -812,7 +858,28 @@ const handleLogout = () => {
           </div>
         </div>
       )}
-
+{toast.show && (
+  <div
+    style={{
+      position: "fixed",
+      bottom: "30px",
+      right: "30px",
+      padding: "14px 20px",
+      borderRadius: "10px",
+      color: "white",
+      fontWeight: "600",
+      background:
+        toast.type === "success"
+          ? "linear-gradient(135deg, #22c55e, #16a34a)"
+          : "linear-gradient(135deg, #ef4444, #dc2626)",
+      boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+      zIndex: 99999,
+      animation: "slideIn 0.3s ease"
+    }}
+  >
+    {toast.message}
+  </div>
+)}
     </div>
   );
 }
@@ -968,3 +1035,10 @@ const profileLogout = {
   color: "red",
   fontWeight: "600"
 };
+const style = document.createElement("style");
+style.innerHTML = `
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}`;
+document.head.appendChild(style);
