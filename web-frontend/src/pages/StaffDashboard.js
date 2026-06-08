@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function StaffDashboard() {
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
@@ -431,7 +432,7 @@ const handleLogout = () => {
       <NavItem label="Manage Vehicles" active={activePage === "vehicles"} onClick={() => setActivePage("vehicles")} />
       <NavItem label="Booking Approvals" active={activePage === "bookings"} onClick={() => setActivePage("bookings")} />
       <NavItem label="Complaints & Reviews" active={activePage === "complaints"} onClick={() => setActivePage("complaints")} />
-      <NavItem label="Profile" active={activePage === "profile"} onClick={() => setActivePage("profile")} />
+      
     </div>
 
     {/* Profile Section */}
@@ -459,14 +460,14 @@ const handleLogout = () => {
           <div style={profileMenuItem}>📷 Change Profile Picture</div>
 
           <div
-            style={profileMenuItem}
-            onClick={() => {
-              setActivePage("profile");
-              setShowProfileMenu(false);
-            }}
-          >
-            👤 Edit Profile
-          </div>
+  style={profileMenuItem}
+  onClick={() => {
+    setShowProfileModal(true);   // ← open modal
+    setShowProfileMenu(false);   // ← close dropdown
+  }}
+>
+  👤 Edit Profile
+</div>
 
           <div style={profileMenuItem}>🔑 Change Password</div>
 
@@ -703,31 +704,71 @@ const handleLogout = () => {
           </div>
         )}
 
-        {/* PROFILE PAGE */}
-        {activePage === "profile" && (
-          <div style={fadeAnimation}>
-            <div style={formWrapper}>
-              <h2 style={{ textAlign: "center", marginBottom: "10px" }}>👤 Edit Staff Profile</h2>
-              <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "30px" }}>Update your contact credentials.</p>
+        {/* EDIT PROFILE MODAL */}
+{showProfileModal && (
+  <div style={overlay} onClick={() => setShowProfileModal(false)}>
+    <div style={modal} onClick={(e) => e.stopPropagation()}>
+      <h3 style={{ textAlign: "center", marginBottom: "6px" }}>👤 Edit Staff Profile</h3>
+      <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "24px", fontSize: "14px" }}>
+        Update your contact credentials.
+      </p>
 
-              <form onSubmit={handleUpdateProfile} style={formStyle}>
-                <div style={formGroup}>
-                  <label style={formLabel}>Full Name</label>
-                  <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} style={formInput} required />
-                </div>
-                <div style={formGroup}>
-                  <label style={formLabel}>Email Address</label>
-                  <input type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} style={formInput} required />
-                </div>
-                <div style={formGroup}>
-                  <label style={formLabel}>New Password (Leave blank to keep current)</label>
-                  <input type="password" placeholder="••••••••" value={profilePassword} onChange={(e) => setProfilePassword(e.target.value)} style={formInput} />
-                </div>
-                <button type="submit" style={submitBtn}>Save Changes</button>
-              </form>
-            </div>
-          </div>
-        )}
+      <form
+        onSubmit={(e) => {
+          handleUpdateProfile(e);
+          setShowProfileModal(false);
+        }}
+        style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+      >
+        <div style={formGroup}>
+          <label style={formLabel}>Full Name</label>
+          <input
+            type="text"
+            value={profileName}
+            onChange={(e) => setProfileName(e.target.value)}
+            style={formInput}
+            required
+          />
+        </div>
+
+        <div style={formGroup}>
+          <label style={formLabel}>Email Address</label>
+          <input
+            type="email"
+            value={profileEmail}
+            onChange={(e) => setProfileEmail(e.target.value)}
+            style={formInput}
+            required
+          />
+        </div>
+
+        <div style={formGroup}>
+          <label style={formLabel}>New Password (Leave blank to keep current)</label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={profilePassword}
+            onChange={(e) => setProfilePassword(e.target.value)}
+            style={formInput}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+          <button
+            type="button"
+            style={cancelBtn}
+            onClick={() => setShowProfileModal(false)}
+          >
+            Cancel
+          </button>
+          <button type="submit" style={submitBtn}>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       </main>
 
