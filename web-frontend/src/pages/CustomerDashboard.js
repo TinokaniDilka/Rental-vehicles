@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function CustomerDashboard() {
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
 const [toast, setToast] = useState({ show: false, message: "", type: "success" });
@@ -231,11 +232,15 @@ const showToast = (message, type = "success") => {
       showToast(err.response?.data?.message || "Failed to delete feedback", "error");
     }
   };
+  const [pickupTime, setPickupTime] = useState("09:00");
+const [dropoffTime, setDropoffTime] = useState("09:00");
   // Booking Modal
   const handleOpenBookingModal = async (vehicle) => {
     setSelectedVehicle(vehicle);
     setBookingStartDate("");
     setBookingEndDate("");
+    setPickupTime("09:00");      // ← add this
+    setDropoffTime("09:00");  
     setBookingHasDriver(false);
     setBookingError("");
     setVehicleBookedDates([]);
@@ -258,8 +263,7 @@ const showToast = (message, type = "success") => {
     const start = new Date(bookingStartDate);
     const end = new Date(bookingEndDate);
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-    if (days > 7) {
+  if (days > 7) {
       setBookingError("Maximum booking period is 7 days");
       return;
     }
@@ -286,6 +290,8 @@ const showToast = (message, type = "success") => {
       vehicleId: selectedVehicle._id,
       startDate: bookingStartDate,
       endDate: bookingEndDate,
+      pickupTime,           // ← add
+      dropoffTime,  
       hasDriver: bookingHasDriver,
       baseAmount,
       driverCharge,
@@ -396,7 +402,8 @@ const showToast = (message, type = "success") => {
           vehicleId: tempBookingData.vehicleId,
           startDate: tempBookingData.startDate,
           endDate: tempBookingData.endDate,
-          hasDriver: tempBookingData.hasDriver,
+          pickupTime: tempBookingData.pickupTime,
+          dropoffTime: tempBookingData.dropoffTime,
           paymentMethod,
           amount: finalAmount,
           promoCode: promoApplied ? promoCode : null
@@ -505,11 +512,7 @@ const showToast = (message, type = "success") => {
     active={activePage.page === "feedback"}
     onClick={() => setActivePage({ page: "feedback" })}
   />
-  <NavItem
-    label="Profile"
-    active={activePage.page === "profile"}
-    onClick={() => setActivePage({ page: "profile" })}
-  />
+  
 </div>
 
           <div style={{ position: "relative" }}>
@@ -527,11 +530,11 @@ const showToast = (message, type = "success") => {
                   <p style={{ color: "#64748b", fontSize: "14px" }}>{user.email}</p>
                 </div>
                 <div style={profileMenuItem}>📷 Change Profile Picture</div>
-                <div 
-  style={profileMenuItem} 
-  onClick={() => { 
-    setActivePage({ page: "profile" }); 
-    setShowProfileMenu(false); 
+                <div
+  style={profileMenuItem}
+  onClick={() => {
+    setShowProfileModal(true);   // ← open modal
+    setShowProfileMenu(false);   // ← close dropdown
   }}
 >
   👤 Edit Profile
@@ -684,6 +687,7 @@ filteredVehicles.map(v => (
                       <div style={{ flex: 2 }}>
                         <h4 style={{ margin: "0 0 5px", fontSize: "18px" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
                         <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>📅 Rental Period: {start} - {end}</p>
+                        {b.pickupTime && <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#64748b" }}>🕐 Pickup: {b.pickupTime} | Dropoff: {b.dropoffTime || "—"}</p>}
                         {b.driverName && <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#4f46e5" }}>👨‍✈️ Driver: {b.driverName}</p>}
                         {b.status === "completed" && (
                           <div style={inspectionBox}>
@@ -841,30 +845,71 @@ filteredVehicles.map(v => (
           </div>
         )}
 
-        {/* Profile */}
-        {activePage.page === "profile" && (
-          <div style={fadeAnimation}>
-            <div style={formWrapper}>
-              <h2 style={{ textAlign: "center", marginBottom: "10px" }}>👤 Edit Customer Profile</h2>
-              <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "30px" }}>Update your contact information and password.</p>
-              <form onSubmit={handleUpdateProfile} style={formStyle}>
-                <div style={formGroup}>
-                  <label style={formLabel}>Full Name</label>
-                  <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} style={formInput} required />
-                </div>
-                <div style={formGroup}>
-                  <label style={formLabel}>Email Address</label>
-                  <input type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} style={formInput} required />
-                </div>
-                <div style={formGroup}>
-                  <label style={formLabel}>New Password (Leave blank to keep current)</label>
-                  <input type="password" placeholder="••••••••" value={profilePassword} onChange={(e) => setProfilePassword(e.target.value)} style={formInput} />
-                </div>
-                <button type="submit" style={submitBtn}>Save Changes</button>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* EDIT PROFILE MODAL */}
+{showProfileModal && (
+  <div style={overlay} onClick={() => setShowProfileModal(false)}>
+    <div style={modal} onClick={(e) => e.stopPropagation()}>
+      <h3 style={{ textAlign: "center", marginBottom: "6px" }}>👤 Edit Staff Profile</h3>
+      <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "24px", fontSize: "14px" }}>
+        Update your contact credentials.
+      </p>
+
+      <form
+        onSubmit={(e) => {
+          handleUpdateProfile(e);
+          setShowProfileModal(false);
+        }}
+        style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+      >
+        <div style={formGroup}>
+          <label style={formLabel}>Full Name</label>
+          <input
+            type="text"
+            value={profileName}
+            onChange={(e) => setProfileName(e.target.value)}
+            style={formInput}
+            required
+          />
+        </div>
+
+        <div style={formGroup}>
+          <label style={formLabel}>Email Address</label>
+          <input
+            type="email"
+            value={profileEmail}
+            onChange={(e) => setProfileEmail(e.target.value)}
+            style={formInput}
+            required
+          />
+        </div>
+
+        <div style={formGroup}>
+          <label style={formLabel}>New Password (Leave blank to keep current)</label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={profilePassword}
+            onChange={(e) => setProfilePassword(e.target.value)}
+            style={formInput}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+          <button
+            type="button"
+            style={cancelBtn}
+            onClick={() => setShowProfileModal(false)}
+          >
+            Cancel
+          </button>
+          <button type="submit" style={submitBtn}>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
         {/* Vehicle Details Page */}
         {/* Vehicle Details Page */}
 {activePage.page === "vehicleDetails" && activePage.data && (
@@ -986,15 +1031,27 @@ filteredVehicles.map(v => (
 
             <div style={{ margin: "20px 0" }}>
               <div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: "13px", fontWeight: "600" }}>Start Date</label>
-                  <input type="date" value={bookingStartDate} onChange={(e) => setBookingStartDate(e.target.value)} style={modalInput} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: "13px", fontWeight: "600" }}>End Date</label>
-                  <input type="date" value={bookingEndDate} onChange={(e) => setBookingEndDate(e.target.value)} style={modalInput} />
-                </div>
-              </div>
+  <div style={{ flex: 1 }}>
+    <label style={{ fontSize: "13px", fontWeight: "600" }}>Start Date</label>
+    <input type="date" value={bookingStartDate} onChange={(e) => setBookingStartDate(e.target.value)} style={modalInput} />
+  </div>
+  <div style={{ flex: 1 }}>
+    <label style={{ fontSize: "13px", fontWeight: "600" }}>End Date</label>
+    <input type="date" value={bookingEndDate} onChange={(e) => setBookingEndDate(e.target.value)} style={modalInput} />
+  </div>
+</div>
+
+{/* Pickup & Dropoff Time Row */}
+<div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
+  <div style={{ flex: 1 }}>
+    <label style={{ fontSize: "13px", fontWeight: "600" }}>🕐 Pickup Time</label>
+    <input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} style={modalInput} />
+  </div>
+  <div style={{ flex: 1 }}>
+    <label style={{ fontSize: "13px", fontWeight: "600" }}>🕐 Dropoff Time</label>
+    <input type="time" value={dropoffTime} onChange={(e) => setDropoffTime(e.target.value)} style={modalInput} />
+  </div>
+</div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "20px 0" }}>
                 <input type="checkbox" id="hasDriver" checked={bookingHasDriver} onChange={(e) => setBookingHasDriver(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
