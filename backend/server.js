@@ -32,6 +32,6 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.log(err));
 
 // ✅ START SERVER
-app.listen(5000, () => {
-  console.log("Server running on http://localhost:5000 ✅");
+app.listen(5000, '0.0.0.0', () => {
+  console.log("Server running on http://0.0.0.0:5000 ✅");
 });
