@@ -551,20 +551,107 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
         {/* Dashboard */}
         {activePage.page === "dashboard" && (
           <div style={fadeAnimation}>
-            <div style={welcomeBanner}>
-              <div>
-                <h1 style={welcomeHeading}>Welcome, {user.name}! 👋</h1>
-                <p style={welcomeSub}>Manage your rentals, review invoices, pay for bookings, and rate your rides.</p>
-              </div>
-              <div style={bannerGraphic}>🚘</div>
-            </div>
+            {/* Updated Welcome Banner - Matching the Design */}
+<div style={welcomeBanner}>
+  <div style={{ flex: 1, zIndex: 2 }}>
+    <h1 style={{
+      ...welcomeHeading,
+      fontSize: "32px",
+      margin: "0 0 8px 0",
+      display: "flex",
+      alignItems: "center",
+      gap: "12px"
+    }}>
+      Welcome back, {user.name || "Dilka"}! 
+      <span style={{ fontSize: "36px" }}>👋</span>
+    </h1>
+    <p style={{
+      ...welcomeSub,
+      fontSize: "15.5px",
+      color: "#e0f2fe",
+      margin: 0,
+      maxWidth: "520px"
+    }}>
+      You have one active rental. Let's manage your journey.
+    </p>
+  </div>
 
-            <div style={dashboardGrid}>
-              <DashboardCard icon="📅" title="YOUR BOOKINGS" value={bookedCount} color="linear-gradient(135deg, #6366f1, #4f46e5)" />
-              <DashboardCard icon="💰" title="TOTAL SPENT" value={`$${totalSpent}`} color="linear-gradient(135deg, #10b981, #059669)" />
-              <DashboardCard icon="⭐" title="SUBMITTED REVIEWS" value={feedbacks.filter(f => f.type === "feedback").length} color="linear-gradient(135deg, #f59e0b, #d97706)" />
-            </div>
+  {/* Decorative Right Side - Waves + Car */}
+  <div style={{
+    position: "absolute",
+    right: "40px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    display: "flex",
+    alignItems: "center",
+    gap: "30px",
+    zIndex: 1
+  }}>
+    {/* Light Trail Waves */}
+    <div style={{
+      position: "relative",
+      width: "220px",
+      height: "80px"
+    }}>
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        left: "-20px",
+        width: "260px",
+        height: "4px",
+        background: "linear-gradient(90deg, transparent, rgba(165, 243, 252, 0.9), rgba(103, 232, 249, 0.7), transparent)",
+        borderRadius: "50%",
+        transform: "rotate(-12deg)",
+        boxShadow: "0 0 20px rgba(165, 243, 252, 0.8)"
+      }}></div>
+      <div style={{
+        position: "absolute",
+        top: "38px",
+        left: "-10px",
+        width: "240px",
+        height: "4px",
+        background: "linear-gradient(90deg, transparent, rgba(147, 197, 253, 0.85), rgba(165, 243, 252, 0.6), transparent)",
+        borderRadius: "50%",
+        transform: "rotate(8deg)",
+        boxShadow: "0 0 18px rgba(147, 197, 253, 0.7)"
+      }}></div>
+    </div>
 
+    {/* Car Icon */}
+    <div style={{
+      fontSize: "68px",
+      filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.3))",
+      transform: "scale(1.05)"
+    }}>
+      🚗
+    </div>
+  </div>
+</div>
+
+            {/* Dashboard Stats Cards - Enhanced */}
+<div style={dashboardGrid}>
+  <DashboardCard 
+    icon="📅" 
+    title="YOUR BOOKINGS" 
+    value={bookedCount} 
+    color="linear-gradient(135deg, #6366f1, #4f46e5)" 
+    accent="#818cf8"
+  />
+  <DashboardCard 
+    icon="💰" 
+    title="TOTAL SPENT" 
+    value={`$${totalSpent}`} 
+    color="linear-gradient(135deg, #10b981, #059669)" 
+    accent="#34d399"
+  />
+  <DashboardCard 
+    icon="⭐" 
+    title="SUBMITTED REVIEWS" 
+    value={feedbacks.filter(f => f.type === "feedback").length} 
+    color="linear-gradient(135deg, #f59e0b, #d97706)" 
+    accent="#fbbf24"
+  />
+</div>
             <div style={sectionCard}>
               <h3>Quick Customer Actions</h3>
               <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", marginTop: "15px" }}>
@@ -1404,15 +1491,87 @@ const NavItem = ({ label, active, onClick }) => (
   </div>
 );
 
-const DashboardCard = ({ icon, title, value, color }) => (
-  <div style={dashboardCardStyle}>
-    <div style={{ width: "60px", height: "60px", borderRadius: "12px", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "30px", color: "white" }}>
+const DashboardCard = ({ icon, title, value, color, accent }) => (
+  <div style={{
+    ...dashboardCardStyle,
+    background: "white",
+    border: "1px solid rgba(99, 102, 241, 0.1)",
+    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    position: "relative",
+    overflow: "hidden"
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-8px)";
+    e.currentTarget.style.boxShadow = "0 20px 40px rgba(99, 102, 241, 0.15)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0)";
+    e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
+  }}
+  >
+    {/* Colored Accent Bar */}
+    <div style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: "6px",
+      background: color
+    }} />
+
+    <div style={{
+      width: "68px",
+      height: "68px",
+      borderRadius: "16px",
+      background: color,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "32px",
+      color: "white",
+      boxShadow: `0 8px 20px ${accent}40`,
+      marginBottom: "12px"
+    }}>
       {icon}
     </div>
+
     <div>
-      <p style={{ margin: 0, color: "#6b7280", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>{title}</p>
-      <h2 style={{ margin: "5px 0 0", fontSize: "24px", color: "#1e1b4b", fontWeight: "700" }}>{value}</h2>
+      <p style={{
+        margin: "0 0 6px 0",
+        color: "#64748b",
+        fontSize: "13px",
+        fontWeight: "700",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px"
+      }}>
+        {title}
+      </p>
+      <h2 style={{
+        margin: 0,
+        fontSize: "28px",
+        fontWeight: "800",
+        color: "#1e2937",
+        background: "linear-gradient(90deg, #1e2937, #334155)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent"
+      }}>
+        {value}
+      </h2>
     </div>
+
+    {/* Subtle decorative orb */}
+    <div style={{
+      position: "absolute",
+      bottom: "-30px",
+      right: "-30px",
+      width: "80px",
+      height: "80px",
+      background: `radial-gradient(circle, ${accent}20 0%, transparent 70%)`,
+      borderRadius: "50%",
+      zIndex: 0,
+      pointerEvents: "none"
+    }} />
   </div>
 );
 
@@ -1430,13 +1589,28 @@ const profileSection = { display: "flex", alignItems: "center", padding: "6px 14
 const userNameStyle = { fontWeight: "600", fontSize: "14px" };
 
 const mainContent = { maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", position: "relative", zIndex: 1 };
-const welcomeBanner = { background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", borderRadius: "20px", padding: "30px 40px", color: "white", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "35px" };
-const welcomeHeading = { margin: 0, fontSize: "28px", fontWeight: "800" };
+const welcomeBanner = {
+  background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
+  borderRadius: "20px",
+  padding: "28px 40px",
+  color: "white",
+  display: "flex",
+  alignItems: "center",
+  position: "relative",
+  overflow: "hidden",
+  marginBottom: "35px",
+  minHeight: "160px",
+  boxShadow: "0 10px 30px rgba(30, 58, 138, 0.25)"
+};const welcomeHeading = { margin: 0, fontSize: "28px", fontWeight: "800" };
 const welcomeSub = { margin: "8px 0 0", color: "#c7d2fe", fontSize: "15px" };
 const bannerGraphic = { fontSize: "70px", opacity: 0.8 };
 
-const dashboardGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginBottom: "35px" };
-const dashboardCardStyle = { background: "white", borderRadius: "16px", padding: "20px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 20px rgba(0,0,0,0.02)", border: "1px solid #f1f5f9" };
+const dashboardGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: "24px",
+  marginBottom: "40px"
+};const dashboardCardStyle = { background: "white", borderRadius: "16px", padding: "20px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 20px rgba(0,0,0,0.02)", border: "1px solid #f1f5f9" };
 
 const sectionCard = { background: "white", borderRadius: "16px", padding: "25px", boxShadow: "0 10px 20px rgba(0,0,0,0.01)", border: "1px solid #f1f5f9" };
 const searchBar = { background: "white", borderRadius: "16px", padding: "20px", display: "flex", gap: "15px", marginBottom: "30px", border: "1px solid #e2e8f0", flexWrap: "wrap" };

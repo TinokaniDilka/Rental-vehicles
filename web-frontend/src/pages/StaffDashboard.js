@@ -484,58 +484,84 @@ const handleLogout = () => {
 
       {/* Main Content */}
       <main style={mainContent}>
-        
-        {/* DASHBOARD PAGE */}
-        {activePage === "dashboard" && (
-          <div style={fadeAnimation}>
-            <div style={welcomeBanner}>
-              <div>
-                <h1 style={welcomeHeading}>Welcome Back, {user.name}! 👨‍💻</h1>
-                <p style={welcomeSub}>Approve rental orders, register vehicle inventory, inspect returns, and answer complaints.</p>
-              </div>
-              <div style={bannerGraphic}>📋</div>
-            </div>
+  
+  {/* DASHBOARD PAGE */}
+ {/* DASHBOARD PAGE */}
+{activePage === "dashboard" && (
+  <div style={fadeAnimation}>
+    {/* === UPDATED WELCOME BANNER === */}
+    <div style={welcomeBanner}>
+      <div style={{ flex: 1 }}>
+        <h1 style={{
+          ...welcomeHeading,
+          fontSize: "32px",
+          marginBottom: "8px",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px"
+        }}>
+          Welcome Back, {user.name || "vasantha"}! 
+          <span style={{ fontSize: "36px" }}>👨‍💻</span>
+        </h1>
+        <p style={{
+          ...welcomeSub,
+          fontSize: "15.5px",
+          color: "#cbd5e1",
+          margin: 0
+        }}>
+          Approve rental orders, register vehicle inventory, inspect returns, and answer complaints.
+        </p>
+      </div>
 
-            <div style={dashboardGrid}>
+      {/* Clipboard Icon */}
+      <div style={{
+        fontSize: "78px",
+        filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.3))",
+      }}>
+        📋
+      </div>
+    </div>
+
+      <div style={dashboardGrid}>
   <DashboardCard 
     icon="⏳" 
     title="PENDING APPROVALS" 
     value={stats.pending} 
-    color="linear-gradient(135deg, #f59e0b, #d97706)" 
+    color="#f59e0b"
+    bg="#fefce8"
   />
-
   <DashboardCard 
     icon="🚗" 
     title="ACTIVE RENTALS" 
     value={stats.active} 
-    color="linear-gradient(135deg, #6366f1, #4f46e5)" 
+    color="#6366f1"
+    bg="#f0f9ff"
   />
-
   <DashboardCard 
     icon="📂" 
     title="TOTAL VEHICLES LISTED" 
     value={vehicles.length} 
-    color="linear-gradient(135deg, #10b981, #059669)" 
+    color="#10b981"
+    bg="#f0fdf4"
   />
-
-  {/* ✅ NEW CARD */}
   <DashboardCard 
     icon="💰" 
     title="TOTAL EARNINGS" 
     value={`$${earnings}`} 
-    color="linear-gradient(135deg, #22c55e, #16a34a)" 
+    color="#22c55e"
+    bg="#f0fdf4"
   />
 </div>
 
-            <div style={sectionCard}>
-              <h3>Quick Operations Shortcuts</h3>
-              <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", marginTop: "15px" }}>
-                <button style={primaryBtn} onClick={() => handleOpenVehicleModal(null)}>➕ Add New Vehicle</button>
-                <button style={secondaryBtn} onClick={() => setActivePage("bookings")}>📋 Check Pending Orders</button>
-              </div>
-            </div>
-          </div>
-        )}
+      <div style={sectionCard}>
+        <h3>Quick Operations Shortcuts</h3>
+        <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", marginTop: "15px" }}>
+          <button style={primaryBtn} onClick={() => handleOpenVehicleModal(null)}>➕ Add New Vehicle</button>
+          <button style={secondaryBtn} onClick={() => setActivePage("bookings")}>📋 Check Pending Orders</button>
+        </div>
+      </div>
+    </div>
+  )}
 
         {/* MANAGE VEHICLES */}
         {activePage === "vehicles" && (
@@ -1109,14 +1135,56 @@ const NavItem = ({ label, active, onClick }) => (
   </div>
 );
 
-const DashboardCard = ({ icon, title, value, color }) => (
-  <div style={dashboardCardStyle}>
-    <div style={{ width: "60px", height: "60px", borderRadius: "12px", background: color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "30px", color: "white" }}>
+const DashboardCard = ({ icon, title, value, color, bg }) => (
+  <div style={{
+    background: "white",
+    borderRadius: "16px",
+    padding: "24px 20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "20px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+    border: "1px solid #f1f5f9",
+    transition: "all 0.3s ease",
+    minHeight: "118px"
+  }}
+  onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-6px)"}
+  onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+  >
+    <div style={{
+      width: "68px",
+      height: "68px",
+      borderRadius: "14px",
+      background: bg || "#f8fafc",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "32px",
+      boxShadow: `0 6px 16px ${color}30`,
+      color: color
+    }}>
       {icon}
     </div>
+
     <div>
-      <p style={{ margin: 0, color: "#6b7280", fontSize: "13px", fontWeight: "600", textTransform: "uppercase" }}>{title}</p>
-      <h2 style={{ margin: "5px 0 0", fontSize: "24px", color: "#1e1b4b", fontWeight: "700" }}>{value}</h2>
+      <p style={{
+        margin: "0 0 6px 0",
+        color: "#64748b",
+        fontSize: "13px",
+        fontWeight: "700",
+        textTransform: "uppercase",
+        letterSpacing: "0.6px"
+      }}>
+        {title}
+      </p>
+      <h2 style={{
+        margin: 0,
+        fontSize: "28px",
+        fontWeight: "800",
+        color: "#1e2937"
+      }}>
+        {value}
+      </h2>
     </div>
   </div>
 );
@@ -1135,12 +1203,31 @@ const profileSection = { display: "flex", alignItems: "center", padding: "6px 14
 const userNameStyle = { fontWeight: "600", fontSize: "14px" };
 
 const mainContent = { maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", position: "relative", zIndex: 1 };
-const welcomeBanner = { background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", borderRadius: "20px", padding: "30px 40px", color: "white", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "35px" };
+const welcomeBanner = {
+  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+  borderRadius: "20px",
+  padding: "32px 40px",
+  color: "white",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: "40px",
+  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.35)",
+  minHeight: "168px",
+  position: "relative",
+  overflow: "hidden"
+};
+
+const dashboardGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: "24px",
+  marginBottom: "40px"
+};
 const welcomeHeading = { margin: 0, fontSize: "28px", fontWeight: "800" };
 const welcomeSub = { margin: "8px 0 0", color: "#cbd5e1", fontSize: "15px" };
 const bannerGraphic = { fontSize: "70px", opacity: 0.8 };
 
-const dashboardGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginBottom: "35px" };
 const dashboardCardStyle = { background: "white", borderRadius: "16px", padding: "20px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 20px rgba(0,0,0,0.02)", border: "1px solid #f1f5f9" };
 
 const sectionCard = { background: "white", borderRadius: "16px", padding: "25px", boxShadow: "0 10px 20px rgba(0,0,0,0.01)", border: "1px solid #f1f5f9" };
