@@ -1,22 +1,27 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { COLORS, SIZES, SHADOWS } from '../utils/theme';
 
 export default function CustomButton({ title, onPress, loading = false, variant = 'primary' }) {
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        variant === 'outline' && styles.outlineButton
+        variant === 'outline' && styles.outlineButton,
+        variant === 'danger' && styles.dangerButton,
+        loading && styles.disabledButton
       ]}
       onPress={onPress}
       disabled={loading}
+      activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#4f46e5' : 'white'} />
+        <ActivityIndicator color={variant === 'outline' ? COLORS.primary : 'white'} />
       ) : (
         <Text style={[
           styles.buttonText,
-          variant === 'outline' && styles.outlineText
+          variant === 'outline' && styles.outlineText,
+          variant === 'danger' && styles.dangerText
         ]}>
           {title}
         </Text>
@@ -27,23 +32,39 @@ export default function CustomButton({ title, onPress, loading = false, variant 
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#4f46e5',
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: SIZES.radiusMd,
     alignItems: 'center',
+    justifyContent: 'center',
     marginVertical: 8,
+    ...SHADOWS.light,
   },
   outlineButton: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#4f46e5',
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  dangerButton: {
+    backgroundColor: COLORS.danger,
+    shadowColor: COLORS.danger,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   outlineText: {
-    color: '#4f46e5',
+    color: COLORS.primary,
+  },
+  dangerText: {
+    color: 'white',
   },
 });

@@ -1,16 +1,52 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useContext, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  Animated,
+  Dimensions,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import InputField from '../../components/InputField';
 import CustomButton from '../../components/CustomButton';
-import Loader from '../../components/Loader';
+import { COLORS, SHADOWS, SIZES } from '../../utils/theme';
+
+const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useContext(AuthContext);
+
+  // Subtle scale animation for the card on mount
+  const cardScale = useRef(new Animated.Value(0.96)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.spring(cardScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 60,
+        friction: 8,
+      }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -34,53 +70,386 @@ export default function LoginScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Text style={styles.title}>QuickRide</Text>
-          <Text style={styles.subtitle}>Rent Smarter</Text>
+      {/* Dark gradient background */}
+      <LinearGradient
+        colors={['#1e1b4b', '#0f172a', '#0c1a35']}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+      />
+
+      {/* Glowing orb — top left */}
+      <View style={styles.orbTopLeft} />
+
+      {/* Glowing orb — bottom right */}
+      <View style={styles.orbBottomRight} />
+
+      {/* Subtle grid / noise overlay via thin lines */}
+      <View style={styles.gridOverlay} pointerEvents="none" />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Hero Section ── */}
+        <View style={styles.heroSection}>
+          <View style={styles.logoWrapper}>
+            <LinearGradient
+              colors={['rgba(99,102,241,0.3)', 'rgba(14,165,233,0.15)']}
+              style={styles.logoBadge}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Text style={styles.logoEmoji}>🚗</Text>
+            </LinearGradient>
+          </View>
+          <Text style={styles.brandName}>QuickRide</Text>
+          <Text style={styles.brandTagline}>Staff & Customer Portal</Text>
         </View>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.welcomeText}>Welcome Back 👋</Text>
-
-          <InputField
-            placeholder="Email Address"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
+        {/* ── Glass Card Form ── */}
+        <Animated.View
+          style={[
+            styles.glassCard,
+            { transform: [{ scale: cardScale }], opacity: cardOpacity },
+          ]}
+        >
+          {/* Card top accent line */}
+          <LinearGradient
+            colors={['#6366f1', '#0ea5e9']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.cardAccentLine}
           />
 
-          <InputField
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <Text style={styles.cardTitle}>Welcome Back 👋</Text>
+          <Text style={styles.cardSubtitle}>
+            Sign in to manage bookings and rentals.
+          </Text>
 
-          <CustomButton
-            title="Login"
+          {/* Email field */}
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
+            <View style={styles.inputRow}>
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color={COLORS.primary}
+                style={styles.inputIcon}
+              />
+              <InputField
+                placeholder="you@example.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          {/* Password field */}
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.fieldLabel}>PASSWORD</Text>
+            <View style={styles.inputRow}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={18}
+                color={COLORS.primary}
+                style={styles.inputIcon}
+              />
+              <InputField
+                placeholder="••••••••"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeBtn}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  size={18}
+                  color="#475569"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Sign In button */}
+          <TouchableOpacity
             onPress={handleLogin}
-            loading={loading}
-          />
+            disabled={loading}
+            activeOpacity={0.85}
+            style={styles.signInBtnWrapper}
+          >
+            <LinearGradient
+              colors={loading ? ['#334155', '#334155'] : ['#6366f1', '#4f46e5']}
+              style={styles.signInBtn}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              {loading ? (
+                <Text style={styles.signInBtnText}>Signing In…</Text>
+              ) : (
+                <>
+                  <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={styles.signInBtnText}>Sign In</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
 
-          <CustomButton
-            title="Create New Account"
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Create Account */}
+          <TouchableOpacity
             onPress={() => navigation.navigate('Register')}
-            variant="outline"
-          />
-        </View>
+            style={styles.createAccountBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="person-add-outline" size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.createAccountText}>Create New Account</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Footer */}
+        <Text style={styles.footerText}>
+          By signing in, you agree to our{' '}
+          <Text style={styles.footerLink}>Terms of Service</Text>
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  scrollContainer: { flexGrow: 1, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 40 },
-  title: { fontSize: 42, fontWeight: 'bold', color: '#4f46e5' },
-  subtitle: { fontSize: 18, color: '#64748b', marginTop: 4 },
-  welcomeText: { fontSize: 24, fontWeight: '600', color: '#1e2937', marginBottom: 30, textAlign: 'center' },
-  formContainer: { paddingHorizontal: 24 },
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+
+  /* ── Orbs ── */
+  orbTopLeft: {
+    position: 'absolute',
+    top: -80,
+    left: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(99,102,241,0.15)',
+  },
+  orbBottomRight: {
+    position: 'absolute',
+    bottom: -60,
+    right: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(14,165,233,0.12)',
+  },
+
+  /* ── Grid overlay (decorative) ── */
+  gridOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.03,
+    backgroundColor: 'transparent',
+  },
+
+  /* ── Scroll ── */
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 48,
+  },
+
+  /* ── Hero ── */
+  heroSection: {
+    alignItems: 'center',
+    marginBottom: 36,
+  },
+  logoWrapper: {
+    marginBottom: 16,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  logoBadge: {
+    width: 88,
+    height: 88,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.4)',
+  },
+  logoEmoji: {
+    fontSize: 46,
+  },
+  brandName: {
+    fontSize: 40,
+    fontWeight: '800',
+    color: '#f8fafc',
+    letterSpacing: -1,
+    marginBottom: 4,
+  },
+  brandTagline: {
+    fontSize: 15,
+    color: '#94a3b8',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+
+  /* ── Glass Card ── */
+  glassCard: {
+    backgroundColor: 'rgba(30,41,59,0.85)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.25)',
+    padding: 28,
+    overflow: 'hidden',
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  cardAccentLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#f8fafc',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+
+  /* ── Fields ── */
+  fieldWrapper: {
+    marginBottom: 4,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6366f1',
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
+  inputRow: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 14,
+    zIndex: 10,
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: 14,
+    zIndex: 10,
+    padding: 4,
+  },
+
+  /* ── Sign In button ── */
+  signInBtnWrapper: {
+    marginTop: 8,
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  signInBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
+  signInBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+
+  /* ── Divider ── */
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(99,102,241,0.2)',
+  },
+  dividerText: {
+    color: '#475569',
+    fontSize: 13,
+    marginHorizontal: 12,
+    fontWeight: '500',
+  },
+
+  /* ── Create Account ── */
+  createAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(99,102,241,0.35)',
+    backgroundColor: 'rgba(99,102,241,0.07)',
+  },
+  createAccountText: {
+    color: '#6366f1',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  /* ── Footer ── */
+  footerText: {
+    textAlign: 'center',
+    color: '#475569',
+    fontSize: 12,
+    marginTop: 28,
+    lineHeight: 18,
+  },
+  footerLink: {
+    color: '#6366f1',
+    fontWeight: '600',
+  },
 });

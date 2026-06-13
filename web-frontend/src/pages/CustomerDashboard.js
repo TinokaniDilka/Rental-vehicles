@@ -5,14 +5,14 @@ export default function CustomerDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
-const [toast, setToast] = useState({ show: false, message: "", type: "success" });
-const showToast = (message, type = "success") => {
-  setToast({ show: true, message, type });
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  setTimeout(() => {
-    setToast({ show: false, message: "", type: "success" });
-  }, 3000); // disappears after 3 sec
-};
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 3000);
+  };
 
   // Navigation
   const [activePage, setActivePage] = useState({ page: "dashboard" });
@@ -63,11 +63,11 @@ const showToast = (message, type = "success") => {
   const [feedbackType, setFeedbackType] = useState("feedback");
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState("");
-  const [allFeedbacks, setAllFeedbacks] = useState([]);   // ← NEW: For public reviews
+  const [allFeedbacks, setAllFeedbacks] = useState([]);
   const [vehicleReviews, setVehicleReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
-    // NEW: Feedback Edit Modal States
+  // Feedback Edit Modal States
   const [showEditFeedbackModal, setShowEditFeedbackModal] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState(null);
   const [editFeedbackType, setEditFeedbackType] = useState("feedback");
@@ -80,6 +80,9 @@ const showToast = (message, type = "success") => {
   const [cancelReason, setCancelReason] = useState("");
   const [cancellationInfo, setCancellationInfo] = useState(null);
 
+  const [pickupTime, setPickupTime] = useState("09:00");
+  const [dropoffTime, setDropoffTime] = useState("09:00");
+
   // Fetch Data
   useEffect(() => {
     fetchVehicles();
@@ -87,6 +90,7 @@ const showToast = (message, type = "success") => {
     fetchFeedbacks();
     fetchAllFeedbacks();
   }, []);
+
   // Refresh all feedbacks when feedbacks change (after submit/edit)
   useEffect(() => {
     fetchAllFeedbacks();
@@ -114,38 +118,38 @@ const showToast = (message, type = "success") => {
   };
 
   const fetchVehicles = async () => {
-  try {
-    const res = await axios.get("http://localhost:5000/api/vehicles");
+    try {
+      const res = await axios.get("http://localhost:5000/api/vehicles");
+      let data = Array.isArray(res.data) ? res.data : [];
 
-    let data = Array.isArray(res.data) ? res.data : [];
+      // Calculate average rating from ALL feedbacks
+      data = data.map(vehicle => {
+        const vehicleFeedbacks = allFeedbacks.filter(f => 
+          f.bookingId?.vehicleId?._id === vehicle._id || 
+          f.vehicle?._id === vehicle._id
+        );
 
-    // Calculate average rating from ALL feedbacks
-    data = data.map(vehicle => {
-      const vehicleFeedbacks = allFeedbacks.filter(f => 
-        f.bookingId?.vehicleId?._id === vehicle._id || 
-        f.vehicle?._id === vehicle._id
-      );
+        if (vehicleFeedbacks.length > 0) {
+          const total = vehicleFeedbacks.reduce((sum, f) => sum + (f.rating || 0), 0);
+          const avgRating = total / vehicleFeedbacks.length;
+          return {
+            ...vehicle,
+            averageRating: parseFloat(avgRating.toFixed(1)),
+            totalReviews: vehicleFeedbacks.length
+          };
+        }
+        return { ...vehicle, averageRating: 0, totalReviews: 0 };
+      });
 
-      if (vehicleFeedbacks.length > 0) {
-        const total = vehicleFeedbacks.reduce((sum, f) => sum + (f.rating || 0), 0);
-        const avgRating = total / vehicleFeedbacks.length;
-        return {
-          ...vehicle,
-          averageRating: parseFloat(avgRating.toFixed(1)),
-          totalReviews: vehicleFeedbacks.length
-        };
-      }
-      return { ...vehicle, averageRating: 0, totalReviews: 0 };
-    });
+      setVehicles(data);
+    } catch (err) {
+      console.error("Error fetching vehicles:", err);
+      setVehicles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setVehicles(data);
-  } catch (err) {
-    console.error("Error fetching vehicles:", err);
-    setVehicles([]);
-  } finally {
-    setLoading(false);
-  }
-};
   const fetchBookings = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/bookings/customer", {
@@ -162,9 +166,8 @@ const showToast = (message, type = "success") => {
     }
   };
 
-   const fetchFeedbacks = async () => {
+  const fetchFeedbacks = async () => {
     try {
-      // Current user's feedbacks (for their history & edit/delete)
       const res = await axios.get("http://localhost:5000/api/feedback/customer", {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -174,18 +177,15 @@ const showToast = (message, type = "success") => {
     }
   };
 
-    // NEW: Fetch ALL feedbacks (try public, fallback to customer)
   const fetchAllFeedbacks = async () => {
     try {
-      // Try public endpoint first
       const res = await axios.get("http://localhost:5000/api/feedback/reviews");
       setAllFeedbacks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.log("Public feedback endpoint failed, using customer feedbacks as fallback");
-      setAllFeedbacks(feedbacks); // Fallback to current user's feedbacks for now
+      setAllFeedbacks(feedbacks);
     }
   };
-  // ==================== NEW CRUD FUNCTIONS FOR FEEDBACK ====================
 
   const handleEditFeedback = (feedback) => {
     setEditingFeedback(feedback);
@@ -213,7 +213,7 @@ const showToast = (message, type = "success") => {
       showToast("✅ Feedback updated successfully!", "success");
       setShowEditFeedbackModal(false);
       fetchAllFeedbacks();
-      fetchFeedbacks(); // Refresh the list
+      fetchFeedbacks();
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to update feedback", "error");
     }
@@ -232,15 +232,13 @@ const showToast = (message, type = "success") => {
       showToast(err.response?.data?.message || "Failed to delete feedback", "error");
     }
   };
-  const [pickupTime, setPickupTime] = useState("09:00");
-const [dropoffTime, setDropoffTime] = useState("09:00");
-  // Booking Modal
+
   const handleOpenBookingModal = async (vehicle) => {
     setSelectedVehicle(vehicle);
     setBookingStartDate("");
     setBookingEndDate("");
-    setPickupTime("09:00");      // ← add this
-    setDropoffTime("09:00");  
+    setPickupTime("09:00");
+    setDropoffTime("09:00");
     setBookingHasDriver(false);
     setBookingError("");
     setVehicleBookedDates([]);
@@ -263,7 +261,7 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
     const start = new Date(bookingStartDate);
     const end = new Date(bookingEndDate);
     const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-  if (days > 7) {
+    if (days > 7) {
       setBookingError("Maximum booking period is 7 days");
       return;
     }
@@ -290,8 +288,8 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
       vehicleId: selectedVehicle._id,
       startDate: bookingStartDate,
       endDate: bookingEndDate,
-      pickupTime,           // ← add
-      dropoffTime,  
+      pickupTime,
+      dropoffTime,
       hasDriver: bookingHasDriver,
       baseAmount,
       driverCharge,
@@ -300,18 +298,15 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
 
     setShowBookingModal(false);
     setShowPaymentModal(true);
-    showToast(`✅ Booking submitted! Vehicle: ${selectedVehicle.name} for ${days} days`, "success");
+    showToast(`✅ Booking details saved! Proceeding to invoice...`, "success");
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    localStorage.clear();
     window.location.href = "/login";
   };
 
-  // Cancel Booking
   const handleOpenCancelModal = (booking) => {
-    // Calculate refund info
     let refundPercentage = 0;
     if (["pending", "approved"].includes(booking.status)) {
       refundPercentage = 100;
@@ -364,6 +359,7 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
       localStorage.setItem("user", JSON.stringify(res.data.user));
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
+      setShowProfileModal(false);
     } catch (err) {
       showToast(err.response?.data?.message || "Profile update failed", "error");
     }
@@ -425,14 +421,6 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
     }
   };
 
-  const handleOpenFeedbackModal = (booking) => {
-    setSelectedBookingForFeedback(booking);
-    setFeedbackType("feedback");
-    setFeedbackRating(5);
-    setFeedbackComment("");
-    setShowFeedbackModal(true);
-  };
-
   const handleSubmittingFeedback = async (e) => {
     e.preventDefault();
     if (!feedbackComment.trim()) return alert("Please fill the comment box");
@@ -448,11 +436,11 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-            showToast(`✅ ${feedbackType === "feedback" ? "Feedback" : "Complaint"} submitted successfully!`, "success");
+      showToast(`✅ ${feedbackType === "feedback" ? "Feedback" : "Complaint"} submitted successfully!`, "success");
       setShowFeedbackModal(false);
       await fetchFeedbacks();
       await fetchAllFeedbacks();
-      await fetchVehicles();   // Refresh ratings too
+      await fetchVehicles();
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to submit feedback", "error");
     }
@@ -465,217 +453,97 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // Filtered Vehicles
   const filteredVehicles = Array.isArray(vehicles)
-  ? vehicles.filter(v => {
-      const matchesCategory =
-        searchCategory === "all" || v.type === searchCategory;
+    ? vehicles.filter(v => {
+        const matchesCategory = searchCategory === "all" || v.type === searchCategory;
+        const matchesLocation = !searchLocation.trim() || v.location.toLowerCase().includes(searchLocation.toLowerCase());
+        return matchesCategory && matchesLocation;
+      })
+    : [];
 
-      const matchesLocation =
-        !searchLocation.trim() ||
-        v.location.toLowerCase().includes(searchLocation.toLowerCase());
-
-      return matchesCategory && matchesLocation;
-    })
-  : [];
   return (
-    <div style={dashboardWrapper}>
-      <div style={glowOrb1}></div>
-      <div style={glowOrb2}></div>
+    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }} className="fade-in">
+      {/* Background glow orbs */}
+      <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
+      <div className="glow-orb glow-orb-accent" style={{ bottom: "-100px", right: "-100px" }}></div>
 
       {/* Navbar */}
-      <nav style={navBar}>
-        <div style={navContainer}>
-          <div style={logo}>
+      <nav className="navbar-custom">
+        <div className="navbar-container">
+          <div className="nav-logo">
             <span style={{ fontSize: "28px", marginRight: "10px" }}>🚗</span>
-            <span style={logoText}>QuickRide <span style={{ color: "#6366f1" }}>Rentals</span></span>
+            <span>QuickRide <span style={{ color: "var(--primary)" }}>Rentals</span></span>
           </div>
 
-          <div style={navLinks}>
-  <NavItem
-    label="Dashboard"
-    active={activePage.page === "dashboard"}
-    onClick={() => setActivePage({ page: "dashboard" })}
-  />
-  <NavItem
-    label="Search Vehicles"
-    active={activePage.page === "search"}
-    onClick={() => setActivePage({ page: "search" })}
-  />
-  <NavItem
-    label="My Bookings"
-    active={activePage.page === "bookings"}
-    onClick={() => setActivePage({ page: "bookings" })}
-  />
-  <NavItem
-    label="Feedback History"
-    active={activePage.page === "feedback"}
-    onClick={() => setActivePage({ page: "feedback" })}
-  />
-  
-</div>
+          <div className="nav-links-wrap">
+            <NavItem label="Dashboard" active={activePage.page === "dashboard"} onClick={() => setActivePage({ page: "dashboard" })} />
+            <NavItem label="Search Vehicles" active={activePage.page === "search" || activePage.page === "vehicleDetails"} onClick={() => setActivePage({ page: "search" })} />
+            <NavItem label="My Bookings" active={activePage.page === "bookings"} onClick={() => setActivePage({ page: "bookings" })} />
+            <NavItem label="Feedback History" active={activePage.page === "feedback"} onClick={() => setActivePage({ page: "feedback" })} />
+          </div>
 
           <div style={{ position: "relative" }}>
-            <div style={profileSection} onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
-              <span style={{ fontSize: "18px", marginRight: "6px" }}>👤</span>
-              <span style={userNameStyle}>{user.name || "Customer"}</span>
-              <span style={{ marginLeft: "6px" }}>▼</span>
+            <div className="profile-pill" onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
+              <span style={{ fontSize: "18px" }}>👤</span>
+              <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Customer"}</span>
+              <span style={{ fontSize: "10px", marginLeft: "4px" }}>▼</span>
             </div>
 
             {showProfileMenu && (
-              <div style={profileDropdown} onClick={(e) => e.stopPropagation()}>
-                <div style={profileHeader}>
-                  <div style={profileAvatar}>👤</div>
-                  <h3 style={{ margin: "10px 0 0" }}>{user.name}</h3>
-                  <p style={{ color: "#64748b", fontSize: "14px" }}>{user.email}</p>
+              <div className="profile-dropdown-menu glass-card scale-in" onClick={(e) => e.stopPropagation()}>
+                <div style={{ textAlign: "center", padding: "15px", borderBottom: "1px solid var(--border-color)" }}>
+                  <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "var(--primary-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", color: "white", margin: "0 auto 10px" }}>👤</div>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{user.name}</h3>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "12px", margin: "4px 0 0" }}>{user.email}</p>
                 </div>
-                <div style={profileMenuItem}>📷 Change Profile Picture</div>
-                <div
-  style={profileMenuItem}
-  onClick={() => {
-    setShowProfileModal(true);   // ← open modal
-    setShowProfileMenu(false);   // ← close dropdown
-  }}
->
-  👤 Edit Profile
-</div>
-                <div style={profileMenuItem}>🔑 Change Password</div>
-                <div style={profileLogout} onClick={handleLogout}>Logout</div>
+                <div style={{ padding: "12px 16px", cursor: "pointer", fontSize: "14px", borderBottom: "1px solid var(--border-color)" }} onClick={() => { setShowProfileModal(true); setShowProfileMenu(false); }}>👤 Edit Profile</div>
+                <div style={{ padding: "14px 16px", cursor: "pointer", color: "var(--danger)", fontWeight: "600", fontSize: "14px" }} onClick={handleLogout}>Logout</div>
               </div>
             )}
           </div>
         </div>
       </nav>
 
-      <main style={mainContent}>
-        {/* Dashboard */}
+      {/* Main Content */}
+      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", position: "relative", zIndex: 1 }}>
+        
+        {/* Dashboard Overview */}
         {activePage.page === "dashboard" && (
-          <div style={fadeAnimation}>
-            {/* Updated Welcome Banner - Matching the Design */}
-<div style={welcomeBanner}>
-  <div style={{ flex: 1, zIndex: 2 }}>
-    <h1 style={{
-      ...welcomeHeading,
-      fontSize: "32px",
-      margin: "0 0 8px 0",
-      display: "flex",
-      alignItems: "center",
-      gap: "12px"
-    }}>
-      Welcome back, {user.name || "Dilka"}! 
-      <span style={{ fontSize: "36px" }}>👋</span>
-    </h1>
-    <p style={{
-      ...welcomeSub,
-      fontSize: "15.5px",
-      color: "#e0f2fe",
-      margin: 0,
-      maxWidth: "520px"
-    }}>
-      You have one active rental. Let's manage your journey.
-    </p>
-  </div>
+          <div className="slide-up">
+            <div className="welcome-banner-wrap">
+              <div style={{ zIndex: 2 }}>
+                <h1 style={{ fontSize: "32px", margin: "0 0 8px 0", color: "white", fontWeight: "800" }}>Welcome back, {user.name}! 👋</h1>
+                <p style={{ fontSize: "15.5px", color: "#e2e8f0", margin: 0, maxWidth: "520px" }}>Find, reserve, and manage premium vehicle rentals with absolute ease.</p>
+              </div>
+              <div style={{ fontSize: "78px", opacity: 0.9, filter: "drop-shadow(0 8px 16px rgba(99,102,241,0.4))", zIndex: 1 }}>🚗</div>
+            </div>
 
-  {/* Decorative Right Side - Waves + Car */}
-  <div style={{
-    position: "absolute",
-    right: "40px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    display: "flex",
-    alignItems: "center",
-    gap: "30px",
-    zIndex: 1
-  }}>
-    {/* Light Trail Waves */}
-    <div style={{
-      position: "relative",
-      width: "220px",
-      height: "80px"
-    }}>
-      <div style={{
-        position: "absolute",
-        top: "20px",
-        left: "-20px",
-        width: "260px",
-        height: "4px",
-        background: "linear-gradient(90deg, transparent, rgba(165, 243, 252, 0.9), rgba(103, 232, 249, 0.7), transparent)",
-        borderRadius: "50%",
-        transform: "rotate(-12deg)",
-        boxShadow: "0 0 20px rgba(165, 243, 252, 0.8)"
-      }}></div>
-      <div style={{
-        position: "absolute",
-        top: "38px",
-        left: "-10px",
-        width: "240px",
-        height: "4px",
-        background: "linear-gradient(90deg, transparent, rgba(147, 197, 253, 0.85), rgba(165, 243, 252, 0.6), transparent)",
-        borderRadius: "50%",
-        transform: "rotate(8deg)",
-        boxShadow: "0 0 18px rgba(147, 197, 253, 0.7)"
-      }}></div>
-    </div>
+            <div className="dashboard-grid">
+              <DashboardCard icon="📅" title="YOUR BOOKINGS" value={bookedCount} color="var(--primary)" />
+              <DashboardCard icon="💰" title="TOTAL SPENT" value={`$${totalSpent}`} color="var(--success)" />
+              <DashboardCard icon="⭐" title="SUBMITTED REVIEWS" value={feedbacks.filter(f => f.type === "feedback").length} color="var(--warning)" />
+            </div>
 
-    {/* Car Icon */}
-    <div style={{
-      fontSize: "68px",
-      filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.3))",
-      transform: "scale(1.05)"
-    }}>
-      🚗
-    </div>
-  </div>
-</div>
-
-            {/* Dashboard Stats Cards - Enhanced */}
-<div style={dashboardGrid}>
-  <DashboardCard 
-    icon="📅" 
-    title="YOUR BOOKINGS" 
-    value={bookedCount} 
-    color="linear-gradient(135deg, #6366f1, #4f46e5)" 
-    accent="#818cf8"
-  />
-  <DashboardCard 
-    icon="💰" 
-    title="TOTAL SPENT" 
-    value={`$${totalSpent}`} 
-    color="linear-gradient(135deg, #10b981, #059669)" 
-    accent="#34d399"
-  />
-  <DashboardCard 
-    icon="⭐" 
-    title="SUBMITTED REVIEWS" 
-    value={feedbacks.filter(f => f.type === "feedback").length} 
-    color="linear-gradient(135deg, #f59e0b, #d97706)" 
-    accent="#fbbf24"
-  />
-</div>
-            <div style={sectionCard}>
-              <h3>Quick Customer Actions</h3>
-              <div style={{ display: "flex", gap: "15px", flexWrap: "wrap", marginTop: "15px" }}>
-                <button style={primaryBtn} onClick={() => setActivePage({ page: "search" })}>
-  🔍 Search Available Vehicles
-</button>
-<button style={secondaryBtn} onClick={() => setActivePage({ page: "bookings" })}>
-  📋 Check Booking Invoices
-</button>
+            <div className="glass-card" style={{ padding: "25px", marginTop: "35px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px" }}>Quick Customer Actions</h3>
+              <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+                <button className="btn-base btn-primary" onClick={() => setActivePage({ page: "search" })}>🔍 Search Available Vehicles</button>
+                <button className="btn-base btn-secondary" onClick={() => setActivePage({ page: "bookings" })}>📋 Check Booking Invoices</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Search Vehicles */}
+        {/* Search Vehicles Catalog */}
         {activePage.page === "search" && (
-          <div style={fadeAnimation}>
+          <div className="slide-up">
             <h2>Search and Book Vehicles 🔍</h2>
-            <p style={{ color: "#6b7280", marginBottom: "25px" }}>Find vehicles by category, location, and dates.</p>
+            <p style={{ color: "var(--text-secondary)", marginBottom: "25px" }}>Find vehicles by category, location, and dates.</p>
 
-            <div style={searchBar}>
-              <div style={searchField}>
-                <label style={fieldLabel}>VEHICLE TYPE</label>
-                <select value={searchCategory} onChange={(e) => setSearchCategory(e.target.value)} style={selectStyle}>
+            <div className="glass-card" style={{ padding: "20px", display: "flex", gap: "15px", marginBottom: "30px", flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ flex: 1, minWidth: "200px" }}>
+                <label className="form-label">Vehicle Type</label>
+                <select value={searchCategory} onChange={(e) => setSearchCategory(e.target.value)} className="custom-select">
                   <option value="all">All Vehicles</option>
                   <option value="car">Car</option>
                   <option value="bike">Three wheel</option>
@@ -683,185 +551,188 @@ const [dropoffTime, setDropoffTime] = useState("09:00");
                   <option value="scooter">Scooter</option>
                 </select>
               </div>
-              <div style={searchField}>
-                <label style={fieldLabel}>LOCATION</label>
-                <input type="text" placeholder="e.g. Colombo" value={searchLocation} onChange={(e) => setSearchLocation(e.target.value)} style={inputStyle} />
+              <div style={{ flex: 1, minWidth: "200px" }}>
+                <label className="form-label">Location</label>
+                <input type="text" placeholder="e.g. Colombo" value={searchLocation} onChange={(e) => setSearchLocation(e.target.value)} className="custom-input" />
               </div>
             </div>
 
-            <div style={vehicleGrid}>
+            <div className="dashboard-grid">
               {filteredVehicles.length === 0 ? (
-                <div style={{ ...emptyStateCard, gridColumn: "1/-1" }}>
+                <div className="glass-card" style={{ gridColumn: "1/-1", padding: "50px", textAlign: "center" }}>
                   <span style={{ fontSize: "50px" }}>🚫</span>
-                  <h3>No Vehicles Found</h3>
-                  <p style={{ color: "#6b7280" }}>Try adjusting your filters.</p>
+                  <h3 style={{ marginTop: "10px" }}>No Vehicles Found</h3>
+                  <p style={{ color: "var(--text-secondary)" }}>Try adjusting your filters.</p>
                 </div>
               ) : (
-                Array.isArray(filteredVehicles) &&
-filteredVehicles.map(v => (
+                filteredVehicles.map(v => (
+                  <div key={v._id} className="glass-card glass-card-hover" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    <div style={{ position: "relative", height: "180px", background: "#1e293b", cursor: "pointer" }} onClick={() => setActivePage({ page: "vehicleDetails", data: v })}>
+                      {v.image ? (
+                        <img src={`http://localhost:5000${v.image}`} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px" }}>🚗</div>
+                      )}
+                      <span style={{
+                        position: "absolute", top: "12px", right: "12px", padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", zIndex: 10,
+                        background: v.isAvailable !== false ? "var(--success)" : "var(--danger)", color: "white", boxShadow: "var(--shadow-sm)"
+                      }}>
+                        {v.isAvailable !== false ? "Available" : "Rented"}
+                      </span>
+                    </div>
 
-  <div key={v._id} style={vehicleCard}>
+                    <div style={{ padding: "20px", display: "flex", flexDirection: "column", flex: 1 }}>
+                      <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "white" }}>{v.name}</h4>
+                      <p style={{ margin: "5px 0", color: "var(--text-secondary)", fontSize: "14px" }}>📍 {v.location}</p>
+                      
+                      {v.averageRating > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", margin: "5px 0" }}>
+                          <span style={{ color: "#fbbf24" }}>{"★".repeat(Math.floor(v.averageRating))}</span>
+                          <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{v.averageRating} ({v.totalReviews})</span>
+                        </div>
+                      )}
 
-    {/* CLICKABLE IMAGE */}
-    {/* CLICKABLE IMAGE */}
-<div
-  style={cardImageWrapper}
-  onClick={() => setActivePage({ page: "vehicleDetails", data: v })}
->
-  {v.image ? (
-    <img
-      src={`http://localhost:5000${v.image}`}
-      alt={v.name}
-      style={cardImage}
-    />
-  ) : (
-    <div style={placeholderImage}>🚗</div>
-  )}
+                      <h3 style={{ margin: "10px 0", fontSize: "22px", fontWeight: "800", color: "var(--primary)" }}>
+                        ${v.pricePerDay} <span style={{ fontSize: "14px", color: "var(--text-secondary)", fontWeight: "normal" }}>/day</span>
+                      </h3>
 
-  {/* Availability Badge - Top Right Corner */}
-  <div style={availabilityBadge(v.isAvailable !== false)}>
-    {v.isAvailable !== false ? "✅ Available" : "🚫 Rented"}
-  </div>
-
-    </div>
-
-          {/* NAME + PRICE + AVERAGE RATING */}
-    <div style={cardBody}>
-      <h4 style={cardName}>{v.name}</h4>
-      <p style={cardPrice}>
-        ${v.pricePerDay}
-        <span style={{ fontSize: "13px", color: "#6b7280" }}>/day</span>
-      </p>
-
-      {/* Average Rating Stars - Bottom of Card */}
-      {v.averageRating > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
-          <div style={{ display: "flex" }}>{renderStars(v.averageRating)}</div>
-          <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "500" }}>
-            {v.averageRating} ({v.totalReviews})
-          </span>
-        </div>
-      )}
-    </div>
-
-  </div>
-))
+                      <button className="btn-base btn-primary" style={{ width: "100%", marginTop: "auto" }} onClick={() => setActivePage({ page: "vehicleDetails", data: v })}>
+                        View Details & Book
+                      </button>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </div>
         )}
 
-        {/* My Bookings */}
+        {/* Vehicle Details Sub-Page */}
+        {activePage.page === "vehicleDetails" && activePage.data && (
+          <div className="slide-up glass-card" style={{ padding: "40px" }}>
+            <div style={{ display: "flex", gap: "40px", flexWrap: "wrap", alignItems: "flex-start" }}>
+              <div style={{ flex: 1, minWidth: "300px" }}>
+                {activePage.data.image ? (
+                  <img src={`http://localhost:5000${activePage.data.image}`} alt={activePage.data.name} style={{ width: "100%", borderRadius: "14px", boxShadow: "var(--shadow-md)" }} />
+                ) : (
+                  <div style={{ width: "100%", height: "240px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "70px" }}>🚗</div>
+                )}
+              </div>
+
+              <div style={{ flex: 1, minWidth: "300px" }}>
+                <h1 style={{ color: "white", fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>{activePage.data.name}</h1>
+                <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginBottom: "15px" }}>📍 {activePage.data.location}</p>
+                
+                <h2 style={{ color: "var(--primary)", fontSize: "28px", fontWeight: "800", marginBottom: "20px" }}>
+                  ${activePage.data.pricePerDay} <span style={{ fontSize: "16px", color: "var(--text-secondary)" }}>/ day</span>
+                </h2>
+
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "20px", marginBottom: "25px" }}>
+                  <h4 style={{ margin: "0 0 8px 0", color: "white" }}>Specifications</h4>
+                  <p style={{ color: "var(--text-secondary)", margin: 0, fontSize: "14.5px" }}>{activePage.data.description || "No specific details provided."}</p>
+                </div>
+
+                {activePage.data.averageRating > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "25px" }}>
+                    <span style={{ fontSize: "22px", color: "#fbbf24" }}>{"★".repeat(Math.floor(activePage.data.averageRating))}</span>
+                    <span style={{ fontSize: "15px", fontWeight: "600", color: "white" }}>
+                      {activePage.data.averageRating} <span style={{ color: "var(--text-secondary)", fontWeight: "normal" }}>({activePage.data.totalReviews} reviews)</span>
+                    </span>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button className="btn-base btn-primary" style={{ flex: 2 }} onClick={() => handleOpenBookingModal(activePage.data)}>🚗 Book Now</button>
+                  <button className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setActivePage({ page: "search" })}>⬅ Back</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Vehicle Reviews */}
+            <div style={{ marginTop: "40px", borderTop: "1px solid var(--border-color)", paddingTop: "30px" }}>
+              <h3 style={{ color: "white", marginBottom: "20px" }}>💬 Customer Reviews ({vehicleReviews.length})</h3>
+              {loadingReviews ? (
+                <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Loading reviews...</p>
+              ) : vehicleReviews.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                  {vehicleReviews.map(review => (
+                    <div key={review._id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "20px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                        <span style={{ fontWeight: "700", color: "white" }}>👤 {review.customerId?.name || "Anonymous Customer"}</span>
+                        <span style={{ color: "#fbbf24" }}>{"★".repeat(review.rating || 5)}</span>
+                      </div>
+                      <p style={{ color: "var(--text-secondary)", fontStyle: "italic", margin: 0 }}>"{review.comment}"</p>
+                      <small style={{ display: "block", marginTop: "10px", color: "var(--text-muted)", textAlign: "right" }}>{new Date(review.createdAt).toLocaleDateString()}</small>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>No reviews yet for this vehicle.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Booking History */}
         {activePage.page === "bookings" && (
-          <div style={fadeAnimation}>
+          <div className="slide-up">
             <h2>My Booking History 📋</h2>
-            <p style={{ color: "#6b7280", marginBottom: "25px" }}>Track statuses, pay invoices, and submit feedback.</p>
+            <p style={{ color: "var(--text-secondary)", marginBottom: "25px" }}>Track statuses, pay invoices, and submit feedback.</p>
 
             {bookings.length === 0 ? (
-              <div style={emptyStateCard}>
+              <div className="glass-card" style={{ padding: "50px", textAlign: "center" }}>
                 <span style={{ fontSize: "64px" }}>📅</span>
                 <h3>No Bookings Found</h3>
-                <button style={primaryBtn} onClick={() => setActivePage("search")}>Browse Vehicles</button>
+                <button className="btn-base btn-primary" style={{ marginTop: "15px" }} onClick={() => setActivePage({ page: "search" })}>Browse Vehicles</button>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 {bookings.map(b => {
                   const start = new Date(b.startDate).toLocaleDateString();
                   const end = new Date(b.endDate).toLocaleDateString();
-                  const bookingFeedbacks = feedbacks.filter(f => f.bookingId?._id === b._id && (f.staffResponse || (Array.isArray(f.staffReplies) && f.staffReplies.length > 0)));
+                  const bookingFeedbacks = feedbacks.filter(f => f.bookingId?._id === b._id);
                   return (
-                    <div key={b._id} style={bookingListItem}>
+                    <div key={b._id} className="glass-card" style={{ padding: "24px", display: "flex", gap: "25px", flexWrap: "wrap", alignItems: "center" }}>
                       <div style={{ flex: 2 }}>
-                        <h4 style={{ margin: "0 0 5px", fontSize: "18px" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
-                        <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>📅 Rental Period: {start} - {end}</p>
-                        {b.pickupTime && <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#64748b" }}>🕐 Pickup: {b.pickupTime} | Dropoff: {b.dropoffTime || "—"}</p>}
-                        {b.driverName && <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#4f46e5" }}>👨‍✈️ Driver: {b.driverName}</p>}
-                        {b.status === "completed" && (
-                          <div style={inspectionBox}>
-                            <h5>🔧 Return Inspection Details</h5>
-                            <p><strong>Condition:</strong> {b.returnCondition} | <strong>Mileage:</strong> {b.returnMileage} km | <strong>Fuel:</strong> {b.returnFuelLevel}%</p>
-                            {b.damages && <p><strong>Damages noted:</strong> {b.damages}</p>}
-                          </div>
-                        )}
-
-                        {bookingFeedbacks.length > 0 && (
-                          <div style={{ marginTop: "16px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "14px" }}>
-                            <p style={{ margin: "0 0 10px 0", fontWeight: "700", color: "#0f172a" }}>Staff Replies:</p>
-                            {bookingFeedbacks.map(f => (
-                              <div key={f._id} style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #e2e8f0" }}>
-                                <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#475569" }}><strong>Your {f.type === "complaint" ? "complaint" : "feedback"}:</strong> {f.comment}</p>
-                                {f.staffResponse && (
-                                  <div style={{ marginTop: "8px", padding: "10px", background: "white", borderRadius: "10px", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}>
-                                    <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#475569" }}><strong>Staff response</strong>:</p>
-                                    <p style={{ margin: 0, fontSize: "13px", color: "#334155" }}>{f.staffResponse}</p>
-                                  </div>
-                                )}
-                                {f.staffReplies && f.staffReplies.length > 0 && f.staffReplies.map(reply => (
-                                  <div key={reply._id} style={{ marginTop: "8px", padding: "10px", background: "white", borderRadius: "10px", boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}>
-                                    <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#475569" }}><strong>{reply.staffName || "Staff"}</strong> replied on {new Date(reply.createdAt).toLocaleDateString()}:</p>
-                                    <p style={{ margin: 0, fontSize: "13px", color: "#334155" }}>{reply.replyText}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                                           <div style={{ flex: 1, minWidth: "150px" }}>
-                        <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>BILLING DETAILS</p>
-                        <p style={{ margin: "2px 0 0", fontSize: "14px" }}>Base Price: ${b.baseCharge}</p>
-                        {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "14px" }}>Driver Fee: ${b.driverCharge}</p>}
-                        {b.discount > 0 && <p style={{ margin: 0, fontSize: "14px", color: "#e11d48" }}>Discount: -${b.discount}</p>}
-                        {b.additionalFees > 0 && <p style={{ margin: 0, fontSize: "14px" }}>Extra Fees: ${b.additionalFees}</p>}
-                        {b.lateReturnCharge > 0 && <p style={{ margin: 0, fontSize: "14px", color: "#dc2626" }}>Late Fee: ${b.lateReturnCharge}</p>}
-                        {b.damageCharge > 0 && <p style={{ margin: 0, fontSize: "14px", color: "#dc2626" }}>Damage Fee: ${b.damageCharge}</p>}
-                        <h4 style={{ margin: "5px 0 0", color: "#1e1b4b" }}>Total: ${b.totalAmount}</h4>
-                      </div>
-
-                      {/* Right Column - Status + Review */}
-                      <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "10px", alignItems: "end" }}>
-                        <span style={getStatusBadgeStyle(b.status)}>{b.status.toUpperCase()}</span>
+                        <h4 style={{ margin: "0 0 5px 0", fontSize: "20px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Vehicle"}</h4>
+                        <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "14px" }}>📅 Period: {start} - {end}</p>
+                        {b.pickupTime && <p style={{ margin: "4px 0 0 0", fontSize: "13.5px", color: "var(--text-muted)" }}>🕐 Pickup: {b.pickupTime} | Dropoff: {b.dropoffTime}</p>}
+                        {b.driverName && <p style={{ margin: "6px 0 0 0", fontSize: "13.5px", color: "var(--primary)", fontWeight: "600" }}>👨‍✈️ Driver: {b.driverName}</p>}
                         
-                        {/* Cancel Booking Button */}
+                        {b.status === "completed" && (
+                          <div style={{ marginTop: "15px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", padding: "12px 16px", borderRadius: "8px" }}>
+                            <h5 style={{ margin: "0 0 6px 0", color: "white" }}>🔧 Return Inspection Details</h5>
+                            <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
+                              <strong>Condition:</strong> {b.returnCondition} | <strong>Mileage:</strong> {b.returnMileage} km | <strong>Fuel:</strong> {b.returnFuelLevel}%
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: "180px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
+                        <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)", fontWeight: "700" }}>BILLING DETAILS</p>
+                        <p style={{ margin: "4px 0 0 0", fontSize: "13.5px" }}>Base Price: ${b.baseCharge}</p>
+                        {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "13.5px" }}>Driver: ${b.driverCharge}</p>}
+                        {b.discount > 0 && <p style={{ margin: 0, fontSize: "13.5px", color: "var(--accent)" }}>Discount: -${b.discount}</p>}
+                        <h4 style={{ margin: "8px 0 0 0", color: "white", fontSize: "18px", fontWeight: "800" }}>Total: ${b.totalAmount}</h4>
+                      </div>
+
+                      <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
+                        <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
+                        
                         {!["completed", "cancelled", "rejected", "ongoing"].includes(b.status) && (
-                          <button 
-                            style={{ ...deleteBtn, fontSize: "13px", padding: "6px 12px" }} 
-                            onClick={() => handleOpenCancelModal(b)}
-                          >
-                            ❌ Cancel Booking
-                          </button>
+                          <button className="btn-base btn-danger" style={{ padding: "8px 14px", fontSize: "13px" }} onClick={() => handleOpenCancelModal(b)}>Cancel Booking</button>
                         )}
-                        
+
                         {b.status === "completed" && (
-                          <>
-                            {feedbacks.some(f => f.bookingId?._id === b._id && f.type === "feedback") ? (
-                              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                  {renderStars(
-                                    feedbacks.find(f => f.bookingId?._id === b._id && f.type === "feedback")?.rating || 0
-                                  )}
-                                  <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "500" }}>Reviewed</span>
-                                </div>
-                                <button 
-                                  style={editBtn} 
-                                  onClick={() => {
-                                    const existing = feedbacks.find(f => f.bookingId?._id === b._id && f.type === "feedback");
-                                    if (existing) handleEditFeedback(existing);
-                                  }}
-                                >
-                                  ✏️ Edit Review
-                                </button>
-                              </div>
-                            ) : (
-                              <button 
-                                style={feedbackBtn} 
-                                onClick={() => handleOpenFeedbackModal(b)}
-                              >
-                                ⭐ Review / Complain
-                              </button>
-                            )}
-                          </>
+                          bookingFeedbacks.length > 0 ? (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+                              <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Reviewed ✅</span>
+                              <button className="btn-base btn-secondary" style={{ padding: "6px 12px", fontSize: "12.5px" }} onClick={() => handleEditFeedback(bookingFeedbacks[0])}>Edit Review</button>
+                            </div>
+                          ) : (
+                            <button className="btn-base btn-primary" style={{ padding: "8px 14px", fontSize: "13px" }} onClick={() => handleOpenFeedbackModal(b)}>⭐ Review / Complain</button>
+                          )
                         )}
                       </div>
                     </div>
@@ -872,59 +743,56 @@ filteredVehicles.map(v => (
           </div>
         )}
 
-                {/* Feedback History - UPDATED WITH EDIT & DELETE */}
+        {/* Feedback History */}
         {activePage.page === "feedback" && (
-          <div style={fadeAnimation}>
+          <div className="slide-up">
             <h2>Feedback & Complaint Submissions 📣</h2>
-            <p style={{ color: "#6b7280", marginBottom: "25px" }}>
-              View, edit, or delete your complaints and feedback submissions.
-            </p>
+            <p style={{ color: "var(--text-secondary)", marginBottom: "25px" }}>View, edit, or delete your complaints and feedback submissions.</p>
 
             {feedbacks.length === 0 ? (
-              <div style={emptyStateCard}>
+              <div className="glass-card" style={{ padding: "50px", textAlign: "center" }}>
                 <span style={{ fontSize: "64px" }}>💬</span>
                 <h3>No Submissions Recorded</h3>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 {feedbacks.map(f => (
-                  <div key={f._id} style={bookingListItem}>
-                    <div style={{ flex: 1 }}>
+                  <div key={f._id} className="glass-card" style={{ padding: "24px", display: "flex", gap: "25px", flexWrap: "wrap", alignItems: "center" }}>
+                    <div style={{ flex: 2 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                        <span style={f.type === "complaint" ? complaintBadge : reviewBadge}>{f.type.toUpperCase()}</span>
-                        {f.type === "feedback" && <span style={{ color: "#fbbf24", fontWeight: "bold" }}>{"★".repeat(f.rating)}</span>}
+                        <span style={{
+                          background: f.type === "complaint" ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
+                          color: f.type === "complaint" ? "var(--danger)" : "var(--warning)",
+                          padding: "4px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "700"
+                        }}>{f.type.toUpperCase()}</span>
+                        {f.type === "feedback" && <span style={{ color: "#fbbf24" }}>{"★".repeat(f.rating)}</span>}
                       </div>
-                      <p style={{ margin: "5px 0", fontSize: "15px" }}>"{f.comment}"</p>
-                      <p style={{ fontSize: "12px", color: "#64748b" }}>
-                        Submitted for: {f.bookingId?.vehicleId?.name || f.vehicle?.name || "Vehicle"}
-                      </p>
-                      <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>
-                        {new Date(f.createdAt).toLocaleDateString()}
-                      </p>
+                      <p style={{ margin: "8px 0", fontSize: "16px", color: "white", fontStyle: "italic" }}>"{f.comment}"</p>
+                      <small style={{ color: "var(--text-muted)" }}>Submitted for: {f.bookingId?.vehicleId?.name || "Vehicle"} on {new Date(f.createdAt).toLocaleDateString()}</small>
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
-                      <button style={editBtn} onClick={() => handleEditFeedback(f)}>
-                        ✏️ Edit
-                      </button>
-                      <button style={deleteBtn} onClick={() => handleDeleteFeedback(f._id)}>
-                        🗑️ Delete
-                      </button>
+                    <div style={{ flex: 1, minWidth: "200px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
+                      {f.type === "complaint" ? (
+                        <div>
+                          <p style={{ margin: 0, fontSize: "14px" }}>Status: <strong style={{ color: f.complaintStatus === "Resolved" ? "var(--success)" : "var(--warning)" }}>{f.complaintStatus}</strong></p>
+                          {f.staffResponse ? (
+                            <div style={{ marginTop: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", padding: "10px", borderRadius: "8px" }}>
+                              <p style={{ margin: 0, fontSize: "12px", color: "white" }}><strong>Staff Reply:</strong></p>
+                              <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--text-secondary)" }}>{f.staffResponse}</p>
+                            </div>
+                          ) : (
+                            <p style={{ margin: "6px 0 0", fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic" }}>Awaiting staff reply...</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p style={{ color: "var(--text-muted)", fontSize: "13px", margin: 0 }}>General feedback rating.</p>
+                      )}
                     </div>
 
-                    {f.type === "complaint" && (
-                      <div style={{ flex: 1, borderLeft: "1px solid #e2e8f0", paddingLeft: "20px" }}>
-                        <p style={{ margin: 0, fontSize: "13px" }}>Status: <strong style={{ color: f.complaintStatus === "Resolved" ? "#10b981" : "#f59e0b" }}>{f.complaintStatus}</strong></p>
-                        {f.staffResponse ? (
-                          <div style={{ marginTop: "8px", background: "#f8fafc", padding: "10px", borderRadius: "8px" }}>
-                            <p style={{ margin: 0, fontSize: "13px", color: "#1e293b" }}><strong>Staff Response:</strong></p>
-                            <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#475569" }}>{f.staffResponse}</p>
-                          </div>
-                        ) : (
-                          <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#94a3b8" }}>Awaiting staff response...</p>
-                        )}
-                      </div>
-                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <button className="btn-base btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => handleEditFeedback(f)}>Edit</button>
+                      <button className="btn-base btn-danger" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => handleDeleteFeedback(f._id)}>Delete</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -932,266 +800,125 @@ filteredVehicles.map(v => (
           </div>
         )}
 
-        {/* EDIT PROFILE MODAL */}
-{showProfileModal && (
-  <div style={overlay} onClick={() => setShowProfileModal(false)}>
-    <div style={modal} onClick={(e) => e.stopPropagation()}>
-      <h3 style={{ textAlign: "center", marginBottom: "6px" }}>👤 Edit Staff Profile</h3>
-      <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "24px", fontSize: "14px" }}>
-        Update your contact credentials.
-      </p>
-
-      <form
-        onSubmit={(e) => {
-          handleUpdateProfile(e);
-          setShowProfileModal(false);
-        }}
-        style={{ display: "flex", flexDirection: "column", gap: "15px" }}
-      >
-        <div style={formGroup}>
-          <label style={formLabel}>Full Name</label>
-          <input
-            type="text"
-            value={profileName}
-            onChange={(e) => setProfileName(e.target.value)}
-            style={formInput}
-            required
-          />
-        </div>
-
-        <div style={formGroup}>
-          <label style={formLabel}>Email Address</label>
-          <input
-            type="email"
-            value={profileEmail}
-            onChange={(e) => setProfileEmail(e.target.value)}
-            style={formInput}
-            required
-          />
-        </div>
-
-        <div style={formGroup}>
-          <label style={formLabel}>New Password (Leave blank to keep current)</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={profilePassword}
-            onChange={(e) => setProfilePassword(e.target.value)}
-            style={formInput}
-          />
-        </div>
-
-        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-          <button
-            type="button"
-            style={cancelBtn}
-            onClick={() => setShowProfileModal(false)}
-          >
-            Cancel
-          </button>
-          <button type="submit" style={submitBtn}>
-            Save Changes
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
-        {/* Vehicle Details Page */}
-        {/* Vehicle Details Page */}
-{activePage.page === "vehicleDetails" && activePage.data && (
-  <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
-
-    {/* LEFT SIDE - IMAGE */}
-    <div style={{ flex: 1 }}>
-      {activePage.data?.image && (
-        <img
-          src={`http://localhost:5000${activePage.data.image}`}
-          alt={activePage.data.name}
-          style={{ width: "100%", borderRadius: "12px" }}
-        />
-      )}
-    </div>
-
-    {/* RIGHT SIDE */}
-    <div style={{ flex: 1 }}>
-      <h2>{activePage.data?.name}</h2>
-
-      <p style={{ color: "#64748b" }}>
-        📍 {activePage.data?.location}
-      </p>
-
-      <h3 style={{ color: "#4f46e5" }}>
-        ${activePage.data?.pricePerDay} / day
-      </h3>
-
-      <p style={{ marginTop: "15px" }}>
-        {activePage.data?.description}
-      </p>
-
-      {/* Average Rating */}
-      {activePage.data?.averageRating > 0 && (
-        <div style={{ margin: "15px 0", display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ display: "flex", fontSize: "24px" }}>
-            {renderStars(activePage.data.averageRating)}
-          </div>
-          <span style={{ fontSize: "16px", fontWeight: "600" }}>
-            {activePage.data.averageRating} 
-            <span style={{ color: "#64748b", fontWeight: "normal" }}> ({activePage.data.totalReviews} reviews)</span>
-          </span>
-        </div>
-      )}
-
-      {/* Customer Reviews Section */}
-      <div style={{ marginTop: "25px" }}>
-        <h4 style={{ marginBottom: "12px", color: "#1e293b" }}>
-          💬 Customer Reviews ({vehicleReviews.length})
-        </h4>
-        
-        {loadingReviews ? (
-          <p style={{ color: "#64748b", fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>
-            Loading reviews...
-          </p>
-        ) : vehicleReviews.length > 0 ? (
-            vehicleReviews
-              .map(review => (
-                <div key={review._id} style={{
-                  background: "#f8fafc",
-                  padding: "16px",
-                  borderRadius: "10px",
-                  marginBottom: "14px",
-                  borderLeft: "4px solid #6366f1",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <span style={{ fontWeight: "700", color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
-                      👤 {review.customerId?.name || "Anonymous Customer"}
-                    </span>
-                    <span style={{ fontSize: "14px", color: "#4f46e5", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
-                      Rating: {"⭐".repeat(review.rating || 5)} out of 5
-                    </span>
-                  </div>
-                  <p style={{ margin: "10px 0 10px", fontSize: "14.5px", color: "#475569", lineHeight: "1.5", fontStyle: "italic" }}>
-                    "{review.comment}"
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <small style={{ color: "#94a3b8" }}>
-                      📅 {new Date(review.createdAt).toLocaleDateString()}
-                    </small>
-                  </div>
-                </div>
-              ))
-          ) : (
-            <p style={{ color: "#64748b", fontStyle: "italic", textAlign: "center", padding: "40px 0" }}>
-              No reviews yet for this vehicle.<br />Be the first to review after your rental!
-            </p>
-          )}
-      </div>
-
-      {/* BOOK BUTTON */}
-      <button
-        style={{ ...submitBtn, marginTop: "25px" }}
-        onClick={() => handleOpenBookingModal(activePage.data)}
-      >
-        🚗 Book Now
-      </button>
-
-      {/* BACK BUTTON */}
-      <button
-        style={{ ...cancelBtn, marginTop: "10px" }}
-        onClick={() => setActivePage({ page: "search" })}
-      >
-        ⬅ Back
-      </button>
-    </div>
-
-  </div>
-)}
       </main>
+
+      {/* EDIT PROFILE MODAL */}
+      {showProfileModal && (
+        <div className="custom-modal-overlay" onClick={() => setShowProfileModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "5px" }}>👤 Edit Customer Profile</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "20px" }}>Update your contact credentials.</p>
+
+            <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Full Name</label>
+                <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} className="custom-input" required />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Email Address</label>
+                <input type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="custom-input" required />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">New Password (leave blank to keep current)</label>
+                <input type="password" placeholder="••••••••" value={profilePassword} onChange={(e) => setProfilePassword(e.target.value)} className="custom-input" />
+              </div>
+              <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowProfileModal(false)}>Cancel</button>
+                <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Booking Modal */}
       {showBookingModal && selectedVehicle && (
-        <div style={overlay} onClick={() => setShowBookingModal(false)}>
-          <div style={modal} onClick={(e) => e.stopPropagation()}>
-            <h3>Book {selectedVehicle.name} 🗓️</h3>
-            <p style={{ color: "#64748b" }}>Rate: ${selectedVehicle.pricePerDay}/day | Location: {selectedVehicle.location}</p>
+        <div className="custom-modal-overlay" onClick={() => setShowBookingModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700" }}>Book {selectedVehicle.name} 🗓️</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "15px" }}>Rate: ${selectedVehicle.pricePerDay}/day | Location: {selectedVehicle.location}</p>
 
-            <div style={{ margin: "20px 0" }}>
-              <div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
-  <div style={{ flex: 1 }}>
-    <label style={{ fontSize: "13px", fontWeight: "600" }}>Start Date</label>
-    <input type="date" value={bookingStartDate} onChange={(e) => setBookingStartDate(e.target.value)} style={modalInput} />
-  </div>
-  <div style={{ flex: 1 }}>
-    <label style={{ fontSize: "13px", fontWeight: "600" }}>End Date</label>
-    <input type="date" value={bookingEndDate} onChange={(e) => setBookingEndDate(e.target.value)} style={modalInput} />
-  </div>
-</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div style={{ display: "flex", gap: "15px" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="form-label">Start Date</label>
+                  <input type="date" value={bookingStartDate} onChange={(e) => setBookingStartDate(e.target.value)} className="custom-input" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="form-label">End Date</label>
+                  <input type="date" value={bookingEndDate} onChange={(e) => setBookingEndDate(e.target.value)} className="custom-input" />
+                </div>
+              </div>
 
-{/* Pickup & Dropoff Time Row */}
-<div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
-  <div style={{ flex: 1 }}>
-    <label style={{ fontSize: "13px", fontWeight: "600" }}>🕐 Pickup Time</label>
-    <input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} style={modalInput} />
-  </div>
-  <div style={{ flex: 1 }}>
-    <label style={{ fontSize: "13px", fontWeight: "600" }}>🕐 Dropoff Time</label>
-    <input type="time" value={dropoffTime} onChange={(e) => setDropoffTime(e.target.value)} style={modalInput} />
-  </div>
-</div>
+              <div style={{ display: "flex", gap: "15px" }}>
+                <div style={{ flex: 1 }}>
+                  <label className="form-label">🕐 Pickup Time</label>
+                  <input type="time" value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className="custom-input" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="form-label">🕐 Dropoff Time</label>
+                  <input type="time" value={dropoffTime} onChange={(e) => setDropoffTime(e.target.value)} className="custom-input" />
+                </div>
+              </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "20px 0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "10px 0" }}>
                 <input type="checkbox" id="hasDriver" checked={bookingHasDriver} onChange={(e) => setBookingHasDriver(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                <label htmlFor="hasDriver" style={{ cursor: "pointer", fontWeight: "500" }}>Add a personal driver ($50/day driver fee)</label>
+                <label htmlFor="hasDriver" style={{ cursor: "pointer", fontWeight: "500", fontSize: "14px" }}>Add a personal driver ($50/day driver fee)</label>
               </div>
             </div>
 
-            {bookingError && <p style={{ color: "red", fontWeight: "bold", fontSize: "14px" }}>⚠️ {bookingError}</p>}
+            {bookingError && <p style={{ color: "var(--danger)", fontWeight: "bold", fontSize: "14px", marginTop: "10px" }}>⚠️ {bookingError}</p>}
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-              <button style={cancelBtn} onClick={() => setShowBookingModal(false)}>Cancel</button>
-              <button style={submitBtn} onClick={handleProceedToPayment}>Proceed to Payment</button>
+              <button className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowBookingModal(false)}>Cancel</button>
+              <button className="btn-base btn-primary" style={{ flex: 2 }} onClick={handleProceedToPayment}>Proceed to Payment</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Payment Modal */}
+      {/* Payment Invoice Modal */}
       {showPaymentModal && tempBookingData && (
-        <div style={overlay} onClick={() => setShowPaymentModal(false)}>
-          <div style={modal} onClick={(e) => e.stopPropagation()}>
-            <h3>💳 Complete Payment</h3>
-            <p style={{ color: "#64748b", marginBottom: "20px" }}>Booking for: {selectedVehicle?.name}</p>
+        <div className="custom-modal-overlay" onClick={() => setShowPaymentModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700" }}>💳 Complete Payment</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "15px" }}>Booking Invoice: {selectedVehicle?.name}</p>
 
-            <div style={invoiceDetailBox}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", padding: "16px", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14.5px" }}>
                 <span>Rental Charge:</span>
                 <span>${tempBookingData.baseAmount}</span>
               </div>
               {tempBookingData.driverCharge > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14.5px" }}>
                   <span>Driver Charge:</span>
                   <span>${tempBookingData.driverCharge}</span>
                 </div>
               )}
-              <hr />
-              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "18px" }}>
+              {promoApplied && (
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14.5px", color: "var(--success)" }}>
+                  <span>Promo Discount ({promoDiscountPercent}%):</span>
+                  <span>-${((tempBookingData.totalAmountBeforePromo * promoDiscountPercent) / 100).toFixed(2)}</span>
+                </div>
+              )}
+              <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "4px 0" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "800", fontSize: "18px", color: "white" }}>
                 <span>Total:</span>
                 <span>${(tempBookingData.totalAmountBeforePromo - (promoApplied ? (tempBookingData.totalAmountBeforePromo * promoDiscountPercent) / 100 : 0)).toFixed(2)}</span>
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "10px", margin: "20px 0" }}>
-              <input type="text" placeholder="PROMO CODE" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} style={modalInput} disabled={promoApplied} />
-              <button type="button" onClick={handleApplyPromo} style={promoApplied ? appliedBtn : applyBtn} disabled={promoApplied}>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+              <input type="text" placeholder="PROMO CODE" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} className="custom-input" disabled={promoApplied} />
+              <button type="button" className={`btn-base ${promoApplied ? "btn-success" : "btn-primary"}`} onClick={handleApplyPromo} disabled={promoApplied}>
                 {promoApplied ? "Applied" : "Apply"}
               </button>
             </div>
-            {promoError && <p style={{ color: "red", fontSize: "13px" }}>{promoError}</p>}
+            {promoError && <p style={{ color: "var(--danger)", fontSize: "13px" }}>{promoError}</p>}
 
-            <div style={{ margin: "20px 0" }}>
-              <label style={{ fontSize: "13px", fontWeight: "600" }}>PAYMENT METHOD</label>
-              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={selectStyle}>
+            <div style={{ marginBottom: "15px" }}>
+              <label className="form-label">Payment Method</label>
+              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="custom-select">
                 <option value="credit_card">Credit Card</option>
                 <option value="debit_card">Debit Card</option>
                 <option value="bank_transfer">Bank Transfer</option>
@@ -1201,14 +928,14 @@ filteredVehicles.map(v => (
 
             {["credit_card", "debit_card"].includes(paymentMethod) && (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-                <input type="text" placeholder="Card Number" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} style={modalInput} />
-                <input type="text" placeholder="Cardholder Name" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} style={modalInput} />
+                <input type="text" placeholder="Card Number" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="custom-input" />
+                <input type="text" placeholder="Cardholder Name" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} className="custom-input" />
               </div>
             )}
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-              <button style={cancelBtn} onClick={() => setShowPaymentModal(false)}>Cancel</button>
-              <button style={submitBtn} onClick={handleProcessPayment}>Complete Payment</button>
+              <button className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowPaymentModal(false)}>Cancel</button>
+              <button className="btn-base btn-success" style={{ flex: 2 }} onClick={handleProcessPayment}>Complete Payment</button>
             </div>
           </div>
         </div>
@@ -1216,91 +943,52 @@ filteredVehicles.map(v => (
 
       {/* Cancel Booking Modal */}
       {showCancelModal && selectedBookingForCancel && cancellationInfo && (
-        <div style={overlay} onClick={() => setShowCancelModal(false)}>
-          <div style={modal} onClick={(e) => e.stopPropagation()}>
-            <h3>❌ Cancel Booking</h3>
-            <p style={{ color: "#64748b", marginBottom: "15px" }}>
+        <div className="custom-modal-overlay" onClick={() => setShowCancelModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700" }}>❌ Cancel Booking</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "15px" }}>
               Vehicle: <strong>{selectedBookingForCancel.vehicleId?.name}</strong> | Status: <strong>{selectedBookingForCancel.status.toUpperCase()}</strong>
             </p>
 
-            {/* Refund Info */}
-            <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "8px", padding: "12px", marginBottom: "15px" }}>
-              <p style={{ margin: "0 0 8px 0", fontWeight: "600", color: "#22c55e" }}>💰 Refund Information:</p>
-              <p style={{ margin: "0", fontSize: "14px" }}>
-                Original Amount: <strong>${selectedBookingForCancel.totalAmount}</strong>
-              </p>
-              <p style={{ margin: "4px 0 0 0", fontSize: "14px" }}>
-                Refund: <strong style={{ color: "#22c55e" }}>${cancellationInfo.amount} ({cancellationInfo.percentage}%)</strong>
-              </p>
-              <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>
-                {cancellationInfo.percentage === 100 && "Full refund will be processed"}
-                {cancellationInfo.percentage === 80 && "80% refund (cancellation more than 24 hours before rental)"}
-                {cancellationInfo.percentage === 50 && "50% refund (cancellation less than 24 hours before rental)"}
-              </p>
+            <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "8px", padding: "12px", marginBottom: "15px" }}>
+              <p style={{ margin: "0 0 6px 0", fontWeight: "700", color: "var(--success)", fontSize: "14.5px" }}>💰 Refund Information:</p>
+              <p style={{ margin: 0, fontSize: "14px" }}>Original Amount: <strong>${selectedBookingForCancel.totalAmount}</strong></p>
+              <p style={{ margin: "4px 0 0 0", fontSize: "14px" }}>Refund: <strong style={{ color: "var(--success)" }}>${cancellationInfo.amount} ({cancellationInfo.percentage}%)</strong></p>
             </div>
 
-            <form style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={formGroup}>
-                <label style={formLabel}>Cancellation Reason (Optional)</label>
-                <textarea
-                  placeholder="Tell us why you're cancelling..."
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  style={formTextarea}
-                  rows={3}
-                />
-              </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "15px" }}>
+              <label className="form-label">Cancellation Reason (Optional)</label>
+              <textarea placeholder="Tell us why you're cancelling..." value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} className="custom-textarea" rows={3} />
+            </div>
 
-              <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
-                <p style={{ margin: "0", fontSize: "13px", color: "#dc2626" }}>
-                  ⚠️ This action cannot be undone. Please confirm your cancellation.
-                </p>
-              </div>
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  type="button"
-                  style={cancelBtn}
-                  onClick={() => {
-                    setShowCancelModal(false);
-                    setCancelReason("");
-                  }}
-                >
-                  Keep Booking
-                </button>
-                <button
-                  type="button"
-                  style={{ ...deleteBtn, flex: 1 }}
-                  onClick={handleConfirmCancel}
-                >
-                  Confirm Cancellation
-                </button>
-              </div>
-            </form>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowCancelModal(false)}>Keep Booking</button>
+              <button className="btn-base btn-danger" style={{ flex: 1 }} onClick={handleConfirmCancel}>Confirm Cancellation</button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Feedback Modal */}
+      {/* Feedback & Review Modal */}
       {showFeedbackModal && selectedBookingForFeedback && (
-        <div style={overlay} onClick={() => setShowFeedbackModal(false)}>
-          <div style={modal} onClick={(e) => e.stopPropagation()}>
-            <h3>⭐ Review / File Complaint</h3>
-            <p style={{ color: "#64748b" }}>Submit comments for booking ID: {selectedBookingForFeedback._id}</p>
+        <div className="custom-modal-overlay" onClick={() => setShowFeedbackModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700" }}>⭐ Review / File Complaint</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "15px" }}>Submit comments for booking ID: {selectedBookingForFeedback._id}</p>
 
-            <form onSubmit={handleSubmittingFeedback} style={{ marginTop: "20px" }}>
-              <div style={formGroup}>
-                <label style={formLabel}>Submission Type</label>
-                <select value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)} style={selectStyle}>
+            <form onSubmit={handleSubmittingFeedback} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Submission Type</label>
+                <select value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)} className="custom-select">
                   <option value="feedback">General Feedback & Rating</option>
                   <option value="complaint">File a Complaint</option>
                 </select>
               </div>
 
               {feedbackType === "feedback" && (
-                <div style={formGroup}>
-                  <label style={formLabel}>Rating (1 to 5 Stars)</label>
-                  <select value={feedbackRating} onChange={(e) => setFeedbackRating(Number(e.target.value))} style={selectStyle}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label className="form-label">Rating (1 to 5 Stars)</label>
+                  <select value={feedbackRating} onChange={(e) => setFeedbackRating(Number(e.target.value))} className="custom-select">
                     <option value="5">★★★★★ (5 Stars)</option>
                     <option value="4">★★★★☆ (4 Stars)</option>
                     <option value="3">★★★☆☆ (3 Stars)</option>
@@ -1310,76 +998,54 @@ filteredVehicles.map(v => (
                 </div>
               )}
 
-              <div style={formGroup}>
-                <label style={formLabel}>Comments / Details</label>
-                <textarea placeholder="Provide details about your rental experience..." value={feedbackComment} onChange={(e) => setFeedbackComment(e.target.value)} style={formTextarea} rows={4} required />
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Comments / Details</label>
+                <textarea placeholder="Provide details about your experience..." value={feedbackComment} onChange={(e) => setFeedbackComment(e.target.value)} className="custom-textarea" rows={4} required />
               </div>
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-                <button type="button" style={cancelBtn} onClick={() => setShowFeedbackModal(false)}>Cancel</button>
-                <button type="submit" style={submitBtn}>Submit</button>
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowFeedbackModal(false)}>Cancel</button>
+                <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>Submit</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-    {/* ==================== NEW: EDIT FEEDBACK MODAL ==================== */}
+      {/* Edit Feedback Modal */}
       {showEditFeedbackModal && editingFeedback && (
-        <div style={overlay} onClick={() => setShowEditFeedbackModal(false)}>
-          <div style={modal} onClick={(e) => e.stopPropagation()}>
-            <h3>✏️ Edit Feedback / Complaint</h3>
+        <div className="custom-modal-overlay" onClick={() => setShowEditFeedbackModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700" }}>✏️ Edit Feedback / Complaint</h3>
 
-            <form onSubmit={handleUpdateFeedback} style={{ marginTop: "20px" }}>
-              <div style={formGroup}>
-                <label style={formLabel}>Submission Type</label>
-                <select 
-                  value={editFeedbackType} 
-                  onChange={(e) => setEditFeedbackType(e.target.value)} 
-                  style={selectStyle}
-                >
+            <form onSubmit={handleUpdateFeedback} style={{ display: "flex", flexDirection: "column", gap: "15px", marginTop: "15px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Submission Type</label>
+                <select value={editFeedbackType} onChange={(e) => setEditFeedbackType(e.target.value)} className="custom-select">
                   <option value="feedback">General Feedback & Rating</option>
                   <option value="complaint">File a Complaint</option>
                 </select>
               </div>
 
               {editFeedbackType === "feedback" && (
-                <div style={formGroup}>
-                  <label style={formLabel}>Rating (1-5 Stars)</label>
-                  <select 
-                    value={editFeedbackRating} 
-                    onChange={(e) => setEditFeedbackRating(Number(e.target.value))} 
-                    style={selectStyle}
-                  >
-                    {[1,2,3,4,5].map(n => (
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label className="form-label">Rating (1-5 Stars)</label>
+                  <select value={editFeedbackRating} onChange={(e) => setEditFeedbackRating(Number(e.target.value))} className="custom-select">
+                    {[1, 2, 3, 4, 5].map(n => (
                       <option key={n} value={n}>{"★".repeat(n)} ({n} Stars)</option>
                     ))}
                   </select>
                 </div>
               )}
 
-              <div style={formGroup}>
-                <label style={formLabel}>Comments / Details</label>
-                <textarea
-                  value={editFeedbackComment}
-                  onChange={(e) => setEditFeedbackComment(e.target.value)}
-                  style={formTextarea}
-                  rows={5}
-                  required
-                />
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Comments / Details</label>
+                <textarea value={editFeedbackComment} onChange={(e) => setEditFeedbackComment(e.target.value)} className="custom-textarea" rows={5} required />
               </div>
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "25px" }}>
-                <button 
-                  type="button" 
-                  style={cancelBtn} 
-                  onClick={() => setShowEditFeedbackModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" style={submitBtn}>
-                  Update Feedback
-                </button>
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowEditFeedbackModal(false)}>Cancel</button>
+                <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>Update Feedback</button>
               </div>
             </form>
           </div>
@@ -1397,11 +1063,8 @@ filteredVehicles.map(v => (
             borderRadius: "10px",
             color: "white",
             fontWeight: "600",
-            background:
-              toast.type === "success"
-                ? "linear-gradient(135deg, #22c55e, #16a34a)"
-                : "linear-gradient(135deg, #ef4444, #dc2626)",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+            background: toast.type === "success" ? "var(--success-gradient)" : "var(--danger-gradient)",
+            boxShadow: "var(--shadow-lg)",
             zIndex: 99999,
             animation: "slideIn 0.3s ease"
           }}
@@ -1409,283 +1072,25 @@ filteredVehicles.map(v => (
           {toast.message}
         </div>
       )}
-      <style>
-        {`
-          @keyframes slideIn {
-            from {
-              transform: translateX(400px);
-              opacity: 0;
-            }
-            to {
-              transform: translateX(0);
-              opacity: 1;
-            }
-          }
-        `}
-      </style>
     </div>
   );
 }
 
-// ==================== STYLES & HELPERS ====================
-
-const getStatusBadgeStyle = (status) => {
-  const base = { padding: "6px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "700" };
-  switch (status) {
-    case "pending": return { ...base, background: "#fef3c7", color: "#d97706" };
-    case "approved": return { ...base, background: "#dbeafe", color: "#2563eb" };
-    case "confirmed": return { ...base, background: "#ecfdf5", color: "#059669" };
-    case "ongoing": return { ...base, background: "#f5f3ff", color: "#7c3aed" };
-    case "completed": return { ...base, background: "#f1f5f9", color: "#475569" };
-    case "rejected": return { ...base, background: "#fee2e2", color: "#dc2626" };
-    default: return base;
-  }
-};
-// ==================== STAR RATING HELPER ====================
-const renderStars = (rating) => {
-  const stars = [];
-  const fullStars = Math.floor(rating || 0);
-  for (let i = 1; i <= 5; i++) {
-    stars.push(
-      <span key={i} style={{ color: i <= fullStars ? "#fbbf24" : "#e5e7eb", fontSize: "18px" }}>
-        ★
-      </span>
-    );
-  }
-  return stars;
-};
-// ==================== NEW STYLES FOR EDIT & DELETE BUTTONS ====================
-const editBtn = {
-  background: "#3b82f6",
-  color: "white",
-  border: "none",
-  padding: "8px 16px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontSize: "14px",
-  fontWeight: "600"
-};
-
-const deleteBtn = {
-  background: "#ef4444",
-  color: "white",
-  border: "none",
-  padding: "8px 16px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontSize: "14px",
-  fontWeight: "600"
-};
-
 const NavItem = ({ label, active, onClick }) => (
-  <div style={{
-    padding: "8px 18px",
-    borderRadius: "20px",
-    cursor: "pointer",
-    fontWeight: active ? "600" : "500",
-    color: active ? "white" : "#cbd5e1",
-    background: active ? "rgba(99, 102, 241, 0.4)" : "transparent",
-    transition: "background 0.2s ease"
-  }} onClick={onClick}>
+  <div className={`nav-link-item ${active ? "nav-link-item-active" : ""}`} onClick={onClick}>
     {label}
   </div>
 );
 
-const DashboardCard = ({ icon, title, value, color, accent }) => (
-  <div style={{
-    ...dashboardCardStyle,
-    background: "white",
-    border: "1px solid rgba(99, 102, 241, 0.1)",
-    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
-    transition: "transform 0.3s ease, box-shadow 0.3s ease",
-    position: "relative",
-    overflow: "hidden"
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = "translateY(-8px)";
-    e.currentTarget.style.boxShadow = "0 20px 40px rgba(99, 102, 241, 0.15)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = "translateY(0)";
-    e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.08)";
-  }}
-  >
-    {/* Colored Accent Bar */}
-    <div style={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      height: "6px",
-      background: color
-    }} />
-
-    <div style={{
-      width: "68px",
-      height: "68px",
-      borderRadius: "16px",
-      background: color,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "32px",
-      color: "white",
-      boxShadow: `0 8px 20px ${accent}40`,
-      marginBottom: "12px"
-    }}>
+const DashboardCard = ({ icon, title, value, color }) => (
+  <div className="glass-card dashboard-card-metric" style={{ position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "6px", background: color }} />
+    <div className="metric-icon-wrap" style={{ background: color, color: "white", boxShadow: "0 8px 16px rgba(0,0,0,0.15)" }}>
       {icon}
     </div>
-
     <div>
-      <p style={{
-        margin: "0 0 6px 0",
-        color: "#64748b",
-        fontSize: "13px",
-        fontWeight: "700",
-        textTransform: "uppercase",
-        letterSpacing: "0.5px"
-      }}>
-        {title}
-      </p>
-      <h2 style={{
-        margin: 0,
-        fontSize: "28px",
-        fontWeight: "800",
-        color: "#1e2937",
-        background: "linear-gradient(90deg, #1e2937, #334155)",
-        WebkitBackgroundClip: "text",
-        WebkitTextFillColor: "transparent"
-      }}>
-        {value}
-      </h2>
+      <p style={{ margin: "0 0 4px 0", color: "var(--text-secondary)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>{title}</p>
+      <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", color: "white" }}>{value}</h2>
     </div>
-
-    {/* Subtle decorative orb */}
-    <div style={{
-      position: "absolute",
-      bottom: "-30px",
-      right: "-30px",
-      width: "80px",
-      height: "80px",
-      background: `radial-gradient(circle, ${accent}20 0%, transparent 70%)`,
-      borderRadius: "50%",
-      zIndex: 0,
-      pointerEvents: "none"
-    }} />
   </div>
 );
-
-// All Styles
-const dashboardWrapper = { minHeight: "100vh", background: "#f8fafc", position: "relative", overflow: "hidden", fontFamily: "'Outfit', 'Inter', sans-serif" };
-const glowOrb1 = { position: "absolute", top: "-150px", left: "-150px", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, rgba(255,255,255,0) 70%)", zIndex: 0, pointerEvents: "none" };
-const glowOrb2 = { position: "absolute", bottom: "-100px", right: "-100px", width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, rgba(255,255,255,0) 70%)", zIndex: 0, pointerEvents: "none" };
-
-const navBar = { background: "#0f172a", color: "white", padding: "16px 0", position: "sticky", top: 0, zIndex: 1000 };
-const navContainer = { maxWidth: "1200px", margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" };
-const logo = { display: "flex", alignItems: "center" };
-const logoText = { fontSize: "20px", fontWeight: "800", letterSpacing: "-0.5px" };
-const navLinks = { display: "flex", gap: "6px" };
-const profileSection = { display: "flex", alignItems: "center", padding: "6px 14px", borderRadius: "30px", background: "rgba(255,255,255,0.08)" };
-const userNameStyle = { fontWeight: "600", fontSize: "14px" };
-
-const mainContent = { maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", position: "relative", zIndex: 1 };
-const welcomeBanner = {
-  background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
-  borderRadius: "20px",
-  padding: "28px 40px",
-  color: "white",
-  display: "flex",
-  alignItems: "center",
-  position: "relative",
-  overflow: "hidden",
-  marginBottom: "35px",
-  minHeight: "160px",
-  boxShadow: "0 10px 30px rgba(30, 58, 138, 0.25)"
-};const welcomeHeading = { margin: 0, fontSize: "28px", fontWeight: "800" };
-const welcomeSub = { margin: "8px 0 0", color: "#c7d2fe", fontSize: "15px" };
-const bannerGraphic = { fontSize: "70px", opacity: 0.8 };
-
-const dashboardGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-  gap: "24px",
-  marginBottom: "40px"
-};const dashboardCardStyle = { background: "white", borderRadius: "16px", padding: "20px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 20px rgba(0,0,0,0.02)", border: "1px solid #f1f5f9" };
-
-const sectionCard = { background: "white", borderRadius: "16px", padding: "25px", boxShadow: "0 10px 20px rgba(0,0,0,0.01)", border: "1px solid #f1f5f9" };
-const searchBar = { background: "white", borderRadius: "16px", padding: "20px", display: "flex", gap: "15px", marginBottom: "30px", border: "1px solid #e2e8f0", flexWrap: "wrap" };
-const searchField = { display: "flex", flexDirection: "column", flex: 1, minWidth: "200px" };
-const fieldLabel = { fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "4px" };
-const selectStyle = { padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", background: "white" };
-const inputStyle = { padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" };
-
-const vehicleGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "25px", marginTop: "20px" };
-const vehicleCard = { background: "white", borderRadius: "16px", overflow: "hidden", boxShadow: "0 10px 20px rgba(0,0,0,0.02)", border: "1px solid #f1f5f9", display: "flex", flexDirection: "column" };
-const cardImageWrapper = { position: "relative", height: "160px", background: "#f1f5f9" };
-const cardImage = { width: "100%", height: "100%", objectFit: "cover" };
-const placeholderImage = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", background: "#f8fafc" };
-const cardBadge = { position: "absolute", top: "10px", right: "10px", background: "#ecfdf5", color: "#059669", padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "700" };
-const cardBody = { padding: "16px", display: "flex", flexDirection: "column", flex: 1 };
-const cardName = { margin: 0, fontSize: "16px", fontWeight: "700" };
-const cardPrice = { margin: "4px 0", fontSize: "18px", fontWeight: "800", color: "#4f46e5" };
-const cardDescription = { margin: "0 0 15px", fontSize: "13px", color: "#6b7280", flex: 1, lineHeight: "1.4" };
-const bookBtn = { background: "#4f46e5", color: "white", border: "none", padding: "10px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-
-const emptyStateCard = { background: "white", borderRadius: "16px", padding: "50px 20px", textAlign: "center", border: "1px solid #f1f5f9" };
-const bookingListItem = { background: "white", borderRadius: "16px", padding: "20px", display: "flex", gap: "20px", border: "1px solid #f1f5f9", flexWrap: "wrap", alignItems: "center", boxShadow: "0 4px 10px rgba(0,0,0,0.01)" };
-const inspectionBox = { marginTop: "10px", background: "#f8fafc", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e2e8f0" };
-
-const payNowBtn = { background: "#10b981", color: "white", border: "none", padding: "10px 18px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-const feedbackBtn = { background: "#4f46e5", color: "white", border: "none", padding: "10px 18px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-
-const formWrapper = { background: "white", padding: "35px", borderRadius: "16px", maxWidth: "500px", margin: "0 auto", border: "1px solid #f1f5f9", boxShadow: "0 10px 20px rgba(0,0,0,0.01)" };
-const formStyle = { display: "flex", flexDirection: "column", gap: "15px" };
-const formGroup = { display: "flex", flexDirection: "column", gap: "4px" };
-const formLabel = { fontSize: "13px", fontWeight: "600", color: "#475569" };
-const formInput = { padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" };
-const formTextarea = { padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", resize: "vertical" };
-const submitBtn = { background: "#4f46e5", color: "white", border: "none", padding: "12px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-const cancelBtn = { background: "#f1f5f9", color: "#475569", border: "none", padding: "12px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-
-const overlay = { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 };
-const modal = { background: "white", padding: "30px", borderRadius: "16px", width: "500px", maxWidth: "90%", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" };
-const modalInput = { width: "100%", padding: "10px", boxSizing: "border-box", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" };
-
-const invoiceDetailBox = { background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "8px" };
-
-const applyBtn = { background: "#4f46e5", color: "white", border: "none", padding: "10px 18px", borderRadius: "8px", cursor: "pointer", fontWeight: "600" };
-const appliedBtn = { background: "#10b981", color: "white", border: "none", padding: "10px 18px", borderRadius: "8px", fontWeight: "600" };
-
-const reviewBadge = { background: "#fef3c7", color: "#d97706", padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700" };
-const complaintBadge = { background: "#fee2e2", color: "#dc2626", padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700" };
-
-const primaryBtn = { ...bookBtn, padding: "12px 24px" };
-const secondaryBtn = { background: "white", color: "#1e1b4b", border: "1px solid #e2e8f0", padding: "12px 24px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" };
-
-const fadeAnimation = { animation: "fadeIn 0.3s ease-out" };
-
-const profileDropdown = { position: "absolute", top: "60px", right: 0, width: "260px", background: "white", borderRadius: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", overflow: "hidden", zIndex: 9999 };
-const profileHeader = { textAlign: "center", padding: "20px", borderBottom: "1px solid #e5e7eb" };
-const profileAvatar = { width: "70px", height: "70px", borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", color: "white", margin: "0 auto" };
-const profileMenuItem = { padding: "12px 18px", cursor: "pointer", fontSize: "14px", borderBottom: "1px solid #f1f5f9", color: "#374151" };
-const profileLogout = { padding: "14px 18px", cursor: "pointer", color: "red", fontWeight: "600" };
-const style = document.createElement("style");
-style.innerHTML = `
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}`;
-document.head.appendChild(style);
-const availabilityBadge = (isAvailable) => ({
-  position: "absolute",
-  top: "12px",
-  right: "12px",
-  padding: "6px 12px",
-  borderRadius: "20px",
-  fontSize: "12px",
-  fontWeight: "700",
-  zIndex: 10,
-  background: isAvailable ? "#10b981" : "#ef4444",
-  color: "white",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-});

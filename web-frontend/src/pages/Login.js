@@ -12,7 +12,7 @@ export default function Login() {
     setToast({ show: true, message, type });
     setTimeout(() => {
       setToast({ show: false, message: "", type: "success" });
-    }, 3000); // disappears after 3 sec
+    }, 3000);
   };
 
   const handleLogin = async (e) => {
@@ -36,7 +36,6 @@ export default function Login() {
 
         showToast(`Welcome back, ${user.name}! ✅`, "success");
         
-        // Redirect after a short delay to show notification
         setTimeout(() => {
           if (user.role === "admin") navigate("/admin");
           else if (user.role === "staff") navigate("/staff");
@@ -54,49 +53,52 @@ export default function Login() {
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={glowOrb1}></div>
-      <div style={glowOrb2}></div>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", position: "relative", overflow: "hidden" }} className="fade-in">
+      {/* Background glow orbs */}
+      <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
+      <div className="glow-orb glow-orb-accent" style={{ bottom: "-150px", right: "-150px" }}></div>
 
-      <div style={cardStyle}>
-        <div style={logoStyle}>
-          <span style={{ fontSize: "40px" }}>🚗</span>
-          <h1 style={logoText}>QuickRide <span style={{ color: "#6366f1" }}>Rentals</span></h1>
+      <div className="glass-card scale-in" style={{ padding: "45px", width: "420px", maxWidth: "90%", textAlign: "center", zIndex: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+          <span style={{ fontSize: "45px", filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.3))" }}>🚗</span>
+          <h1 style={{ color: "white", fontSize: "28px", fontWeight: "800", margin: 0, letterSpacing: "-0.5px" }}>
+            QuickRide <span style={{ color: "var(--primary)" }}>Rentals</span>
+          </h1>
         </div>
-        <p style={subtitleStyle}>Log into the management platform</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginBottom: "30px" }}>Log into the management platform</p>
 
-        <form onSubmit={handleLogin} style={formStyle}>
-          <div style={formGroup}>
-            <label style={labelStyle}>EMAIL ADDRESS</label>
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "20px", textAlign: "left" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label className="form-label">Email Address</label>
             <input
               type="email"
               placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
+              className="custom-input"
               required
             />
           </div>
 
-          <div style={formGroup}>
-            <label style={labelStyle}>PASSWORD</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label className="form-label">Password</label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
+              className="custom-input"
               required
             />
           </div>
 
-          <button type="submit" style={btnStyle} disabled={loading}>
+          <button type="submit" className="btn-base btn-primary" style={{ marginTop: "10px", width: "100%" }} disabled={loading}>
             {loading ? "Logging in..." : "Sign In"}
           </button>
         </form>
 
-        <p style={registerLinkStyle}>
-          Don't have an account? <Link to="/register" style={{ color: "#818cf8", textDecoration: "none", fontWeight: "600" }}>Register here</Link>
+        <p style={{ color: "var(--text-secondary)", marginTop: "25px", fontSize: "14px" }}>
+          Don't have an account? <Link to="/register" style={{ color: "var(--primary)", textDecoration: "none", fontWeight: "600" }}>Register here</Link>
         </p>
       </div>
 
@@ -109,11 +111,11 @@ export default function Login() {
             right: "20px",
             padding: "16px 24px",
             borderRadius: "12px",
-            background: toast.type === "success" ? "#10b981" : "#ef4444",
+            background: toast.type === "success" ? "var(--success)" : "var(--danger)",
             color: "white",
             fontSize: "14px",
             fontWeight: "500",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            boxShadow: "var(--shadow-lg)",
             animation: "slideIn 0.3s ease-out",
             zIndex: 1000
           }}
@@ -138,126 +140,3 @@ export default function Login() {
     </div>
   );
 }
-
-// Styling
-const containerStyle = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "100vh",
-  background: "#0f172a", // sleek dark blue
-  fontFamily: "'Outfit', 'Inter', sans-serif",
-  position: "relative",
-  overflow: "hidden"
-};
-
-const glowOrb1 = {
-  position: "absolute",
-  top: "-150px",
-  left: "-150px",
-  width: "500px",
-  height: "500px",
-  borderRadius: "50%",
-  background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(255,255,255,0) 70%)",
-  zIndex: 0,
-  pointerEvents: "none"
-};
-
-const glowOrb2 = {
-  position: "absolute",
-  bottom: "-150px",
-  right: "-150px",
-  width: "600px",
-  height: "600px",
-  borderRadius: "50%",
-  background: "radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(255,255,255,0) 70%)",
-  zIndex: 0,
-  pointerEvents: "none"
-};
-
-const cardStyle = {
-  background: "rgba(30, 41, 59, 0.7)", // glassmorphism
-  backdropFilter: "blur(20px)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
-  borderRadius: "24px",
-  padding: "45px",
-  width: "420px",
-  maxWidth: "90%",
-  boxShadow: "0 20px 50px rgba(0, 0, 0, 0.3)",
-  textAlign: "center",
-  zIndex: 10
-};
-
-const logoStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: "10px",
-  marginBottom: "10px"
-};
-
-const logoText = {
-  color: "white",
-  fontSize: "28px",
-  fontWeight: "800",
-  margin: 0,
-  letterSpacing: "-0.5px"
-};
-
-const subtitleStyle = {
-  color: "#94a3b8",
-  fontSize: "15px",
-  margin: "0 0 30px"
-};
-
-const formStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "20px",
-  textAlign: "left"
-};
-
-const formGroup = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "6px"
-};
-
-const labelStyle = {
-  color: "#94a3b8",
-  fontSize: "11px",
-  fontWeight: "700",
-  letterSpacing: "0.05em"
-};
-
-const inputStyle = {
-  background: "rgba(15, 23, 42, 0.6)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
-  borderRadius: "12px",
-  padding: "14px 16px",
-  color: "white",
-  fontSize: "15px",
-  outline: "none",
-  transition: "border-color 0.2s ease"
-};
-
-const btnStyle = {
-  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-  color: "white",
-  border: "none",
-  borderRadius: "12px",
-  padding: "16px",
-  fontSize: "16px",
-  fontWeight: "600",
-  cursor: "pointer",
-  marginTop: "10px",
-  boxShadow: "0 8px 20px -6px rgba(99, 102, 241, 0.5)",
-  transition: "transform 0.1s ease, box-shadow 0.2s ease"
-};
-
-const registerLinkStyle = {
-  color: "#94a3b8",
-  marginTop: "25px",
-  fontSize: "14px",
-  margin: "25px 0 0"
-};
