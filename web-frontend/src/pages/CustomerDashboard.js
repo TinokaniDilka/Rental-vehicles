@@ -306,6 +306,15 @@ export default function CustomerDashboard() {
     window.location.href = "/login";
   };
 
+  // Add this function
+const handleOpenFeedbackModal = (booking) => {
+  setSelectedBookingForFeedback(booking);
+  setFeedbackType("feedback");
+  setFeedbackRating(5);
+  setFeedbackComment("");
+  setShowFeedbackModal(true);
+};
+
   const handleOpenCancelModal = (booking) => {
     let refundPercentage = 0;
     if (["pending", "approved"].includes(booking.status)) {
