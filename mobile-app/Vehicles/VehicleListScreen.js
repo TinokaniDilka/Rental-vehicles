@@ -15,7 +15,7 @@ import VehicleCard from '../components/VehicleCard';
 import Loader from '../components/Loader';
 import { Ionicons } from '@expo/vector-icons';
 
-const FILTER_CHIPS = ['All', 'Car', 'Bike', 'Scooter', 'Three Wheel'];
+const FILTER_CHIPS = ['All', 'Car', 'Scooter', 'Three Wheel'];
 
 export default function VehicleListScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);

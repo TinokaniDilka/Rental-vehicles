@@ -617,7 +617,7 @@ export default function StaffDashboardScreen({ navigation }) {
 
             <Text style={styles.inputLabel}>Category</Text>
             <View style={styles.typeRow}>
-              {['car', 'bike', 'scooter', 'three wheel'].map(t => (
+              {['car', 'scooter', 'three wheel'].map(t => (
                 <TouchableOpacity key={t} onPress={() => setVehicleType(t)}
                   style={[styles.typeChip, vehicleType === t && styles.typeChipActive]}>
                   <Text style={[styles.typeChipText, vehicleType === t && { color: 'white' }]}>
