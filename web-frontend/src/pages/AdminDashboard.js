@@ -29,7 +29,9 @@ export default function AdminDashboard() {
   const [profileName, setProfileName] = useState(user.name || "");
   const [profileEmail, setProfileEmail] = useState(user.email || "");
   const [profilePassword, setProfilePassword] = useState("");
-
+    // Add these after the existing states
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   // Staff Account Form
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [staffName, setStaffName] = useState("");
@@ -40,6 +42,13 @@ export default function AdminDashboard() {
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState("");
+
+    // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowProfileMenu(false);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchStats();
@@ -165,18 +174,28 @@ export default function AdminDashboard() {
     }
   };
 
-  // Profile Update
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.put(
         "http://localhost:5000/api/auth/profile",
-        { name: profileName, email: profileEmail, password: profilePassword },
+        { 
+          name: profileName, 
+          email: profileEmail, 
+          password: profilePassword || undefined 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       localStorage.setItem("user", JSON.stringify(res.data.user));
       alert("Profile updated successfully ✅");
       setProfilePassword("");
+      setShowProfileModal(false);
     } catch (err) {
       alert(err.response?.data?.message || "Profile update failed");
     }
@@ -187,13 +206,13 @@ export default function AdminDashboard() {
       {/* Background glow orbs */}
       <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
       <div className="glow-orb glow-orb-accent" style={{ bottom: "-100px", right: "-100px" }}></div>
-
       {/* Navbar */}
+            {/* Navbar - Customer Style Profile */}
       <nav className="navbar-custom">
         <div className="navbar-container">
           <div className="nav-logo">
-            <span style={{ fontSize: "28px", marginRight: "10px" }}>🛡️</span>
-            <span>QuickRide <span style={{ color: "var(--accent)" }}>Admin Console</span></span>
+            <span style={{ fontSize: "28px", marginRight: "10px" }}>🛠️</span>
+            <span>QuickRide <span style={{ color: "var(--accent)" }}>Admin </span></span>
           </div>
 
           <div className="nav-links-wrap">
@@ -201,16 +220,54 @@ export default function AdminDashboard() {
             <NavItem label="Users List" active={activePage === "users"} onClick={() => setActivePage("users")} />
             <NavItem label="Promo Codes" active={activePage === "promos"} onClick={() => setActivePage("promos")} />
             <NavItem label="System Reports" active={activePage === "reports"} onClick={() => setActivePage("reports")} />
-            <NavItem label="Profile" active={activePage === "profile"} onClick={() => setActivePage("profile")} />
+            
           </div>
 
-          <div className="profile-pill">
-            <span style={{ fontSize: "18px" }}>👤</span>
-            <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Admin"}</span>
+          {/* Profile Pill (like Customer Dashboard) */}
+          <div style={{ position: "relative" }}>
+            <div 
+              className="profile-pill" 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setShowProfileMenu(!showProfileMenu); 
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <span style={{ fontSize: "18px" }}>👤</span>
+              <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Admin"}</span>
+              <span style={{ fontSize: "10px", marginLeft: "4px" }}>▼</span>
+            </div>
+
+            {showProfileMenu && (
+              <div 
+                className="profile-dropdown-menu glass-card scale-in" 
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ textAlign: "center", padding: "15px", borderBottom: "1px solid var(--border-color)" }}>
+                  <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "var(--primary-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", color: "white", margin: "0 auto 10px" }}>👤</div>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{user.name}</h3>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "12px", margin: "4px 0 0" }}>{user.email}</p>
+                </div>
+                <div 
+                  style={{ padding: "12px 16px", cursor: "pointer", fontSize: "14px", borderBottom: "1px solid var(--border-color)" }} 
+                  onClick={() => { 
+                    setShowProfileModal(true); 
+                    setShowProfileMenu(false); 
+                  }}
+                >
+                  👤 Edit Profile
+                </div>
+                <div 
+                  style={{ padding: "14px 16px", cursor: "pointer", color: "var(--danger)", fontWeight: "600", fontSize: "14px" }} 
+                  onClick={handleLogout}
+                >
+                  Logout
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
-
       {/* Main Container */}
       <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", position: "relative", zIndex: 1 }}>
         
@@ -505,7 +562,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* PROFILE SETTINGS */}
+                {/* PROFILE SETTINGS */}
         {activePage === "profile" && (
           <div className="slide-up">
             <div className="glass-card" style={{ padding: "35px", borderRadius: "16px", maxWidth: "500px", margin: "0 auto" }}>
@@ -530,6 +587,33 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+              {/* Profile Quick Edit Modal */}
+      {showProfileModal && (
+        <div className="custom-modal-overlay" onClick={() => setShowProfileModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "20px" }}>Edit Profile</h3>
+            
+            <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Full Name</label>
+                <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} className="custom-input" required />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Email Address</label>
+                <input type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="custom-input" required />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">New Password (Leave blank to keep current)</label>
+                <input type="password" placeholder="••••••••" value={profilePassword} onChange={(e) => setProfilePassword(e.target.value)} className="custom-input" />
+              </div>
+              <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowProfileModal(false)}>Cancel</button>
+                <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       </main>
 
