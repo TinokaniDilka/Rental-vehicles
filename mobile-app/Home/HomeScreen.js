@@ -8,6 +8,7 @@ import {
   StatusBar,
   Dimensions,
   TextInput,
+  ImageBackground
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../context/AuthContext';
@@ -42,39 +43,37 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* HERO CARD */}
-        <LinearGradient
-          colors={['#6366f1', '#4f46e5']}
-          style={styles.hero}
-        >
-          <Text style={styles.available}>⚡ 200+ Vehicles Available</Text>
+    
 
-          <Text style={styles.heroTitle}>
-            Find Your
-          </Text>
-          <Text style={styles.heroTitleBold}>
-            Perfect Ride
-          </Text>
+<ImageBackground
+  source={{
+    uri: 'https://i.pinimg.com/originals/97/87/23/9787239940becc079d01e6e5ee0bac16.jpg'
+  }}
+  style={styles.heroCard}
+  imageStyle={{ borderRadius: 20 }}
+>
 
-          <Text style={styles.heroSub}>
-            Premium vehicles at your fingertips
-          </Text>
 
-          <View style={styles.heroButtons}>
-            <TouchableOpacity
-              style={styles.primaryBtn}
-              onPress={() => navigation.navigate('Vehicles')}
-            >
-              <Text style={styles.primaryText}>Rent Now</Text>
-            </TouchableOpacity>
+  <View style={styles.overlay}>
 
-            <TouchableOpacity
-              style={styles.secondaryBtn}
-              onPress={() => navigation.navigate('Vehicles')}
-            >
-              <Text style={styles.secondaryText}>Browse Vehicles</Text>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
+    
+    <Text style={styles.title}>
+      Find Your{'\n'}Perfect Ride
+    </Text>
+
+ 
+    <View style={styles.buttonsRow}>
+      <TouchableOpacity style={styles.primaryBtn}>
+        <Text style={styles.primaryText}>Rent Now</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.outlineBtn}>
+        <Text style={styles.outlineText}>Browse Vehicles</Text>
+      </TouchableOpacity>
+    </View>
+
+  </View>
+</ImageBackground>
 
         {/* SEARCH */}
         <View style={styles.searchBox}>
@@ -266,6 +265,65 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
+heroCard: {
+  height: 200,
+  borderRadius: 20,
+  overflow: 'hidden',
+  marginBottom: 20,
+},
+
+overlay: {
+  flex: 1,
+  padding: 20,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+  justifyContent: 'center',
+},
+
+smallText: {
+  color: '#ddd',
+  marginBottom: 10,
+},
+
+title: {
+  fontSize: 26,
+  fontWeight: '700',
+  color: '#fff',
+},
+
+subtitle: {
+  color: '#ddd',
+  marginVertical: 10,
+},
+
+buttonsRow: {
+  flexDirection: 'row',
+  marginTop: 10,
+},
+
+primaryBtn: {
+  backgroundColor: '#fff',
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  borderRadius: 10,
+  marginRight: 10,
+},
+
+primaryText: {
+  color: '#000',
+  fontWeight: '600',
+},
+
+outlineBtn: {
+  borderWidth: 1,
+  borderColor: '#fff',
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  borderRadius: 10,
+},
+
+outlineText: {
+  color: '#fff',
+},
 
   badgeBlue: {
     backgroundColor: '#0ea5e9',
