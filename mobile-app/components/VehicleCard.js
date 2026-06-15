@@ -2,46 +2,69 @@ import React from 'react';
 import { API_BASE_URL } from '../utils/constants';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, SIZES, SHADOWS } from '../utils/theme';
-
+import { ImageBackground } from 'react-native';
 export default function VehicleCard({ vehicle, onPress }) {
   const isAvailable = vehicle.isAvailable !== false;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.imageContainer}>
-        {vehicle.image ? (
-          <Image
-            source={{ uri: `${API_BASE_URL}${vehicle.image}` }}
-            style={styles.image}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.placeholderImage}>
-            <Text style={{ fontSize: 32 }}>🚗</Text>
-          </View>
-        )}
-        <View style={[styles.badge, { backgroundColor: isAvailable ? COLORS.success : COLORS.danger }]}>
-          <Text style={styles.badgeText}>{isAvailable ? 'Available' : 'Rented'}</Text>
-        </View>
-      </View>
-      
-      <View style={styles.info}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.name}>{vehicle.name}</Text>
-          <Text style={styles.category}>{vehicle.type?.toUpperCase()}</Text>
-        </View>
-        
-        <View style={styles.divider} />
-        
-        <View style={styles.footer}>
-          <Text style={styles.location}>📍 {vehicle.location}</Text>
-          <Text style={styles.price}>
-            <Text style={styles.priceNum}>${vehicle.pricePerDay}</Text>
-            <Text style={styles.priceDay}> / day</Text>
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+  
+  <View style={styles.imageContainer}>
+    
+    {vehicle.image ? (
+      <Image
+        source={{ uri: `${API_BASE_URL}${vehicle.image}` }}
+        style={styles.image}
+        resizeMode="cover"
+      />
+    ) : (
+      <Image
+        source={require('../assets/car-placeholder.webp')}
+        style={styles.image}
+        resizeMode="cover"
+      />
+    )}
+
+    {/* ✅ BADGE */}
+    <View
+      style={[
+        styles.badge,
+        { backgroundColor: isAvailable ? COLORS.success : COLORS.danger },
+      ]}
+    >
+      <Text style={styles.badgeText}>
+        {isAvailable ? 'Available' : 'Rented'}
+      </Text>
+    </View>
+
+  </View>
+
+  <View style={styles.info}>
+    
+    <View style={styles.cardHeader}>
+      <Text style={styles.name}>{vehicle.name}</Text>
+      <Text style={styles.category}>
+        {vehicle.type?.toUpperCase()}
+      </Text>
+    </View>
+
+    <View style={styles.divider} />
+
+    <View style={styles.footer}>
+      <Text style={styles.location}>📍 {vehicle.location}</Text>
+
+      <Text style={styles.price}>
+        <Text style={styles.priceNum}>
+          ${vehicle.pricePerDay}
+        </Text>
+        <Text style={styles.priceDay}> / day</Text>
+      </Text>
+    </View>
+
+  </View>
+
+</TouchableOpacity>
+
   );
 }
 
