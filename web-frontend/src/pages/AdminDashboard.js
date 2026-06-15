@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 export default function AdminDashboard() {
@@ -7,7 +7,12 @@ export default function AdminDashboard() {
 
   // Navigation
   const [activePage, setActivePage] = useState("dashboard");
+  const [activeReportTab, setActiveReportTab] = useState("payments");
 
+  // Ref for scrolling to payments section
+  const paymentsRef = useRef(null);
+   const vehiclesRef = useRef(null);
+  const feedbackRef = useRef(null);
   // Stats State
   const [stats, setStats] = useState({
     totalVehicles: 0,
@@ -44,12 +49,22 @@ export default function AdminDashboard() {
   const [promoDiscount, setPromoDiscount] = useState("");
 
     // Close profile dropdown when clicking outside
+  // Auto-scroll to Invoice Payments Log when Monthly Revenue is clicked
+  // Auto-scroll to correct section when coming from dashboard cards
+  // Auto-scroll to correct section when coming from dashboard cards
   useEffect(() => {
-    const handleClickOutside = () => setShowProfileMenu(false);
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
-
+    if (activePage === "reports") {
+      setTimeout(() => {
+        if (activeReportTab === "payments" && paymentsRef.current) {
+          paymentsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (activeReportTab === "vehicles" && vehiclesRef.current) {
+          vehiclesRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (activeReportTab === "feedback" && feedbackRef.current) {
+          feedbackRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+    }
+  }, [activePage, activeReportTab]);
   useEffect(() => {
     fetchStats();
     fetchUsers();
@@ -269,7 +284,13 @@ export default function AdminDashboard() {
         </div>
       </nav>
       {/* Main Container */}
-      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px", position: "relative", zIndex: 1 }}>
+      <main style={{ 
+        maxWidth: "1200px", 
+        margin: "0 auto", 
+        padding: "60px 20px 40px 20px",   // Increased top padding
+        position: "relative", 
+        zIndex: 1 
+      }}>
         
         {/* OVERVIEW STATS */}
         {activePage === "dashboard" && (
@@ -283,12 +304,55 @@ export default function AdminDashboard() {
             </div>
 
             <div className="dashboard-grid">
-              <DashboardCard icon="💰" title="MONTHLY REVENUE" value={`$${stats.monthlyRevenue}`} color="var(--success)" />
-              <DashboardCard icon="🚗" title="ACTIVE RENTALS" value={stats.activeRentals} color="var(--primary)" />
-              <DashboardCard icon="⏳" title="PENDING ORDERS" value={stats.pendingBookings} color="var(--warning)" />
-              <DashboardCard icon="👤" title="TOTAL CUSTOMERS" value={stats.totalCustomers} color="var(--secondary)" />
-              <DashboardCard icon="⭐" title="SATISFACTION RATING" value={`${stats.customerSatisfaction} / 5`} color="var(--accent)" />
-            </div>
+  <DashboardCard 
+    icon="💰" 
+    title="MONTHLY REVENUE" 
+    value={`$${stats.monthlyRevenue}`} 
+    color="var(--success)" 
+    onClick={() => {
+      setActiveReportTab("payments");
+      setActivePage("reports");
+    }}
+  />
+
+  <DashboardCard 
+    icon="🚗" 
+    title="ACTIVE RENTALS" 
+    value={stats.activeRentals} 
+    color="var(--primary)" 
+    onClick={() => {
+      setActiveReportTab("vehicles");
+      setActivePage("reports");
+    }}
+  />
+
+  <DashboardCard 
+    icon="⏳" 
+    title="PENDING ORDERS" 
+    value={stats.pendingBookings} 
+    color="var(--warning)" 
+    onClick={() => setActivePage("reports")}
+  />
+
+  <DashboardCard 
+    icon="👤" 
+    title="TOTAL CUSTOMERS" 
+    value={stats.totalCustomers} 
+    color="var(--secondary)" 
+    onClick={() => setActivePage("users")} // 👈 open users list
+  />
+
+  <DashboardCard 
+    icon="⭐" 
+    title="SATISFACTION RATING" 
+    value={`${stats.customerSatisfaction} / 5`} 
+    color="var(--accent)" 
+    onClick={() => {
+      setActiveReportTab("feedback");
+      setActivePage("reports");
+    }}
+  />
+</div>
 
             <div className="glass-card" style={{ padding: "25px", marginTop: "35px" }}>
               <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px" }}>Quick Operations Shortcuts</h3>
@@ -302,7 +366,7 @@ export default function AdminDashboard() {
 
         {/* USERS LIST */}
         {activePage === "users" && (
-          <div className="slide-up">
+          <div className="slide-up" style={{ marginTop: "50px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "22px", fontWeight: "700" }}>User Accounts Registry 👥</h2>
               <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Staff</button>
@@ -363,7 +427,7 @@ export default function AdminDashboard() {
 
         {/* PROMO CODES */}
         {activePage === "promos" && (
-          <div className="slide-up">
+          <div className="slide-up" style={{ marginTop: "50px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "22px", fontWeight: "700" }}>Promotional Discounts Manager 🏷️</h2>
               <button className="btn-base btn-primary" onClick={() => setShowPromoModal(true)}>➕ Add Promo Code</button>
@@ -414,10 +478,11 @@ export default function AdminDashboard() {
 
         {/* REPORTS VIEW */}
         {activePage === "reports" && (
-          <div className="slide-up">
+          <div className="slide-up" style={{ marginTop: "50px" }}>
             <h2>Operations Analysis Reports 📊</h2>
-            <p style={{ color: "var(--text-secondary)", marginBottom: "30px" }}>Extract and audit transaction listings, bookings, feedback logs, and fleet status.</p>
-
+            <p style={{ color: "var(--text-secondary)", marginBottom: "30px" }}>
+              Extract and audit transaction listings, bookings, feedback logs, and fleet status.
+            </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               
               {/* BOOKINGS TABLE */}
@@ -453,8 +518,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* PAYMENTS TABLE */}
-              <div className="glass-card" style={{ padding: "25px" }}>
+              {/* PAYMENTS TABLE - Highlighted when coming from Monthly Revenue */}
+              <div 
+                ref={paymentsRef} 
+                className="glass-card" 
+                style={{ 
+                  padding: "25px",
+                  border: activeReportTab === "payments" ? "2px solid var(--success)" : "1px solid var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
                 <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💰 Invoice Payments Log</h4>
                 <div className="custom-table-container">
                   <table className="custom-table">
@@ -482,8 +555,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* FLEET AVAILABILITY */}
-              <div className="glass-card" style={{ padding: "25px" }}>
+              {/* VEHICLE FLEET AVAILABILITY - Highlighted when coming from Active Rentals */}
+              <div 
+                ref={vehiclesRef} 
+                className="glass-card" 
+                style={{ 
+                  padding: "25px",
+                  border: activeReportTab === "vehicles" ? "2px solid var(--primary)" : "1px solid var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
                 <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>🚘 Vehicle Fleet Availability</h4>
                 <div className="custom-table-container">
                   <table className="custom-table">
@@ -518,8 +599,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* CUSTOMER FEEDBACK & COMPLAINTS */}
-              <div className="glass-card" style={{ padding: "25px" }}>
+              {/* CUSTOMER FEEDBACK & COMPLAINTS - Highlighted when coming from Satisfaction Rating */}
+              <div 
+                ref={feedbackRef} 
+                className="glass-card" 
+                style={{ 
+                  padding: "25px",
+                  border: activeReportTab === "feedback" ? "2px solid var(--accent)" : "1px solid var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
                 <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💬 Customer Feedbacks & Complaints</h4>
                 <div className="custom-table-container">
                   <table className="custom-table">
@@ -684,15 +773,23 @@ const NavItem = ({ label, active, onClick }) => (
   </div>
 );
 
-const DashboardCard = ({ icon, title, value, color }) => (
-  <div className="glass-card dashboard-card-metric" style={{ position: "relative", overflow: "hidden" }}>
+const DashboardCard = ({ icon, title, value, color, onClick }) => (
+  <div 
+    className="glass-card dashboard-card-metric"
+    onClick={onClick}
+    style={{ 
+      position: "relative", 
+      overflow: "hidden",
+      cursor: "pointer"   // 👈 add this
+    }}
+  >
     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "4px", background: color }} />
     <div className="metric-icon-wrap" style={{ background: color, color: "white" }}>
       {icon}
     </div>
     <div>
-      <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>{title}</p>
-      <h2 style={{ margin: "4px 0 0", fontSize: "22px", color: "var(--text-primary)", fontWeight: "800" }}>{value}</h2>
+      <p style={{ margin: 0 }}>{title}</p>
+      <h2>{value}</h2>
     </div>
   </div>
 );
