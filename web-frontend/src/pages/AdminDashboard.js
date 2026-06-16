@@ -371,22 +371,22 @@ export default function AdminDashboard() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "22px", fontWeight: "700" }}>User Accounts Registry 👥</h2>
               {/* ✅ FILTER DROPDOWN */}
-<div style={{ marginTop: "10px", marginBottom: "15px" }}>
-  <select
-    value={userFilter}
-    onChange={(e) => setUserFilter(e.target.value)}
-    className="custom-input"
-    style={{ maxWidth: "200px" }}
-  >
-    <option value="all">All Users</option>
-    <option value="staff">Staff</option>
-    <option value="customer">Customers</option>
-    <option value="admin">Admins</option>
-    <option value="renter">Renters</option>
-  </select>
-</div>
+              <div style={{ marginTop: "10px", marginBottom: "15px" }}>
+                <select
+                  value={userFilter}
+                   onChange={(e) => setUserFilter(e.target.value)}
+                  className="custom-input"
+                  style={{ maxWidth: "200px" }}
+                >
+                  <option value="all">All Users</option>
+                <option value="staff">Staff</option>
+                <option value="customer">Customers</option>
+                <option value="admin">Admins</option>
+                <option value="renter">Renters</option>
+            </select>
+          </div>
 
-              <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Staff</button>
+            <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Staff</button>
             </div>
 
             <div className="custom-table-container">
