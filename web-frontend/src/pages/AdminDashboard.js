@@ -28,6 +28,9 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [promos, setPromos] = useState([]);
   const [reports, setReports] = useState({ bookings: [], payments: [], vehicles: [], feedback: [] });
+  const [selectedDate, setSelectedDate] = useState("");
+  const [paymentDate, setPaymentDate] = useState("");
+  const [searchTransaction, setSearchTransaction] = useState("");
   const [loading, setLoading] = useState(true);
 
   // Profile Settings
@@ -42,15 +45,13 @@ export default function AdminDashboard() {
   const [staffName, setStaffName] = useState("");
   const [staffEmail, setStaffEmail] = useState("");
   const [staffPassword, setStaffPassword] = useState("");
+  const [userFilter, setUserFilter] = useState("all");
 
   // Promo Code Form
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState("");
 
-    // Close profile dropdown when clicking outside
-  // Auto-scroll to Invoice Payments Log when Monthly Revenue is clicked
-  // Auto-scroll to correct section when coming from dashboard cards
   // Auto-scroll to correct section when coming from dashboard cards
   useEffect(() => {
     if (activePage === "reports") {
@@ -369,6 +370,22 @@ export default function AdminDashboard() {
           <div className="slide-up" style={{ marginTop: "50px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "22px", fontWeight: "700" }}>User Accounts Registry 👥</h2>
+              {/* ✅ FILTER DROPDOWN */}
+<div style={{ marginTop: "10px", marginBottom: "15px" }}>
+  <select
+    value={userFilter}
+    onChange={(e) => setUserFilter(e.target.value)}
+    className="custom-input"
+    style={{ maxWidth: "200px" }}
+  >
+    <option value="all">All Users</option>
+    <option value="staff">Staff</option>
+    <option value="customer">Customers</option>
+    <option value="admin">Admins</option>
+    <option value="renter">Renters</option>
+  </select>
+</div>
+
               <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Staff</button>
             </div>
 
@@ -384,7 +401,13 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(u => (
+                  {users
+  .filter(u => {
+    if (userFilter === "all") return true;
+    return u.role === userFilter;
+  })
+  .map(u => (
+
                     <tr key={u._id} className="custom-tr">
                       <td className="custom-td custom-td-primary">{u.name}</td>
                       <td className="custom-td">{u.email}</td>
@@ -480,14 +503,40 @@ export default function AdminDashboard() {
         {activePage === "reports" && (
           <div className="slide-up" style={{ marginTop: "50px" }}>
             <h2>Operations Analysis Reports 📊</h2>
+            
             <p style={{ color: "var(--text-secondary)", marginBottom: "30px" }}>
               Extract and audit transaction listings, bookings, feedback logs, and fleet status.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               
               {/* BOOKINGS TABLE */}
-              <div className="glass-card" style={{ padding: "25px" }}>
-                <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>📅 System Booking Logs</h4>
+              {/* BOOKINGS TABLE */}
+<div className="glass-card" style={{ padding: "25px" }}>
+  <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>
+    📅 System Booking Logs
+  </h4>
+
+  {/* ✅ ONLY ONE FILTER BAR */}
+  <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
+    <span style={{ color: "white", fontWeight: "600" }}>Filter by Date:</span>
+
+    <input
+      type="date"
+      value={selectedDate}
+      onChange={(e) => setSelectedDate(e.target.value)}
+      className="custom-input"
+      style={{ maxWidth: "180px" }}
+    />
+
+    <button
+      className="btn-base btn-secondary"
+      onClick={() => setSelectedDate("")}
+    >
+      Reset
+    </button>
+  </div>
+
+              
                 <div className="custom-table-container">
                   <table className="custom-table">
                     <thead>
@@ -500,18 +549,43 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {reports.bookings.map(b => (
+                    {reports.bookings
+  .filter(b => {
+    if (!selectedDate) return true;
+
+    const selected = new Date(selectedDate).setHours(0,0,0,0);
+    const start = new Date(b.startDate).setHours(0,0,0,0);
+    const end = new Date(b.endDate).setHours(0,0,0,0);
+
+    return selected >= start && selected <= end;
+  })
+  .map(b => (
                         <tr key={b._id} className="custom-tr">
-                          <td className="custom-td custom-td-primary">{b.vehicleId?.name || "Deleted"}</td>
-                          <td className="custom-td">{b.customerId?.name || "Deleted"}</td>
-                          <td className="custom-td">
-                            {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
-                          </td>
-                          <td className="custom-td">${b.totalAmount}</td>
-                          <td className="custom-td">
-                            <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
-                          </td>
-                        </tr>
+
+  <td className="custom-td custom-td-primary">
+    {b.vehicleId?.name || "Deleted"}
+    <br />
+    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+      ID: {b.vehicleId?.vehicleId || b.vehicleId?._id?.slice(-6)}
+    </span>
+  </td>
+
+  <td className="custom-td">{b.customerId?.name}</td>
+
+  <td className="custom-td">
+    {new Date(b.startDate).toLocaleDateString()} -
+    {new Date(b.endDate).toLocaleDateString()}
+  </td>
+
+  <td className="custom-td">${b.totalAmount}</td>
+
+  <td className="custom-td">
+    <span className={`badge-base badge-${b.status}`}>
+      {b.status.toUpperCase()}
+    </span>
+  </td>
+
+</tr>
                       ))}
                     </tbody>
                   </table>
@@ -529,26 +603,103 @@ export default function AdminDashboard() {
                 }}
               >
                 <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💰 Invoice Payments Log</h4>
+                {/* ✅ SEARCH BAR FOR TRANSACTION ID */}
+<div style={{ marginBottom: "15px", display: "flex", gap: "10px", alignItems: "center" }}>
+  
+  <input
+    type="text"
+    placeholder="Search Transaction ID..."
+    value={searchTransaction}
+    onChange={(e) => setSearchTransaction(e.target.value)}
+    className="custom-input"
+    style={{ maxWidth: "250px" }}
+  />
+
+  <button
+    className="btn-base btn-secondary"
+    onClick={() => setSearchTransaction("")}
+  >
+    Clear
+  </button>
+
+</div>
+
+                {/* ✅ DATE FILTER FOR PAYMENTS */}
+<div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
+  <span style={{ color: "white", fontWeight: "600" }}>Filter by Date:</span>
+
+  <input
+    type="date"
+    value={paymentDate}
+    onChange={(e) => setPaymentDate(e.target.value)}
+    className="custom-input"
+    style={{ maxWidth: "180px" }}
+  />
+
+  <button
+    className="btn-base btn-secondary"
+    onClick={() => setPaymentDate("")}
+  >
+    Reset
+  </button>
+</div>
                 <div className="custom-table-container">
                   <table className="custom-table">
                     <thead>
                       <tr>
                         <th className="custom-th">TRANSACTION ID</th>
                         <th className="custom-th">CUSTOMER</th>
+                        <th className="custom-th">VEHICLE</th>        {/* ✅ */}
+                        <th className="custom-th">VEHICLE ID</th>     {/* ✅ */}
                         <th className="custom-th">AMOUNT</th>
-                        <th className="custom-th">PAYMENT METHOD</th>
-                        <th className="custom-th">TIMESTAMP</th>
+<                       th className="custom-th">TIMESTAMP</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {reports.payments.map(p => (
-                        <tr key={p._id} className="custom-tr">
-                          <td className="custom-td" style={{ fontFamily: "monospace" }}>{p._id}</td>
-                          <td className="custom-td">{p.customerId?.name || "Deleted"}</td>
-                          <td className="custom-td">${p.amount}</td>
-                          <td className="custom-td">{p.paymentMethod.replace("_", " ").toUpperCase()}</td>
-                          <td className="custom-td">{new Date(p.paidAt || p.createdAt).toLocaleString()}</td>
-                        </tr>
+                      {reports.payments
+  .filter(p => {
+    // ✅ Date filter
+    const matchDate = paymentDate
+      ? new Date(p.paidAt || p.createdAt).toDateString() ===
+        new Date(paymentDate).toDateString()
+      : true;
+
+    // ✅ Transaction ID search
+    const matchSearch = searchTransaction
+      ? p._id.toLowerCase().includes(searchTransaction.toLowerCase())
+      : true;
+
+    return matchDate && matchSearch;
+  })
+  .map(p => (
+<tr key={p._id} className="custom-tr">
+
+  <td className="custom-td" style={{ fontFamily: "monospace" }}>
+    {p._id}
+  </td>
+
+  <td className="custom-td">
+    {p.customerId?.name || "Deleted"}
+  </td>
+
+  {/* ✅ VEHICLE NAME */}
+  <td className="custom-td">
+    {p.bookingId?.vehicleId?.name || "N/A"}
+  </td>
+
+  {/* ✅ VEHICLE ID */}
+  <td className="custom-td">
+    {p.bookingId?.vehicleId?.vehicleId ||
+     p.bookingId?.vehicleId?._id?.slice(-6) ||
+     "N/A"}
+  </td>
+
+  <td className="custom-td">${p.amount}</td>
+
+  <td className="custom-td">
+    {new Date(p.paidAt || p.createdAt).toLocaleString()}
+  </td>
+</tr>
                       ))}
                     </tbody>
                   </table>
@@ -569,32 +720,67 @@ export default function AdminDashboard() {
                 <div className="custom-table-container">
                   <table className="custom-table">
                     <thead>
-                      <tr>
-                        <th className="custom-th">VEHICLE NAME</th>
-                        <th className="custom-th">CATEGORY</th>
-                        <th className="custom-th">DAILY RATE</th>
-                        <th className="custom-th">LOCATION</th>
-                        <th className="custom-th">PHYSICAL STATE</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reports.vehicles.map(v => (
-                        <tr key={v._id} className="custom-tr">
-                          <td className="custom-td custom-td-primary">{v.name}</td>
-                          <td className="custom-td">{v.type.toUpperCase()}</td>
-                          <td className="custom-td">${v.pricePerDay}</td>
-                          <td className="custom-td">{v.location}</td>
-                          <td className="custom-td">
-                            <span style={{
-                              color: v.isAvailable ? "var(--success)" : "var(--warning)",
-                              fontWeight: "bold"
-                            }}>
-                              ● {v.isAvailable ? "Available In Stock" : "Rented Out"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+  <tr>
+    <th className="custom-th">VEHICLE ID</th>
+    <th className="custom-th">VEHICLE NAME</th>
+    <th className="custom-th">CATEGORY</th>
+    <th className="custom-th">DAILY RATE</th>
+    <th className="custom-th">LOCATION</th>
+    <th className="custom-th">ADDED DATE</th>
+    <th className="custom-th">PHYSICAL STATE</th>
+  </tr>
+</thead>
+                    
+                   <tbody>
+  {reports.vehicles.map(v => (
+    <tr key={v._id} className="custom-tr">
+
+      {/* ✅ VEHICLE ID */}
+      <td className="custom-td" style={{ fontFamily: "monospace" }}>
+        {v.vehicleId || v._id.slice(-6)}
+      </td>
+
+      {/* ✅ NAME */}
+      <td className="custom-td custom-td-primary">
+        {v.name}
+      </td>
+
+      {/* ✅ CATEGORY */}
+      <td className="custom-td">
+        {v.type.toUpperCase()}
+      </td>
+
+      {/* ✅ PRICE */}
+      <td className="custom-td">
+        ${v.pricePerDay}
+      </td>
+
+      {/* ✅ LOCATION */}
+      <td className="custom-td">
+        {v.location}
+      </td>
+
+      {/* ✅ DATE */}
+      <td className="custom-td">
+        {v.createdAt
+          ? new Date(v.createdAt).toLocaleDateString()
+          : "N/A"}
+      </td>
+
+      {/* ✅ STATUS */}
+      <td className="custom-td">
+        <span style={{
+          color: v.isAvailable ? "var(--success)" : "var(--warning)",
+          fontWeight: "bold"
+        }}>
+          ● {v.isAvailable ? "Available In Stock" : "Rented Out"}
+        </span>
+      </td>
+
+    </tr>
+  ))}
+</tbody>
+
                   </table>
                 </div>
               </div>
@@ -622,7 +808,17 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {reports.feedback.map(f => (
+                      {reports.feedback
+  .filter(f => {
+    if (!selectedDate) return true;
+
+    return (
+      new Date(f.createdAt).toDateString() ===
+      new Date(selectedDate).toDateString()
+    );
+  })
+  .map(f => (
+
                         <tr key={f._id} className="custom-tr">
                           <td className="custom-td">{f.customerId?.name || "Deleted"}</td>
                           <td className="custom-td">
