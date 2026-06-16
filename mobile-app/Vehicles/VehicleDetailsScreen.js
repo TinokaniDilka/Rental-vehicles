@@ -29,7 +29,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
 
   useEffect(() => {
     getVehicleById(vehicleId)
-      .then((res) => setVehicle(res.data))
+      .then((res) => setVehicle(res.data.vehicle || res.data))
       .catch(() => Alert.alert('Error', 'Failed to load vehicle'))
       .finally(() => setLoading(false));
   }, []);
@@ -56,8 +56,11 @@ export default function VehicleDetailsScreen({ route, navigation }) {
         {/* ── Hero Image ── */}
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: `${API_BASE_URL}${vehicle.image}` }}
-            style={styles.heroImage}
+           source={{
+  uri: vehicle?.image
+    ? `http://10.24.89.129:5000${vehicle.image}`
+    : 'https://via.placeholder.com/300'
+}} style={styles.heroImage}
             resizeMode="cover"
           />
           {/* Overlay gradient so the bottom text remains readable */}
