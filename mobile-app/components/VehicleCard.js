@@ -5,25 +5,22 @@ import { COLORS, SIZES, SHADOWS } from '../utils/theme';
 import { ImageBackground } from 'react-native';
 export default function VehicleCard({ vehicle, onPress }) {
   const isAvailable = vehicle.isAvailable !== false;
-
+console.log('IMAGE PATH:', vehicle.image);
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
   
   <View style={styles.imageContainer}>
+    <Image
+  source={{
+    uri: vehicle.image
+      ? `http://10.24.89.129:5000${vehicle.image}`
+      : 'https://via.placeholder.com/300'
+  }}
+  style={styles.image}
+  resizeMode="cover"
+/>
+
     
-    {vehicle.image ? (
-      <Image
-        source={{ uri: `${API_BASE_URL}${vehicle.image}` }}
-        style={styles.image}
-        resizeMode="cover"
-      />
-    ) : (
-      <Image
-        source={require('../assets/car-placeholder.webp')}
-        style={styles.image}
-        resizeMode="cover"
-      />
-    )}
 
     {/* ✅ BADGE */}
     <View
