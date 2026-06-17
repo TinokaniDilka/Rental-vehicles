@@ -98,5 +98,4 @@ router.delete("/cleanup-renters", async (req, res) => {
     res.status(500).json({ message: "Cleanup failed", error: err.message });
   }
 });
-// =================================================================
 module.exports = router;
