@@ -13,21 +13,17 @@ const {
 // Public routes
 router.post("/login", loginUser);
 
-// Register user
+// Register user - Only Staff Registration (No Renters/Customers)
 router.post("/register", async (req, res) => {
   try {
     let { name, email, password, role } = req.body;
 
-    if (!email || !password || !role) {
-      return res.status(400).json({ message: "Email, password and role are required" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
-    // Map 'renter' to 'staff' if sent, otherwise use role
-    if (role === "renter") role = "staff";
-
-    if (!["customer", "staff"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role selected" });
-    }
+    // Force role to "staff" - No renter or customer allowed
+    role = "staff";
 
     email = email.trim().toLowerCase();
 
@@ -40,14 +36,14 @@ router.post("/register", async (req, res) => {
       name: name || email.split("@")[0], 
       email, 
       password, 
-      role,
+      role: "staff",        // Fixed to staff only
       isActive: true
     });
 
     await newUser.save();
 
     res.status(201).json({
-      message: "User registered successfully ✅",
+      message: "Staff account registered successfully ✅",
       user: {
         _id: newUser._id,
         name: newUser.name,
@@ -89,5 +85,18 @@ router.put("/users/:id/toggle-active", protect, async (req, res, next) => {
   }
   next();
 }, toggleUserActive);
-
+// ===================== TEMPORARY CLEANUP ROUTE =====================
+router.delete("/cleanup-renters", async (req, res) => {
+  try {
+    const result = await User.deleteMany({ role: "renter" });
+    res.json({ 
+      success: true,
+      message: "✅ All renter accounts removed successfully!",
+      deletedCount: result.deletedCount 
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Cleanup failed", error: err.message });
+  }
+});
+// =================================================================
 module.exports = router;

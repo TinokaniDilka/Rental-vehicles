@@ -382,8 +382,7 @@ export default function AdminDashboard() {
                 <option value="staff">Staff</option>
                 <option value="customer">Customers</option>
                 <option value="admin">Admins</option>
-                <option value="renter">Renters</option>
-            </select>
+                 </select>
           </div>
 
             <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Staff</button>

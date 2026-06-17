@@ -36,12 +36,7 @@ export default function Sidebar() {
         </>
       )}
 
-      {/* ✅ RENTER MENU */}
-      {role === "renter" && (
-        <>
-          <Link to="/renter" style={link}>Dashboard</Link>
-        </>
-      )}
+      
 
       <button onClick={logout} style={{
         marginTop: "20px",
