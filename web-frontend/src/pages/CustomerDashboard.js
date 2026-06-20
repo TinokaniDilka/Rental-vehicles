@@ -666,15 +666,76 @@ const handleOpenFeedbackModal = (booking) => {
               ) : vehicleReviews.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                   {vehicleReviews.map(review => (
-                    <div key={review._id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "20px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                        <span style={{ fontWeight: "700", color: "white" }}>👤 {review.customerId?.name || "Anonymous Customer"}</span>
-                        <span style={{ color: "#fbbf24" }}>{"★".repeat(review.rating || 5)}</span>
-                      </div>
-                      <p style={{ color: "var(--text-secondary)", fontStyle: "italic", margin: 0 }}>"{review.comment}"</p>
-                      <small style={{ display: "block", marginTop: "10px", color: "var(--text-muted)", textAlign: "right" }}>{new Date(review.createdAt).toLocaleDateString()}</small>
-                    </div>
-                  ))}
+  <div
+    key={review._id}
+    style={{
+      background: "rgba(255,255,255,0.02)",
+      border: "1px solid var(--border-color)",
+      borderRadius: "12px",
+      padding: "20px"
+    }}
+  >
+    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+      <span style={{ fontWeight: "700", color: "white" }}>
+        👤 {review.customerId?.name || "Customer"}
+      </span>
+      <span style={{ color: "#fbbf24" }}>
+        {"★".repeat(review.rating || 5)}
+      </span>
+    </div>
+
+    {/* ✅ CUSTOMER COMMENT */}
+    <p style={{ color: "var(--text-secondary)", fontStyle: "italic", margin: 0 }}>
+      "{review.comment}"
+    </p>
+
+    {/* ✅ ✅ THIS IS THE MISSING PART */}
+    {review.staffReplies && review.staffReplies.length > 0 ? (
+      <div
+        style={{
+          marginTop: "10px",
+          padding: "10px",
+          background: "rgba(99,102,241,0.08)",
+          borderRadius: "6px"
+        }}
+      >
+        <strong style={{ fontSize: "12px", color: "white" }}>
+          💬 Staff Replies:
+        </strong>
+
+        {review.staffReplies.map(r => (
+          <p key={r._id} style={{ margin: "4px 0", fontSize: "13px" }}>
+            • {r.replyText}
+          </p>
+        ))}
+      </div>
+    ) : review.staffResponse ? (
+      <div
+        style={{
+          marginTop: "10px",
+          padding: "10px",
+          background: "rgba(255,255,255,0.03)",
+          borderRadius: "6px"
+        }}
+      >
+        <strong style={{ fontSize: "12px" }}>💬 Staff Reply:</strong>
+        <p style={{ margin: 0 }}>{review.staffResponse}</p>
+      </div>
+    ) : null}
+
+    <small
+      style={{
+        display: "block",
+        marginTop: "10px",
+        color: "var(--text-muted)",
+        textAlign: "right"
+      }}
+    >
+      {new Date(review.createdAt).toLocaleDateString()}
+    </small>
+  </div>
+))}
+
                 </div>
               ) : (
                 <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>No reviews yet for this vehicle.</p>

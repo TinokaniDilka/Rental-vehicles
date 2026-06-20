@@ -539,14 +539,14 @@ export default function AdminDashboard() {
                 <div className="custom-table-container">
                   <table className="custom-table">
                     <thead>
-                      <tr>
-                        <th className="custom-th">VEHICLE</th>
-                        <th className="custom-th">CUSTOMER</th>
-                        <th className="custom-th">PERIOD</th>
-                        <th className="custom-th">TOTAL BILL</th>
-                        <th className="custom-th">STATUS</th>
-                      </tr>
-                    </thead>
+  <tr>
+    <th className="custom-th">CUSTOMER</th>
+    <th className="custom-th">VEHICLE</th>   {/* ✅ ADD HERE */}
+    <th className="custom-th">RATING</th>
+    <th className="custom-th">COMMENTS</th>
+    <th className="custom-th">STAFF REPLY</th>
+  </tr>
+</thead>
                     <tbody>
                     {reports.bookings
   .filter(b => {
@@ -801,8 +801,8 @@ export default function AdminDashboard() {
                       <tr>
                         <th className="custom-th">CUSTOMER</th>
                         <th className="custom-th">TYPE</th>
-                        <th className="custom-th">RATING / COMPLAINT STATUS</th>
-                        <th className="custom-th">COMMENTS</th>
+                       <th className="custom-th">RATING</th>
+                       <th className="custom-th">COMMENTS</th>
                         <th className="custom-th">STAFF REPLY</th>
                       </tr>
                     </thead>
@@ -818,24 +818,49 @@ export default function AdminDashboard() {
   })
   .map(f => (
 
-                        <tr key={f._id} className="custom-tr">
-                          <td className="custom-td">{f.customerId?.name || "Deleted"}</td>
-                          <td className="custom-td">
-                            <span style={{
-                              background: f.type === "complaint" ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
-                              color: f.type === "complaint" ? "var(--danger)" : "var(--warning)",
-                              padding: "4px 8px",
-                              borderRadius: "12px",
-                              fontSize: "10px",
-                              fontWeight: "700"
-                            }}>{f.type.toUpperCase()}</span>
-                          </td>
-                          <td className="custom-td">
-                            {f.type === "feedback" ? `${f.rating} ★` : f.complaintStatus}
-                          </td>
-                          <td className="custom-td" style={{ fontStyle: "italic" }}>"{f.comment}"</td>
-                          <td className="custom-td">{f.staffResponse || <em style={{ color: "var(--text-muted)" }}>No response</em>}</td>
-                        </tr>
+                       <tr key={f._id} className="custom-tr">
+
+  {/* CUSTOMER */}
+  <td className="custom-td">
+    {f.customerId?.name || "Deleted"}
+  </td>
+
+
+  {/* ✅ ✅ PUT YOUR CODE HERE */}
+  <td className="custom-td">
+    {f.bookingId?.vehicleId?.name || "N/A"}
+    <br />
+    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+      ID: {f.bookingId?.vehicleId?.vehicleId || f.bookingId?.vehicleId?._id?.slice(-6)}
+    </span>
+  </td>
+
+  {/* RATING */}
+  <td className="custom-td">
+    {f.rating ? `${f.rating} ★` : "-"}
+  </td>
+
+  {/* COMMENTS */}
+  <td className="custom-td" style={{ fontStyle: "italic" }}>
+    "{f.comment}"
+  </td>
+
+  {/* STAFF REPLY */}
+  <td className="custom-td">
+    {f.staffReplies && f.staffReplies.length > 0 ? (
+      <div>
+        {f.staffReplies.map(r => (
+          <p key={r._id}>• {r.replyText}</p>
+        ))}
+      </div>
+    ) : f.staffResponse ? (
+      <p>{f.staffResponse}</p>
+    ) : (
+      <em style={{ color: "var(--text-muted)" }}>No response</em>
+    )}
+  </td>
+
+</tr>
                       ))}
                     </tbody>
                   </table>
