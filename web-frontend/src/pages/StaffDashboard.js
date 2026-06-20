@@ -8,6 +8,7 @@ export default function StaffDashboard() {
   const token = localStorage.getItem("token");
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
+ 
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -22,8 +23,33 @@ export default function StaffDashboard() {
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbackTab, setFeedbackTab] = useState("reviews");
+
   const [stats, setStats] = useState({ active: 0, pending: 0 });
   const [earnings, setEarnings] = useState(0);
+
+  // 🔍 Search & Filters
+const [searchText, setSearchText] = useState("");
+const [statusFilter, setStatusFilter] = useState("all");
+const [dateFilter, setDateFilter] = useState("");
+const [vehicleTypeFilter, setVehicleTypeFilter] = useState("all");
+
+  const [showNotifications, setShowNotifications] = useState(false);
+
+const notifications = {
+  newBookings: bookings.filter(b => b.status === "pending").length,
+  lateReturns: bookings.filter(
+    b => b.status === "ongoing" && new Date(b.endDate) < new Date()
+  ).length,
+  complaints: feedbacks.filter(
+    f => f.type === "complaint" && f.complaintStatus !== "Resolved"
+  ).length
+};
+
+const totalNotifications =
+  notifications.newBookings +
+  notifications.lateReturns +
+  notifications.complaints;
 
   // Profile state
   const [profileName, setProfileName] = useState(user.name || "");
@@ -76,6 +102,14 @@ export default function StaffDashboard() {
     fetchBookings();
     fetchFeedbacks();
   }, []);
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchBookings();
+    fetchFeedbacks();
+  }, 30000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const fetchVehicles = async () => {
     try {
@@ -88,25 +122,27 @@ export default function StaffDashboard() {
     }
   };
 
-  const fetchBookings = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/bookings/staff/all", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+const fetchBookings = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/api/bookings/staff/all", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-      setBookings(res.data);
-      const pendingCount = res.data.filter(b => b.status === "pending").length;
-      const activeCount = res.data.filter(b => b.status === "ongoing").length;
-      const totalEarnings = res.data
-        .filter(b => ["completed", "ongoing", "confirmed"].includes(b.status))
-        .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+    setBookings(res.data);
 
-      setStats({ active: activeCount, pending: pendingCount });
-      setEarnings(totalEarnings);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    const pendingCount = res.data.filter(b => b.status === "pending").length;
+    const activeCount = res.data.filter(b => b.status === "ongoing").length;
+    
+    const totalEarnings = res.data
+      .filter(b => ["completed", "ongoing", "confirmed"].includes(b.status))
+      .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+
+    setStats({ active: activeCount, pending: pendingCount });
+    setEarnings(totalEarnings);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const fetchFeedbacks = async () => {
     try {
@@ -224,25 +260,28 @@ export default function StaffDashboard() {
   };
 
   const handleSaveReview = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `http://localhost:5000/api/bookings/${selectedBookingForReview._id}/review`,
-        {
-          status: reviewStatus,
-          driverName: selectedBookingForReview.hasDriver ? driverName : "",
-          discount: Number(discount) || 0,
-          additionalFees: Number(additionalFees) || 0
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      showToast(`Booking has been ${reviewStatus} ✅`);
-      setShowReviewModal(false);
-      fetchBookings();
-    } catch (err) {
-      showToast(err.response?.data?.message || "Review submission failed", "error");
-    }
-  };
+  e.preventDefault();
+  try {
+    await axios.put(
+      `http://localhost:5000/api/bookings/${selectedBookingForReview._id}/review`,
+      {
+        status: reviewStatus,
+        driverName: selectedBookingForReview.hasDriver ? driverName : "",
+        discount: Number(discount) || 0,
+        additionalFees: Number(additionalFees) || 0
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    showToast(`Booking has been ${reviewStatus} ✅`);
+    setShowReviewModal(false);
+    
+    // Refresh data so pending count updates immediately
+    await fetchBookings();
+  } catch (err) {
+    showToast(err.response?.data?.message || "Review submission failed", "error");
+  }
+};
 
   const handlePickup = async (bookingId) => {
     try {
@@ -390,6 +429,29 @@ export default function StaffDashboard() {
     }
   };
 
+
+const reviews = feedbacks.filter(f => f.type === "feedback");
+const complaints = feedbacks.filter(f => f.type === "complaint");
+
+
+  const filteredBookings = bookings.filter(b => {
+  const matchesSearch =
+    (b.customerId?.name || "").toLowerCase().includes(searchText.toLowerCase());
+
+  const matchesStatus =
+    statusFilter === "all" || b.status === statusFilter;
+
+  const matchesDate =
+    !dateFilter ||
+    new Date(b.startDate).toDateString() === new Date(dateFilter).toDateString();
+
+  const matchesVehicleType =
+    vehicleTypeFilter === "all" ||
+    b.vehicleId?.type === vehicleTypeFilter;
+
+  return matchesSearch && matchesStatus && matchesDate && matchesVehicleType;
+});
+
   return (
     <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }} className="fade-in">
       {/* Background glow orbs */}
@@ -410,6 +472,73 @@ export default function StaffDashboard() {
             <NavItem label="Booking Approvals" active={activePage === "bookings"} onClick={() => setActivePage("bookings")} />
             <NavItem label="Complaints & Reviews" active={activePage === "complaints"} onClick={() => setActivePage("complaints")} />
           </div>
+          {/* 🔔 Notification Bell */}
+<div style={{ position: "relative", marginRight: "15px" }}>
+  <div
+    style={{ cursor: "pointer", fontSize: "20px", position: "relative" }}
+    onClick={() => setShowNotifications(!showNotifications)}
+  >
+    🔔
+
+    {totalNotifications > 0 && (
+      <span
+        style={{
+          position: "absolute",
+          top: "-6px",
+          right: "-8px",
+          background: "var(--danger)",
+          color: "white",
+          fontSize: "10px",
+          padding: "2px 6px",
+          borderRadius: "50%",
+          fontWeight: "700"
+        }}
+      >
+        {totalNotifications}
+      </span>
+    )}
+  </div>
+
+  {showNotifications && (
+    <div
+      className="glass-card"
+      style={{
+        position: "absolute",
+        right: 0,
+        top: "35px",
+        width: "260px",
+        padding: "15px",
+        zIndex: 999
+      }}
+    >
+      <h4 style={{ margin: "0 0 10px", fontSize: "14px" }}>
+        Notifications
+      </h4>
+
+      <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
+        <p
+  style={{ cursor: "pointer" }}
+  onClick={() => setActivePage("bookings")}
+>
+  🆕 New booking requests: <strong>{notifications.newBookings}</strong>
+</p>
+
+<p
+  style={{ cursor: "pointer" }}
+  onClick={() => setActivePage("complaints")}
+>
+  💬 Complaints to respond: <strong>{notifications.complaints}</strong>
+</p>
+</div>
+
+      {totalNotifications === 0 && (
+        <p style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+          No new notifications 🎉
+        </p>
+      )}
+    </div>
+  )}
+</div>
 
           <div style={{ position: "relative" }}>
             <div className="profile-pill" onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
@@ -448,18 +577,37 @@ export default function StaffDashboard() {
             </div>
 
             <div className="dashboard-grid">
-              <DashboardCard icon="⏳" title="PENDING APPROVALS" value={stats.pending} color="var(--warning)" />
               <DashboardCard icon="🚗" title="ACTIVE RENTALS" value={stats.active} color="var(--primary)" />
-              <DashboardCard icon="📂" title="TOTAL VEHICLES" value={vehicles.length} color="var(--secondary)" />
+              <DashboardCard icon="📂" title="TOTAL VEHICLES" value={vehicles.length} color="var(--secondary)" onClick={() => setActivePage("vehicle-details")} />
               <DashboardCard icon="💰" title="TOTAL EARNINGS" value={`$${earnings}`} color="var(--success)" />
             </div>
-
+                        {/* ==================== NEW: ACTIVE RENTALS ON DASHBOARD ==================== */}
+            {stats.active > 0 && (
+              <div className="glass-card" style={{ padding: "25px", marginTop: "35px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px" }}>Currently Active Rentals</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                  {bookings
+                    .filter(b => b.status === "ongoing")
+                    .map(b => (
+                      <div key={b._id} className="glass-card" style={{ padding: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <strong>{b.vehicleId?.name}</strong> — {b.customerId?.name}
+                          <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: "4px 0 0" }}>
+                            {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <button className="btn-base btn-primary" onClick={() => handleOpenReturnModal(b)}>Inspect Return</button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+            {/* =================================================================== */}
             <div className="glass-card" style={{ padding: "25px", marginTop: "35px" }}>
               <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px" }}>Quick Operations Shortcuts</h3>
               <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
                 <button className="btn-base btn-primary" onClick={() => handleOpenVehicleModal(null)}>➕ Add New Vehicle</button>
-                <button className="btn-base btn-secondary" onClick={() => setActivePage("bookings")}>📋 Check Pending Orders</button>
-              </div>
+                </div>
             </div>
           </div>
         )}
@@ -514,12 +662,132 @@ export default function StaffDashboard() {
             </div>
           </div>
         )}
+                {/* ==================== NEW: VEHICLE DETAILS PAGE ==================== */}
+        {activePage === "vehicle-details" && (
+          <div className="slide-up">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" }}>
+              <div>
+                <h2>Vehicle Fleet Details 📋</h2>
+                <p style={{ color: "var(--text-secondary)", margin: "5px 0 0" }}>Complete inventory with addition & removal history</p>
+              </div>
+             </div>
+
+            <div className="glass-card" style={{ overflow: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid var(--border-color)" }}>
+                    <th style={{ padding: "15px", textAlign: "left", fontSize: "14px", color: "var(--text-secondary)" }}>Vehicle ID</th>
+                    <th style={{ padding: "15px", textAlign: "left", fontSize: "14px", color: "var(--text-secondary)" }}>Name</th>
+                    <th style={{ padding: "15px", textAlign: "left", fontSize: "14px", color: "var(--text-secondary)" }}>Type</th>
+                    <th style={{ padding: "15px", textAlign: "left", fontSize: "14px", color: "var(--text-secondary)" }}>Added On</th>
+                    <th style={{ padding: "15px", textAlign: "left", fontSize: "14px", color: "var(--text-secondary)" }}>Removed On</th>
+                    <th style={{ padding: "15px", textAlign: "left", fontSize: "14px", color: "var(--text-secondary)" }}>Status</th>
+                    
+                  </tr>
+                </thead>
+                <tbody>
+                  {vehicles.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ padding: "60px", textAlign: "center", color: "var(--text-secondary)" }}>
+                        No vehicles in the fleet yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    vehicles.map(v => {
+                      const addedDate = v.createdAt ? new Date(v.createdAt).toLocaleDateString() : "N/A";
+                      const removedDate = v.removedAt ? new Date(v.removedAt).toLocaleDateString() : "Present";
+                      return (
+                        <tr key={v._id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                          <td style={{ padding: "15px", fontFamily: "monospace", fontSize: "13px" }}>{v._id}</td>
+                          <td style={{ padding: "15px" }}>{v.name}</td>
+                          <td style={{ padding: "15px" }}>{v.type}</td>
+                          <td style={{ padding: "15px" }}>{addedDate}</td>
+                          <td style={{ padding: "15px" }}>{removedDate}</td>
+                          <td style={{ padding: "15px" }}>
+                            <span className={`badge-base badge-${v.isAvailable ? "success" : "danger"}`}>
+                              {v.isAvailable ? "Available" : "Rented / Removed"}
+                            </span>
+                          </td>
+                          
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* BOOKING REQUESTS */}
-        {activePage === "bookings" && (
-          <div className="slide-up">
-            <h2>Manage Booking Requests 📋</h2>
-            <p style={{ color: "var(--text-secondary)", marginBottom: "25px" }}>Process pending approvals, pickups, and return checklists.</p>
+       {activePage === "bookings" && (
+  <div className="slide-up">
+    <h2>Manage Booking Requests 📋</h2>
+
+    <p style={{ color: "var(--text-secondary)", marginBottom: "25px" }}>
+      Process pending approvals, pickups, and return checklists.
+    </p>
+
+    {/* ✅ PUT YOUR FILTER BAR HERE */}
+    <div
+      style={{
+        display: "flex",
+        gap: "12px",
+        marginBottom: "20px",
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}
+    >
+      {/* your inputs go here */}
+    </div>
+            {/* 🔍 Search + Filters */}
+{/* 🔍 Search + Filters */}
+<div 
+  style={{
+    display: "flex",
+    gap: "12px",
+    marginBottom: "20px",
+    alignItems: "center",
+    flexWrap: "wrap"
+  }}
+>
+
+  {/* Search */}
+  <input
+    type="text"
+    placeholder="Search customer..."
+    value={searchText}
+    onChange={(e) => setSearchText(e.target.value)}
+    className="custom-input"
+    style={{ width: "220px" }}
+  />
+
+  {/* Status */}
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+    className="custom-select"
+    style={{ width: "160px" }}
+  >
+    <option value="all">All Status</option>
+    <option value="pending">Pending</option>
+    <option value="confirmed">Confirmed</option>
+    <option value="ongoing">Ongoing</option>
+    <option value="completed">Completed</option>
+  </select>
+
+  {/* Date */}
+  <input
+    type="date"
+    value={dateFilter}
+    onChange={(e) => setDateFilter(e.target.value)}
+    className="custom-input"
+    style={{ width: "160px" }}
+  />
+
+
+</div>
+
 
             {bookings.length === 0 ? (
               <div className="glass-card" style={{ padding: "50px", textAlign: "center" }}>
@@ -528,7 +796,7 @@ export default function StaffDashboard() {
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {bookings.map(b => {
+                {filteredBookings.map(b => {
                   const start = new Date(b.startDate).toLocaleDateString();
                   const end = new Date(b.endDate).toLocaleDateString();
                   return (
@@ -583,9 +851,27 @@ export default function StaffDashboard() {
         {/* REVIEWS & COMPLAINTS */}
         {activePage === "complaints" && (
           <div className="slide-up">
-            <h2>Customer Reviews & Complaints 📣</h2>
-            <p style={{ color: "var(--text-secondary)", marginBottom: "25px" }}>Reply to customer complaints and monitor service reviews.</p>
+  <h2>Customer Reviews & Complaints 📣</h2>
+  <p style={{ color: "var(--text-secondary)", marginBottom: "15px" }}>
+    Monitor feedback and resolve customer issues.
+  </p>
 
+  {/* ✅ Tabs */}
+  <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+    <button
+      className={`btn-base ${feedbackTab === "reviews" ? "btn-primary" : "btn-secondary"}`}
+      onClick={() => setFeedbackTab("reviews")}
+    >
+      ⭐ Reviews
+    </button>
+
+    <button
+      className={`btn-base ${feedbackTab === "complaints" ? "btn-danger" : "btn-secondary"}`}
+      onClick={() => setFeedbackTab("complaints")}
+    >
+      ⚠ Complaints
+    </button>
+  </div>
             {feedbacks.length === 0 ? (
               <div className="glass-card" style={{ padding: "50px", textAlign: "center" }}>
                 <span style={{ fontSize: "64px" }}>💬</span>
@@ -593,7 +879,16 @@ export default function StaffDashboard() {
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {feedbacks.map(f => (
+
+  {(feedbackTab === "reviews" ? reviews : complaints).length === 0 ? (
+
+    <div className="glass-card" style={{ padding: "40px", textAlign: "center" }}>
+      <h3>No {feedbackTab} found</h3>
+    </div>
+
+  ) : (
+
+    (feedbackTab === "reviews" ? reviews : complaints).map(f => (
                   <div key={f._id} className="glass-card" style={{ padding: "20px", display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" }}>
                     <div style={{ flex: 2 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
@@ -626,7 +921,8 @@ export default function StaffDashboard() {
                       </button>
                     </div>
                   </div>
-                ))}
+                ))
+              )}
               </div>
             )}
           </div>
@@ -923,8 +1219,16 @@ const NavItem = ({ label, active, onClick }) => (
   </div>
 );
 
-const DashboardCard = ({ icon, title, value, color }) => (
-  <div className="glass-card dashboard-card-metric" style={{ position: "relative", overflow: "hidden" }}>
+const DashboardCard = ({ icon, title, value, color, onClick }) => (
+  <div 
+    className="glass-card dashboard-card-metric" 
+    style={{ 
+      position: "relative", 
+      overflow: "hidden", 
+      cursor: onClick ? "pointer" : "default" 
+    }}
+    onClick={onClick}
+  >
     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "6px", background: color }} />
     <div className="metric-icon-wrap" style={{ background: color, color: "white", boxShadow: "0 8px 16px rgba(0,0,0,0.15)" }}>
       {icon}
