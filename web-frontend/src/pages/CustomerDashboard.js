@@ -488,6 +488,7 @@ const handleOpenFeedbackModal = (booking) => {
             <NavItem label="Dashboard" active={activePage.page === "dashboard"} onClick={() => setActivePage({ page: "dashboard" })} />
             <NavItem label="Search Vehicles" active={activePage.page === "search" || activePage.page === "vehicleDetails"} onClick={() => setActivePage({ page: "search" })} />
             <NavItem label="My Bookings" active={activePage.page === "bookings"} onClick={() => setActivePage({ page: "bookings" })} />
+           <NavItem label="Payment History" active={activePage.page === "payments"} onClick={() => setActivePage({ page: "payments" })} />
             <NavItem label="Feedback History" active={activePage.page === "feedback"} onClick={() => setActivePage({ page: "feedback" })} />
           </div>
 
@@ -704,6 +705,7 @@ const handleOpenFeedbackModal = (booking) => {
                     <div key={b._id} className="glass-card" style={{ padding: "24px", display: "flex", gap: "25px", flexWrap: "wrap", alignItems: "center" }}>
                       <div style={{ flex: 2 }}>
                         <h4 style={{ margin: "0 0 5px 0", fontSize: "20px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Vehicle"}</h4>
+                        <p style={{ fontSize: "12px", color: "var(--text-muted)" }}> Booking ID: {b._id}</p>
                         <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "14px" }}>📅 Period: {start} - {end}</p>
                         {b.pickupTime && <p style={{ margin: "4px 0 0 0", fontSize: "13.5px", color: "var(--text-muted)" }}>🕐 Pickup: {b.pickupTime} | Dropoff: {b.dropoffTime}</p>}
                         {b.driverName && <p style={{ margin: "6px 0 0 0", fontSize: "13.5px", color: "var(--primary)", fontWeight: "600" }}>👨‍✈️ Driver: {b.driverName}</p>}
@@ -751,7 +753,47 @@ const handleOpenFeedbackModal = (booking) => {
             )}
           </div>
         )}
+{/* PAYMENT HISTORY */}
+{activePage.page === "payments" && (
+  <div className="slide-up">
+    <h2>Payment History 💳</h2>
+    <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
+      View all your payment transactions.
+    </p>
 
+    {bookings.filter(b => b.totalAmount > 0).length === 0 ? (
+      <div className="glass-card" style={{ padding: "40px", textAlign: "center" }}>
+        <h3>No payments yet</h3>
+      </div>
+    ) : (
+      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+        {bookings
+          .filter(b => ["confirmed", "completed", "ongoing"].includes(b.status))
+          .map(b => (
+            <div key={b._id} className="glass-card" style={{ padding: "20px" }}>
+              
+              <h4 style={{ margin: 0 }}>
+                {b.vehicleId?.name}
+              </h4>
+
+              <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                Booking ID: {b._id}
+              </p>
+
+              <p style={{ margin: "5px 0" }}>
+                Amount Paid: <strong>${b.totalAmount}</strong>
+              </p>
+
+              <p style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                {new Date(b.createdAt).toLocaleDateString()}
+              </p>
+
+            </div>
+          ))}
+      </div>
+    )}
+  </div>
+)}
         {/* Feedback History */}
         {activePage.page === "feedback" && (
           <div className="slide-up">
@@ -781,23 +823,81 @@ const handleOpenFeedbackModal = (booking) => {
                     </div>
 
                     <div style={{ flex: 1, minWidth: "200px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
-                      {f.type === "complaint" ? (
-                        <div>
-                          <p style={{ margin: 0, fontSize: "14px" }}>Status: <strong style={{ color: f.complaintStatus === "Resolved" ? "var(--success)" : "var(--warning)" }}>{f.complaintStatus}</strong></p>
-                          {f.staffResponse ? (
-                            <div style={{ marginTop: "10px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", padding: "10px", borderRadius: "8px" }}>
-                              <p style={{ margin: 0, fontSize: "12px", color: "white" }}><strong>Staff Reply:</strong></p>
-                              <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--text-secondary)" }}>{f.staffResponse}</p>
-                            </div>
-                          ) : (
-                            <p style={{ margin: "6px 0 0", fontSize: "13px", color: "var(--text-muted)", fontStyle: "italic" }}>Awaiting staff reply...</p>
-                          )}
-                        </div>
-                      ) : (
-                        <p style={{ color: "var(--text-muted)", fontSize: "13px", margin: 0 }}>General feedback rating.</p>
-                      )}
-                    </div>
+                      {f.type === "complaint" && (
+  <>
+    {f.staffReplies && f.staffReplies.length > 0 ? (
+      <div
+        style={{
+          marginTop: "10px",
+          background: "rgba(99,102,241,0.08)",
+          border: "1px solid rgba(99,102,241,0.2)",
+          padding: "10px",
+          borderRadius: "8px"
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: "12px",
+            color: "white",
+            fontWeight: "600"
+          }}
+        >
+          💬 Staff Replies:
+        </p>
 
+        {f.staffReplies.map(r => (
+          <p
+            key={r._id}
+            style={{
+              margin: "4px 0",
+              fontSize: "13px",
+              color: "var(--text-secondary)"
+            }}
+          >
+            • {r.replyText}
+          </p>
+        ))}
+      </div>
+    ) : f.staffResponse ? (
+      <div
+        style={{
+          marginTop: "10px",
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid var(--border-color)",
+          padding: "10px",
+          borderRadius: "8px"
+        }}
+      >
+        <p style={{ margin: 0, fontSize: "12px", color: "white" }}>
+          <strong>Staff Reply:</strong>
+        </p>
+
+        <p
+          style={{
+            margin: "2px 0 0",
+            fontSize: "13px",
+            color: "var(--text-secondary)"
+          }}
+        >
+          {f.staffResponse}
+        </p>
+      </div>
+    ) : (
+      <p
+        style={{
+          margin: "6px 0 0",
+          fontSize: "13px",
+          color: "var(--text-muted)",
+          fontStyle: "italic"
+        }}
+      >
+        Awaiting staff reply...
+      </p>
+    )}
+  </>
+)}
+                    </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       <button className="btn-base btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => handleEditFeedback(f)}>Edit</button>
                       <button className="btn-base btn-danger" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => handleDeleteFeedback(f._id)}>Delete</button>
