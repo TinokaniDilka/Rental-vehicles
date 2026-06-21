@@ -13,7 +13,7 @@ const {
 // Public routes
 router.post("/login", loginUser);
 
-// Register user - Only Staff Registration (No Renters/Customers)
+// Register user - Staff or Customer Registration
 router.post("/register", async (req, res) => {
   try {
     let { name, email, password, role } = req.body;
@@ -22,8 +22,10 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    // Force role to "staff" - No renter or customer allowed
-    role = "staff";
+    // Default role to "customer" if not specified or invalid. Allow "customer" or "staff".
+    if (!role || !["customer", "staff"].includes(role)) {
+      role = "customer";
+    }
 
     email = email.trim().toLowerCase();
 
@@ -36,14 +38,14 @@ router.post("/register", async (req, res) => {
       name: name || email.split("@")[0], 
       email, 
       password, 
-      role: "staff",        // Fixed to staff only
+      role,
       isActive: true
     });
 
     await newUser.save();
 
     res.status(201).json({
-      message: "Staff account registered successfully ✅",
+      message: `${role.charAt(0).toUpperCase() + role.slice(1)} account registered successfully ✅`,
       user: {
         _id: newUser._id,
         name: newUser.name,

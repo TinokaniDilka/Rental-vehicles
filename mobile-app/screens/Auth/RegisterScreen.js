@@ -19,11 +19,11 @@ import CustomButton from '../../components/CustomButton';
 import { COLORS, SHADOWS, SIZES } from '../../utils/theme';
 
 const { width } = Dimensions.get('window');
-
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('customer'); // default
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -55,7 +55,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const res = await api.post('/api/auth/register', { name, email, password });
+      const res = await api.post('/api/auth/register', { name, email, password, role });
       Alert.alert('Success', 'Account created! Please login.');
       navigation.navigate('Login');
     } catch (error) {
@@ -214,6 +214,47 @@ export default function RegisterScreen({ navigation }) {
             <Ionicons name="shield-checkmark-outline" size={12} color="#475569" />{' '}
             Use at least 8 characters with a mix of letters and numbers
           </Text>
+
+{/* ── Role Selection ── */}
+<View style={{ marginBottom: 20 }}>
+  <Text style={styles.fieldLabel}>SELECT ROLE</Text>
+
+  <View style={{ flexDirection: 'row', gap: 10 }}>
+    <TouchableOpacity
+      onPress={() => setRole('customer')}
+      style={{
+        flex: 1,
+        padding: 14,
+        borderRadius: 12,
+        backgroundColor: role === 'customer' ? '#6366f1' : '#1e293b',
+        borderWidth: 1,
+        borderColor: '#6366f1',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#fff', fontWeight: '600' }}>
+        Customer
+      </Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      onPress={() => setRole('staff')}
+      style={{
+        flex: 1,
+        padding: 14,
+        borderRadius: 12,
+        backgroundColor: role === 'staff' ? '#6366f1' : '#1e293b',
+        borderWidth: 1,
+        borderColor: '#6366f1',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#fff', fontWeight: '600' }}>
+        Staff
+      </Text>
+    </TouchableOpacity>
+  </View>
+</View>
 
           {/* ── Register Button ── */}
           <TouchableOpacity
