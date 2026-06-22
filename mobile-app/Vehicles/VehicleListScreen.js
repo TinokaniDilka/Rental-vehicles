@@ -15,6 +15,8 @@ import VehicleCard from '../components/VehicleCard';
 import Loader from '../components/Loader';
 import { Ionicons } from '@expo/vector-icons';
 
+import { API_BASE_URL } from '../utils/constants';
+
 const FILTER_CHIPS = ['All', 'Car', 'Scooter', 'Three Wheel', 'Van'];
 
 export default function VehicleListScreen({ navigation }) {
@@ -27,16 +29,24 @@ export default function VehicleListScreen({ navigation }) {
     fetchVehicles();
   }, []);
 
-  const fetchVehicles = async () => {
-    try {
-      const res = await getVehicles();
-      setVehicles(res.data);
-    } catch (err) {
-      console.error('Failed to load vehicles', err);
-    } finally {
-      setLoading(false);
+const fetchVehicles = async () => {
+  try {
+    console.log('Fetching vehicles...');
+    const res = await getVehicles();
+    console.log('Vehicles received:', res.data);
+    setVehicles(res.data || []);
+  } catch (err) {
+    console.error('Failed to load vehicles:', err.message);
+    if (err.response) {
+      console.error('Response data:', err.response.data);
+      console.error('Status:', err.response.status);
+    } else if (err.request) {
+      console.error('No response from server - Network / Base URL issue');
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const filtered = vehicles.filter((v) => {
     const matchesSearch =

@@ -9,6 +9,23 @@ const app = express();
 // ✅ Middleware
 app.use(cors());
 app.use(express.json());
+
+// Request logger middleware
+app.use((req, res, next) => {
+  console.log(`\n=== INCOMING REQUEST [${new Date().toLocaleTimeString()}] ===`);
+  console.log(`${req.method} ${req.url}`);
+  console.log('Headers:', JSON.stringify(req.headers));
+  console.log('Body:', JSON.stringify(req.body));
+  
+  const originalSend = res.send;
+  res.send = function (body) {
+    console.log(`=== RESPONSE [${res.statusCode}] ===`);
+    console.log('Body:', body);
+    return originalSend.apply(res, arguments);
+  };
+  next();
+});
+
 app.use("/uploads", express.static("uploads"));
 const userRoutes = require("./routes/userRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");

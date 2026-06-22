@@ -4,7 +4,7 @@ export const createBooking = (data) =>
   api.post('/api/bookings', data);
 
 export const getMyBookings = () =>
-  api.get('/api/bookings/my');
+  api.get('/api/bookings/customer');     // ← Fixed
 
 export const cancelBooking = (id) =>
   api.put(`/api/bookings/${id}/cancel`);

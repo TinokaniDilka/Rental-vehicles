@@ -58,6 +58,7 @@ export default function LoginScreen({ navigation }) {
     try {
       await login(email, password);
       Alert.alert('Success', 'Welcome back!');
+      // console.log('Login success');
     } catch (error) {
       Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
     } finally {

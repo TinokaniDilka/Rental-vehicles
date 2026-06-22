@@ -121,33 +121,44 @@ export default function StaffDashboardScreen({ navigation }) {
     fetchFeedbacks(t);
   };
 
-  const fetchVehicles = async (t) => {
-    try {
-      const res = await api.get('/api/vehicles/my-vehicles', authHeaders(t));
-      setVehicles(res.data);
-    } catch (err) { console.error('vehicles', err); }
-  };
+ const fetchVehicles = async (t) => {
+  try {
+    const res = await api.get('/api/vehicles/my-vehicles', authHeaders(t));
+    console.log('Staff vehicles loaded:', res.data?.length || 0);
+    setVehicles(res.data || []);
+  } catch (err) {
+    console.error('Failed to load vehicles:', err.response?.data || err.message);
+  }
+};
 
-  const fetchBookings = async (t) => {
-    try {
-      const res = await api.get('/api/bookings/staff/all', authHeaders(t));
-      setBookings(res.data);
-      const pending = res.data.filter(b => b.status === 'pending').length;
-      const active = res.data.filter(b => b.status === 'ongoing').length;
-      const earn = res.data
-        .filter(b => ['completed', 'ongoing', 'confirmed'].includes(b.status))
-        .reduce((s, b) => s + (b.totalAmount || 0), 0);
-      setStats({ active, pending });
-      setEarnings(earn);
-    } catch (err) { console.error('bookings', err); }
-  };
+ const fetchBookings = async (t) => {
+  try {
+    const res = await api.get('/api/bookings/staff/all', authHeaders(t));
+    console.log('Staff bookings loaded:', res.data?.length || 0);
+    setBookings(res.data || []);
+    
+    const pending = res.data.filter(b => b.status === 'pending').length;
+    const active = res.data.filter(b => b.status === 'ongoing').length;
+    const earn = res.data
+      .filter(b => ['completed', 'ongoing', 'confirmed'].includes(b.status))
+      .reduce((s, b) => s + (b.totalAmount || 0), 0);
+    
+    setStats({ active, pending });
+    setEarnings(earn);
+  } catch (err) {
+    console.error('Failed to load bookings:', err.response?.data || err.message);
+  }
+};
 
   const fetchFeedbacks = async (t) => {
-    try {
-      const res = await api.get('/api/feedback', authHeaders(t));
-      setFeedbacks(res.data);
-    } catch (err) { console.error('feedbacks', err); }
-  };
+  try {
+    const res = await api.get('/api/feedback', authHeaders(t));
+    console.log('Feedbacks loaded:', res.data?.length || 0);
+    setFeedbacks(res.data || []);
+  } catch (err) {
+    console.error('Failed to load feedbacks:', err.response?.data || err.message);
+  }
+};
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -180,10 +191,10 @@ export default function StaffDashboardScreen({ navigation }) {
         description: vehicleDesc,
       };
       if (editingVehicle) {
-        await api.put(`/api/vehicles/${editingVehicle._id}`, payload, authHeaders());
+        await api.put(`/vehicles/${editingVehicle._id}`, payload, authHeaders());
         Alert.alert('Success', 'Vehicle updated successfully ✅');
       } else {
-        await api.post('/api/vehicles', payload, authHeaders());
+        await api.post('/vehicles', payload, authHeaders());
         Alert.alert('Success', 'Vehicle added successfully ✅');
       }
       setShowVehicleModal(false);
@@ -199,7 +210,7 @@ export default function StaffDashboardScreen({ navigation }) {
       {
         text: 'Delete', style: 'destructive', onPress: async () => {
           try {
-            await api.delete(`/api/vehicles/${id}`, authHeaders());
+            await api.delete(`/vehicles/${id}`, authHeaders());
             fetchVehicles();
           } catch (err) {
             Alert.alert('Error', err.response?.data?.message || 'Delete failed');
@@ -223,7 +234,7 @@ export default function StaffDashboardScreen({ navigation }) {
     setReviewSaving(true);
     try {
       await api.put(
-        `/api/bookings/${selectedBookingForReview._id}/review`,
+        `/bookings/${selectedBookingForReview._id}/review`,
         { status: reviewStatus, driverName, discount: Number(discount) || 0, additionalFees: Number(additionalFees) || 0 },
         authHeaders()
       );
@@ -237,7 +248,7 @@ export default function StaffDashboardScreen({ navigation }) {
 
   const handlePickup = async (bookingId) => {
     try {
-      await api.put(`/api/bookings/${bookingId}/pickup`, {}, authHeaders());
+      await api.put(`/bookings/${bookingId}/pickup`, {}, authHeaders());
       Alert.alert('Success', 'Rental started! Booking is now ongoing 🚗');
       fetchBookings();
     } catch (err) {
@@ -261,7 +272,7 @@ export default function StaffDashboardScreen({ navigation }) {
     setReturnSaving(true);
     try {
       await api.put(
-        `/api/bookings/${selectedBookingForReturn._id}/return`,
+        `/bookings/${selectedBookingForReturn._id}/return`,
         {
           actualReturnDate,
           returnMileage: Number(returnMileage) || 0,
@@ -292,7 +303,7 @@ export default function StaffDashboardScreen({ navigation }) {
     setComplaintSaving(true);
     try {
       await api.put(
-        `/api/feedback/${selectedComplaint._id}/respond`,
+        `/feedback/${selectedComplaint._id}/respond`,
         { complaintStatus, staffResponse },
         authHeaders()
       );
@@ -315,7 +326,7 @@ export default function StaffDashboardScreen({ navigation }) {
     setReplySaving(true);
     try {
       await api.post(
-        `/api/feedback/${selectedFeedbackForReply._id}/staff-reply`,
+        `/feedback/${selectedFeedbackForReply._id}/staff-reply`,
         { replyText },
         authHeaders()
       );

@@ -65,7 +65,15 @@ router.post("/register", async (req, res) => {
 
 // Protected profile route
 router.put("/profile", protect, updateProfile);
-
+router.get("/profile", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch profile", error: err.message });
+  }
+});
 // Admin-only user management routes
 router.get("/users", protect, async (req, res, next) => {
   if (req.user.role !== "admin") {
