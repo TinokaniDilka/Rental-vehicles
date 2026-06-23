@@ -56,6 +56,7 @@ export default function StaffDashboardScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
+  
   const [stats, setStats] = useState({ active: 0, pending: 0 });
   const [earnings, setEarnings] = useState(0);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -538,6 +539,139 @@ export default function StaffDashboardScreen({ navigation }) {
       />
     </View>
   );
+    // ─── Profile Page ─────────────────────────────────────────────────────────
+  const renderProfile = () => {
+    const avatarLetter = user?.name ? user.name.charAt(0).toUpperCase() : '?';
+    const memberSince = user?.createdAt
+      ? new Date(user.createdAt).getFullYear()
+      : '2024';
+
+    const SETTINGS_ITEMS = [
+      { icon: 'person-outline', label: 'Edit Profile', route: 'EditProfile' },
+      { icon: 'notifications-outline', label: 'Notifications', route: 'Notifications' },
+      { icon: 'help-circle-outline', label: 'Help & Support', route: 'Support' },
+    ];
+
+    return (
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={profileStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Page Title */}
+        <View style={profileStyles.pageHeader}>
+          <Text style={profileStyles.pageTitle}>Profile</Text>
+          <TouchableOpacity style={profileStyles.settingsIconBtn} activeOpacity={0.75}>
+            <Ionicons name="settings-outline" size={20} color="#94a3b8" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Avatar Section */}
+        <View style={profileStyles.avatarSection}>
+          <LinearGradient
+            colors={['#6366f1', '#4f46e5']}
+            style={profileStyles.avatarCircle}
+          >
+            {user?.name ? (
+              <Text style={profileStyles.avatarLetter}>{avatarLetter}</Text>
+            ) : (
+              <Ionicons name="person" size={38} color="#fff" />
+            )}
+          </LinearGradient>
+
+          <View style={profileStyles.onlineDot} />
+
+          <Text style={profileStyles.userName}>{user?.name || 'Staff Member'}</Text>
+          <Text style={profileStyles.userEmail}>{user?.email || 'staff@quickride.com'}</Text>
+
+          <View style={profileStyles.roleBadge}>
+            <Ionicons name="shield-checkmark" size={12} color="#818cf8" />
+            <Text style={profileStyles.roleBadgeText}>
+              {user?.role?.toUpperCase() || 'STAFF'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Stats Row */}
+        <View style={profileStyles.statsRow}>
+          <View style={profileStyles.statCard}>
+            <Text style={profileStyles.statValue}>{bookings.length}</Text>
+            <Text style={profileStyles.statLabel}>Bookings</Text>
+          </View>
+          <View style={[profileStyles.statCard, profileStyles.statCardMiddle]}>
+            <Text style={profileStyles.statValue}>{memberSince}</Text>
+            <Text style={profileStyles.statLabel}>Member Since</Text>
+          </View>
+          <View style={profileStyles.statCard}>
+            <View style={profileStyles.statActiveDot} />
+            <Text style={profileStyles.statLabel}>Status</Text>
+            <Text style={profileStyles.statActiveText}>Active</Text>
+          </View>
+        </View>
+
+        {/* Info Card */}
+        <Text style={profileStyles.sectionLabel}>Account Info</Text>
+        <View style={profileStyles.glassCard}>
+          <View style={profileStyles.infoRow}>
+            <View style={profileStyles.infoIconWrap}>
+              <Ionicons name="mail-outline" size={16} color="#6366f1" />
+            </View>
+            <View style={profileStyles.infoTextWrap}>
+              <Text style={profileStyles.infoLabel}>Email</Text>
+              <Text style={profileStyles.infoValue} numberOfLines={1}>
+                {user?.email || '—'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={profileStyles.rowDivider} />
+
+          <View style={profileStyles.infoRow}>
+            <View style={profileStyles.infoIconWrap}>
+              <Ionicons name="shield-checkmark-outline" size={16} color="#6366f1" />
+            </View>
+            <View style={profileStyles.infoTextWrap}>
+              <Text style={profileStyles.infoLabel}>Role</Text>
+              <Text style={profileStyles.infoValue}>{user?.role || 'Staff'}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Settings Section */}
+        <Text style={profileStyles.sectionLabel}>Settings</Text>
+        <View style={profileStyles.glassCard}>
+          {SETTINGS_ITEMS.map((item, index) => (
+            <React.Fragment key={item.label}>
+              <TouchableOpacity
+                style={profileStyles.settingsRow}
+                onPress={() => navigation && navigation.navigate && navigation.navigate(item.route)}
+                activeOpacity={0.7}
+              >
+                <View style={profileStyles.settingsIconWrap}>
+                  <Ionicons name={item.icon} size={18} color="#6366f1" />
+                </View>
+                <Text style={profileStyles.settingsLabel}>{item.label}</Text>
+                <Ionicons name="chevron-forward" size={16} color="#475569" />
+              </TouchableOpacity>
+              {index < SETTINGS_ITEMS.length - 1 && <View style={profileStyles.rowDivider} />}
+            </React.Fragment>
+          ))}
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={profileStyles.logoutBtn}
+          onPress={handleLogout}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+          <Text style={profileStyles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    );
+  };
 
   const renderComplaints = () => (
     <View style={{ flex: 1 }}>
@@ -610,7 +744,7 @@ export default function StaffDashboardScreen({ navigation }) {
     { id: 'dashboard', icon: 'grid-outline', label: 'Dashboard' },
     { id: 'vehicles', icon: 'car-outline', label: 'Vehicles' },
     { id: 'bookings', icon: 'calendar-outline', label: 'Bookings' },
-    { id: 'complaints', icon: 'chatbubble-outline', label: 'Reviews' },
+    { id: 'profile', icon: 'person-outline', label: 'Profile' },
   ];
 
   // ─── Modal: Add/Edit Vehicle ────────────────────────────────────────────────
@@ -872,9 +1006,7 @@ export default function StaffDashboardScreen({ navigation }) {
           <Text style={styles.topBarBrand}>🛠️ QuickRide <Text style={{ color: '#6366f1' }}>Staff</Text></Text>
           <Text style={styles.topBarUser}>{user?.name}</Text>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-          <Ionicons name="log-out-outline" size={22} color="#ef4444" />
-        </TouchableOpacity>
+        
       </View>
 
       {/* Page Content */}
@@ -883,6 +1015,7 @@ export default function StaffDashboardScreen({ navigation }) {
         {activePage === 'vehicles' && renderVehicles()}
         {activePage === 'bookings' && renderBookings()}
         {activePage === 'complaints' && renderComplaints()}
+        {activePage === 'profile' && renderProfile()}
       </View>
 
       {/* Bottom Tab Bar */}
@@ -1097,6 +1230,8 @@ const styles = StyleSheet.create({
   primaryBtn: { borderRadius: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
   primaryBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
 
+
+  
   // Replies
   previousReplies: {
     backgroundColor: 'rgba(15,23,42,0.5)',
@@ -1107,4 +1242,235 @@ const styles = StyleSheet.create({
   replyItem: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.1)' },
   replyStaff: { fontSize: 11, fontWeight: '700', color: '#6366f1', marginBottom: 2 },
   replyText: { fontSize: 13, color: '#94a3b8', lineHeight: 18 },
+});
+// Profile specific styles
+const profileStyles = StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 28,
+  },
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#f8fafc',
+    letterSpacing: 0.2,
+  },
+  settingsIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(30,41,59,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 28,
+  },
+  avatarCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#6366f1',
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  avatarLetter: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  onlineDot: {
+    position: 'absolute',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#10b981',
+    borderWidth: 2.5,
+    borderColor: '#0f172a',
+    top: 66,
+    right: '37%',
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#f8fafc',
+    marginTop: 14,
+    letterSpacing: 0.2,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(99,102,241,0.15)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.3)',
+  },
+  roleBadgeText: {
+    color: '#818cf8',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginLeft: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 28,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: 'rgba(30,41,59,0.85)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.2)',
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+  },
+  statCardMiddle: {
+    borderColor: 'rgba(99,102,241,0.35)',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#6366f1',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '600',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statActiveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10b981',
+    marginBottom: 6,
+  },
+  statActiveText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#10b981',
+    marginTop: 2,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: 12,
+    marginLeft: 2,
+  },
+  glassCard: {
+    backgroundColor: 'rgba(30,41,59,0.85)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.25)',
+    padding: 18,
+    marginBottom: 24,
+    shadowColor: '#6366f1',
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(99,102,241,0.1)',
+    marginVertical: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(99,102,241,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  infoTextWrap: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 15,
+    color: '#f8fafc',
+    fontWeight: '600',
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  settingsIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(99,102,241,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  settingsLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#f8fafc',
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(239,68,68,0.4)',
+    backgroundColor: 'rgba(239,68,68,0.08)',
+  },
+  logoutText: {
+    color: '#ef4444',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
 });
