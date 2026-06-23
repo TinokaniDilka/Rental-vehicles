@@ -140,8 +140,8 @@ export default function LoginScreen({ navigation }) {
                 style={styles.inputIcon}
               />
               <InputField
-                placeholder="you@example.com"
-                value={email}
+                placeholder="       you@example.com"
+                value={ email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -160,7 +160,7 @@ export default function LoginScreen({ navigation }) {
                 style={styles.inputIcon}
               />
               <InputField
-                placeholder="••••••••"
+                placeholder="       ••••••••"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}

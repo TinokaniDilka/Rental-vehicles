@@ -146,7 +146,7 @@ export default function RegisterScreen({ navigation }) {
               />
               <View style={styles.inputInner}>
                 <InputField
-                  placeholder="John Doe"
+                  placeholder="        John Doe"
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -167,7 +167,7 @@ export default function RegisterScreen({ navigation }) {
               />
               <View style={styles.inputInner}>
                 <InputField
-                  placeholder="you@example.com"
+                  placeholder="        you@example.com"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -189,7 +189,7 @@ export default function RegisterScreen({ navigation }) {
               />
               <View style={styles.inputInner}>
                 <InputField
-                  placeholder="••••••••"
+                  placeholder="       ••••••••"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
