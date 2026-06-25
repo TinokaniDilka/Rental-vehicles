@@ -453,7 +453,10 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
 });
 
   return (
-    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }} className="fade-in">
+    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden",  backgroundImage: `url("https://mir-s3-cdn-cf.behance.net/project_modules/2800_opt_1/68927482806013.5d28876e37868.jpg")`, // put your image path here
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat"}} className="fade-in">
       {/* Background glow orbs */}
       <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
       <div className="glow-orb glow-orb-accent" style={{ bottom: "-100px", right: "-100px" }}></div>
