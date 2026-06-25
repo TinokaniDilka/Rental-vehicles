@@ -453,10 +453,18 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
 });
 
   return (
-    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden",  backgroundImage: `url("https://mir-s3-cdn-cf.behance.net/project_modules/2800_opt_1/68927482806013.5d28876e37868.jpg")`, // put your image path here
+    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden",  backgroundImage: `url("https://koala.sh/api/image/v2-7tvj1-k9p5g.jpg?width=1216&height=832&dream")`, // put your image path here
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat"}} className="fade-in">
+       <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background: "rgba(0,0,0,0.6)", // adjust darkness
+      zIndex: 0,
+    }}
+  />
       {/* Background glow orbs */}
       <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
       <div className="glow-orb glow-orb-accent" style={{ bottom: "-100px", right: "-100px" }}></div>

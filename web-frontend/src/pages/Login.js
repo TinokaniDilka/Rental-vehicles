@@ -54,11 +54,19 @@ export default function Login() {
 
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", position: "relative", overflow: "hidden", 
- backgroundImage: `url("https://mir-s3-cdn-cf.behance.net/project_modules/2800_opt_1/68927482806013.5d28876e37868.jpg")`, // put your image path here
+ backgroundImage: `url("https://static.vecteezy.com/system/resources/thumbnails/040/969/066/small_2x/ai-generated-a-lineup-of-colorful-luxury-cars-in-a-show-room-showcasing-a-prominent-yellow-car-in-front-with-a-focus-on-the-headlight-and-grille-photo.jpeg")`, // put your image path here
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat"
  }} className="fade-in">
+   <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background: "rgba(0,0,0,0.4)", // adjust darkness
+      zIndex: 0,
+    }}
+  />
       {/* Background glow orbs */}
       <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
       <div className="glow-orb glow-orb-accent" style={{ bottom: "-150px", right: "-150px" }}></div>
