@@ -1,16 +1,30 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { Alert } from 'react-native';
+
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  FlatList, TextInput, Alert, Modal, ActivityIndicator,
-  KeyboardAvoidingView, Platform, StatusBar
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  Dimensions,
+  TextInput,
+  ImageBackground,
+  Modal,                    // ✅ ADD THIS
+  KeyboardAvoidingView,     // ✅ ADD THIS
+  Platform,                 // ✅ ADD THIS
+  ActivityIndicator,
+  FlatList         // ✅ ADD THIS
 } from 'react-native';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { COLORS, SHADOWS, SIZES } from '../utils/theme';
-
+import { Image } from 'react-native';
 // ─── Mini Components ────────────────────────────────────────────────────────
 
 const MetricCard = ({ icon, title, value, color }) => (
@@ -61,6 +75,7 @@ export default function StaffDashboardScreen({ navigation }) {
   const [earnings, setEarnings] = useState(0);
   const [filterStatus, setFilterStatus] = useState('all');
   const [token, setToken] = useState('');
+
 
   // Vehicle modal
   const [showVehicleModal, setShowVehicleModal] = useState(false);
@@ -132,20 +147,23 @@ export default function StaffDashboardScreen({ navigation }) {
   }
 };
 
- const fetchBookings = async (t) => {
+const fetchBookings = async (t) => {
   try {
     const res = await api.get('/api/bookings/staff/all', authHeaders(t));
+
     console.log('Staff bookings loaded:', res.data?.length || 0);
     setBookings(res.data || []);
-    
+
     const pending = res.data.filter(b => b.status === 'pending').length;
     const active = res.data.filter(b => b.status === 'ongoing').length;
+
     const earn = res.data
       .filter(b => ['completed', 'ongoing', 'confirmed'].includes(b.status))
       .reduce((s, b) => s + (b.totalAmount || 0), 0);
-    
+
     setStats({ active, pending });
     setEarnings(earn);
+
   } catch (err) {
     console.error('Failed to load bookings:', err.response?.data || err.message);
   }
@@ -170,57 +188,105 @@ export default function StaffDashboardScreen({ navigation }) {
 
   // ── Vehicle CRUD ──
   const openVehicleModal = (vehicle = null) => {
-    setEditingVehicle(vehicle);
-    setVehicleName(vehicle?.name || '');
-    setVehicleType(vehicle?.type || 'car');
-    setVehiclePrice(vehicle?.pricePerDay?.toString() || '');
-    setVehicleLocation(vehicle?.location || '');
-    setVehicleDesc(vehicle?.description || '');
-    setShowVehicleModal(true);
-  };
+  setEditingVehicle(vehicle);
+  setVehicleName(vehicle?.name || '');
+  setVehicleType(vehicle?.type || 'car');
+  setVehiclePrice(vehicle?.pricePerDay?.toString() || '');
+  setVehicleLocation(vehicle?.location || '');
+  setVehicleDesc(vehicle?.description || '');
 
-  const saveVehicle = async () => {
-    if (!vehicleName || !vehiclePrice || !vehicleLocation) {
-      Alert.alert('Error', 'Please fill all required fields');
-      return;
+  setShowVehicleModal(true);
+};
+
+
+const saveVehicle = async () => {
+  if (!vehicleName || !vehiclePrice || !vehicleLocation) {
+    Alert.alert('Error', 'Please fill all required fields');
+    return;
+  }
+  setVehicleSaving(true);
+  try {
+    const payload = {
+      name: vehicleName, 
+      type: vehicleType,
+      pricePerDay: parseFloat(vehiclePrice), // better to send as number
+      location: vehicleLocation,
+      description: vehicleDesc,
+    };
+
+    if (editingVehicle) {
+      await api.put(`/api/vehicles/${editingVehicle._id}`, payload, authHeaders());
+      Alert.alert('Success', 'Vehicle updated successfully ✅');
+    } else {
+      await api.post('/api/vehicles', payload, authHeaders());   // ← Fixed
+      Alert.alert('Success', 'Vehicle added successfully ✅');
     }
-    setVehicleSaving(true);
-    try {
-      const payload = {
-        name: vehicleName, type: vehicleType,
-        pricePerDay: vehiclePrice, location: vehicleLocation,
-        description: vehicleDesc,
-      };
-      if (editingVehicle) {
-        await api.put(`/vehicles/${editingVehicle._id}`, payload, authHeaders());
-        Alert.alert('Success', 'Vehicle updated successfully ✅');
-      } else {
-        await api.post('/vehicles', payload, authHeaders());
-        Alert.alert('Success', 'Vehicle added successfully ✅');
-      }
-      setShowVehicleModal(false);
-      fetchVehicles();
-    } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Could not save vehicle');
-    } finally { setVehicleSaving(false); }
-  };
+    setShowVehicleModal(false);
+    fetchVehicles();   // refresh list
+  } catch (err) {
+    console.error('Save vehicle error:', err.response?.data || err.message);
+    Alert.alert('Error', err.response?.data?.message || 'Could not save vehicle');
+  } finally { 
+    setVehicleSaving(false); 
+  }
+};
 
-  const deleteVehicle = (id) => {
-    Alert.alert('Delete Vehicle', 'Are you sure you want to delete this vehicle?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive', onPress: async () => {
-          try {
-            await api.delete(`/vehicles/${id}`, authHeaders());
-            fetchVehicles();
-          } catch (err) {
-            Alert.alert('Error', err.response?.data?.message || 'Delete failed');
-          }
+ const deleteVehicle = (id) => {
+  Alert.alert('Delete Vehicle', 'Are you sure you want to delete this vehicle?', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Delete', 
+      style: 'destructive', 
+      onPress: async () => {
+        try {
+          await api.delete(`/api/vehicles/${id}`, authHeaders());  // ← Fixed
+          fetchVehicles();
+          Alert.alert('Success', 'Vehicle deleted');
+        } catch (err) {
+          Alert.alert('Error', err.response?.data?.message || 'Delete failed');
         }
       }
-    ]);
-  };
+    }
+  ]);
+};
 
+  const openReplyModal = (feedback) => {
+  setSelectedFeedbackForReply(feedback);
+  setReplyText('');
+  setShowReplyModal(true);
+};
+
+const saveReply = async () => {
+  if (!replyText.trim()) {
+    Alert.alert('Error', 'Reply text cannot be empty');
+    return;
+  }
+
+  setReplySaving(true);
+
+  try {
+    await api.post(
+      `/api/feedback/${selectedFeedbackForReply._id}/staff-reply`,
+      { replyText },
+      authHeaders()
+    );
+
+    Alert.alert('Success', 'Reply added ✅');
+    setShowReplyModal(false);
+    fetchFeedbacks();
+
+  } catch (err) {
+    console.log("REPLY ERROR:", err.response?.data || err.message);
+
+    Alert.alert(
+      'Error',
+      err.response?.data?.message || 'Reply failed'
+    );
+
+  } finally {
+    setReplySaving(false);
+  }
+};
   // ── Booking Actions ──
   const openReviewModal = (booking) => {
     setSelectedBookingForReview(booking);
@@ -268,76 +334,90 @@ export default function StaffDashboardScreen({ navigation }) {
     setShowReturnModal(true);
   };
 
-  const saveReturn = async () => {
-    if (!returnMileage) { Alert.alert('Error', 'Return mileage is required'); return; }
-    setReturnSaving(true);
-    try {
-      await api.put(
-        `/bookings/${selectedBookingForReturn._id}/return`,
-        {
-          actualReturnDate,
-          returnMileage: Number(returnMileage) || 0,
-          returnFuelLevel: Number(returnFuelLevel) || 100,
-          returnCondition, damages,
-          damageCharge: Number(damageCharge) || 0,
-        },
-        authHeaders()
-      );
-      Alert.alert('Success', 'Vehicle return finalized ✅');
-      setShowReturnModal(false);
-      fetchBookings();
-    } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Return failed');
-    } finally { setReturnSaving(false); }
-  };
+const saveReturn = async () => {
+  if (!selectedBookingForReturn?._id) {
+    Alert.alert('Error', 'No booking selected');
+    return;
+  }
 
-  // ── Complaint / Feedback Actions ──
-  const openComplaintModal = (item) => {
-    setSelectedComplaint(item);
-    setComplaintStatus(item.complaintStatus || 'Open');
-    setStaffResponse(item.staffResponse || '');
-    setShowComplaintModal(true);
-  };
+  if (!returnMileage) {
+    Alert.alert('Error', 'Return mileage is required');
+    return;
+  }
 
-  const saveComplaintResponse = async () => {
-    if (!staffResponse.trim()) { Alert.alert('Error', 'Please enter a response'); return; }
-    setComplaintSaving(true);
-    try {
-      await api.put(
-        `/feedback/${selectedComplaint._id}/respond`,
-        { complaintStatus, staffResponse },
-        authHeaders()
-      );
-      Alert.alert('Success', 'Response submitted ✅');
-      setShowComplaintModal(false);
-      fetchFeedbacks();
-    } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Failed to respond');
-    } finally { setComplaintSaving(false); }
-  };
+  setReturnSaving(true);
 
-  const openReplyModal = (feedback) => {
-    setSelectedFeedbackForReply(feedback);
-    setReplyText('');
-    setShowReplyModal(true);
-  };
+  try {
+    await api.put(
+      `/api/bookings/${selectedBookingForReturn._id}/return`,
+      {
+        actualReturnDate: new Date().toISOString(),
+        returnMileage: Number(returnMileage),
+        returnFuelLevel: Number(returnFuelLevel) || 100,
+        returnCondition,
+        damages,
+        damageCharge: Number(damageCharge) || 0,
+      },
+      authHeaders()
+    );
 
-  const saveReply = async () => {
-    if (!replyText.trim()) { Alert.alert('Error', 'Reply text cannot be empty'); return; }
-    setReplySaving(true);
-    try {
-      await api.post(
-        `/feedback/${selectedFeedbackForReply._id}/staff-reply`,
-        { replyText },
-        authHeaders()
-      );
-      Alert.alert('Success', 'Reply added ✅');
-      setShowReplyModal(false);
-      fetchFeedbacks();
-    } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Reply failed');
-    } finally { setReplySaving(false); }
-  };
+    Alert.alert('Success', 'Vehicle return finalized ✅');
+    setShowReturnModal(false);
+    fetchBookings();
+
+  } catch (err) {
+    console.log("RETURN ERROR:", err.response?.data || err.message);
+
+    Alert.alert(
+      'Error',
+      err.response?.data?.message || 'Return failed'
+    );
+
+  } finally {
+    setReturnSaving(false);
+  }
+};
+
+ const openComplaintModal = (item) => {
+  setSelectedComplaint(item);
+  setComplaintStatus(item.complaintStatus || 'Open');
+  setStaffResponse(item.staffResponse || '');
+  setShowComplaintModal(true);
+};
+
+const saveComplaintResponse = async () => {
+  if (!staffResponse.trim()) {
+    Alert.alert('Error', 'Please enter a response');
+    return;
+  }
+
+  setComplaintSaving(true);
+
+  try {
+    await api.put(
+      `/api/feedback/${selectedComplaint._id}/respond`,
+      {
+        complaintStatus,
+        staffResponse,
+      },
+      authHeaders()
+    );
+
+    Alert.alert('Success', 'Response submitted ✅');
+    setShowComplaintModal(false);
+    fetchFeedbacks();
+
+  } catch (err) {
+    Alert.alert(
+      'Error',
+      err.response?.data?.message || 'Failed to respond'
+    );
+
+  } finally {
+    setComplaintSaving(false);
+  }
+};
+
 
   // ── Filtered Bookings ──
   const filteredBookings = filterStatus === 'all'
@@ -345,17 +425,37 @@ export default function StaffDashboardScreen({ navigation }) {
     : bookings.filter(b => b.status === filterStatus);
 
   // ─── Render Pages ──────────────────────────────────────────────────────────
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "☀️ Good Morning";
+  if (hour < 18) return "🌤️ Good Afternoon";
+  return "🌙 Good Evening";
+};
 
   const renderDashboard = () => (
     <ScrollView contentContainerStyle={styles.pageContent} showsVerticalScrollIndicator={false}>
       {/* Welcome Banner */}
-      <LinearGradient colors={['#4f46e5', '#6366f1', '#818cf8']} style={styles.welcomeBanner}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.welcomeTitle}>Welcome Back, {user?.name?.split(' ')[0]}! 👨‍💻</Text>
-          <Text style={styles.welcomeSubtitle}>Approve bookings, manage vehicles & handle complaints</Text>
-        </View>
-        <Text style={{ fontSize: 52, opacity: 0.9 }}>📋</Text>
-      </LinearGradient>
+      <View style={styles.welcomeBanner} />
+      <Text style={styles.welcomeTitle}>{getGreeting()}, {user?.name?.split(' ')[0]}!</Text>
+      <Text style={styles.welcomeSubtitle}>Let’s manage your rentals efficiently 🚀</Text>
+
+
+<ImageBackground
+  source={{
+    uri: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2'
+  }}
+  style={styles.heroImage}
+  imageStyle={{ borderRadius: 16, resizeMode: 'cover', height: 200,  }}  // ← Important for clarity
+>
+  <LinearGradient
+    colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.0)']}
+    style={styles.heroOverlay}
+  >
+    <Text style={styles.heroTitle}>Ready for Today?</Text>
+  </LinearGradient>
+</ImageBackground>
+
+<View style={{ height: "30%", backgroundColor: 'transparent' }} />   {/* Big test gap */}
 
       {/* Metrics Grid */}
       <View style={styles.metricsGrid}>
@@ -710,9 +810,15 @@ export default function StaffDashboardScreen({ navigation }) {
             <Text style={styles.feedbackMeta}>From: {f.customerId?.name}</Text>
             {f.type === 'complaint' && (
               <View style={styles.complaintStatusRow}>
-                <Text style={styles.feedbackMeta}>Status: <Text style={{ color: f.complaintStatus === 'Resolved' ? '#10b981' : '#f59e0b', fontWeight: '700' }}>{f.complaintStatus}</Text></Text>
+                <Text style={styles.feedbackMeta}>
+                  Status:{' '}
+                  <Text style={{ color: f.complaintStatus === 'Resolved' ? '#10b981' : '#f59e0b', fontWeight: '700' }}>
+                    {f.complaintStatus}
+                  </Text>
+                </Text>
               </View>
             )}
+
             {f.staffResponse ? (
               <Text style={styles.staffResponseText}>💬 Response: {f.staffResponse}</Text>
             ) : null}
@@ -749,55 +855,121 @@ export default function StaffDashboardScreen({ navigation }) {
 
   // ─── Modal: Add/Edit Vehicle ────────────────────────────────────────────────
 
-  const VehicleModal = () => (
-    <Modal visible={showVehicleModal} animationType="slide" transparent onRequestClose={() => setShowVehicleModal(false)}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
-        <View style={styles.modalSheet}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>{editingVehicle ? '✏️ Edit Vehicle' : '➕ Add Vehicle'}</Text>
+  // Replace the entire VehicleModal component with this:
 
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.inputLabel}>Vehicle Name *</Text>
-            <TextInput style={styles.modalInput} value={vehicleName} onChangeText={setVehicleName} placeholder="e.g. Toyota Corolla" placeholderTextColor="#475569" />
+// Replace the entire VehicleModal with this:
+// ─── Vehicle Modal (must be OUTSIDE main component to prevent remount) ────────
+const VehicleModal = ({
+  visible, onClose, editingVehicle,
+  vehicleName, setVehicleName,
+  vehicleType, setVehicleType,
+  vehiclePrice, setVehiclePrice,
+  vehicleLocation, setVehicleLocation,
+  vehicleDesc, setVehicleDesc,
+  vehicleSaving, onSave, styles
+}) => (
+  <Modal
+    visible={visible}
+    animationType="slide"
+    transparent
+    onRequestClose={onClose}
+  >
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.modalOverlay}
+    >
+      <View style={styles.modalSheet}>
+        <View style={styles.modalHandle} />
+        <Text style={styles.modalTitle}>
+          {editingVehicle ? '✏️ Edit Vehicle' : '➕ Add Vehicle'}
+        </Text>
 
-            <Text style={styles.inputLabel}>Category</Text>
-            <View style={styles.typeRow}>
-              {['car', 'scooter', 'three wheel', 'Van'].map(t => (
-                <TouchableOpacity key={t} onPress={() => setVehicleType(t)}
-                  style={[styles.typeChip, vehicleType === t && styles.typeChipActive]}>
-                  <Text style={[styles.typeChipText, vehicleType === t && { color: 'white' }]}>
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
+          contentContainerStyle={{ paddingBottom: 150 }}
+          bounces={false}
+        >
+          <Text style={styles.inputLabel}>Vehicle Name *</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={vehicleName}
+            onChangeText={setVehicleName}
+            placeholder="e.g. Toyota Corolla"
+            placeholderTextColor="#475569"
+            autoCorrect={false}
+            autoCapitalize="words"
+            returnKeyType="next"
+            blurOnSubmit={false}
+          />
 
-            <Text style={styles.inputLabel}>Price Per Day ($) *</Text>
-            <TextInput style={styles.modalInput} value={vehiclePrice} onChangeText={setVehiclePrice} placeholder="e.g. 45" placeholderTextColor="#475569" keyboardType="numeric" />
-
-            <Text style={styles.inputLabel}>Location *</Text>
-            <TextInput style={styles.modalInput} value={vehicleLocation} onChangeText={setVehicleLocation} placeholder="e.g. Colombo" placeholderTextColor="#475569" />
-
-            <Text style={styles.inputLabel}>Description</Text>
-            <TextInput style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]}
-              value={vehicleDesc} onChangeText={setVehicleDesc} placeholder="Optional description..." placeholderTextColor="#475569" multiline />
-
-            <View style={styles.modalBtns}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowVehicleModal(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+          <Text style={styles.inputLabel}>Category</Text>
+          <View style={styles.typeRow}>
+            {['car', 'scooter', 'three wheel', 'Van'].map(t => (
+              <TouchableOpacity
+                key={t}
+                onPress={() => setVehicleType(t)}
+                style={[styles.typeChip, vehicleType === t && styles.typeChipActive]}
+              >
+                <Text style={[styles.typeChipText, vehicleType === t && { color: 'white' }]}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={{ flex: 2 }} onPress={saveVehicle} disabled={vehicleSaving}>
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
-                  {vehicleSaving ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.primaryBtnText}>Save Vehicle</Text>}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
+            ))}
+          </View>
 
+          <Text style={styles.inputLabel}>Price Per Day ($) *</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={vehiclePrice}
+            onChangeText={setVehiclePrice}
+            placeholder="e.g. 45"
+            placeholderTextColor="#475569"
+            keyboardType="numeric"
+            returnKeyType="next"
+            blurOnSubmit={false}
+          />
+
+          <Text style={styles.inputLabel}>Location *</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={vehicleLocation}
+            onChangeText={setVehicleLocation}
+            placeholder="e.g. Colombo"
+            placeholderTextColor="#475569"
+            returnKeyType="next"
+            blurOnSubmit={false}
+          />
+
+          <Text style={styles.inputLabel}>Description</Text>
+          <TextInput
+            style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
+            value={vehicleDesc}
+            onChangeText={setVehicleDesc}
+            placeholder="Optional description..."
+            placeholderTextColor="#475569"
+            multiline
+            returnKeyType="done"
+          />
+
+          <View style={styles.modalBtns}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ flex: 2 }} onPress={onSave} disabled={vehicleSaving}>
+              <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
+                {vehicleSaving
+                  ? <ActivityIndicator color="white" size="small" />
+                  : <Text style={styles.primaryBtnText}>Save Vehicle</Text>}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
+  </Modal>
+);
   // ─── Modal: Review Booking ────────────────────────────────────────────────
 
   const ReviewModal = () => (
@@ -1003,10 +1175,9 @@ export default function StaffDashboardScreen({ navigation }) {
       {/* Top Navbar */}
       <View style={styles.topBar}>
         <View>
-          <Text style={styles.topBarBrand}>🛠️ QuickRide <Text style={{ color: '#6366f1' }}>Staff</Text></Text>
+          <Text style={styles.topBarBrand}>🛠️ QuickRide Staff</Text>
           <Text style={styles.topBarUser}>{user?.name}</Text>
         </View>
-        
       </View>
 
       {/* Page Content */}
@@ -1031,7 +1202,24 @@ export default function StaffDashboardScreen({ navigation }) {
       </View>
 
       {/* Modals */}
-      <VehicleModal />
+      <VehicleModal
+  visible={showVehicleModal}
+  onClose={() => setShowVehicleModal(false)}
+  editingVehicle={editingVehicle}
+  vehicleName={vehicleName}
+  setVehicleName={setVehicleName}
+  vehicleType={vehicleType}
+  setVehicleType={setVehicleType}
+  vehiclePrice={vehiclePrice}
+  setVehiclePrice={setVehiclePrice}
+  vehicleLocation={vehicleLocation}
+  setVehicleLocation={setVehicleLocation}
+  vehicleDesc={vehicleDesc}
+  setVehicleDesc={setVehicleDesc}
+  vehicleSaving={vehicleSaving}
+  onSave={saveVehicle}
+  styles={styles}
+/>
       <ReviewModal />
       <ReturnModal />
       <ComplaintModal />
@@ -1092,10 +1280,16 @@ const styles = StyleSheet.create({
 
   // Dashboard
   pageContent: { padding: 16, paddingBottom: 100 },
-  welcomeBanner: {
-    borderRadius: 20, padding: 22,
-    flexDirection: 'row', alignItems: 'center', marginBottom: 18,
-  },
+
+welcomeBanner: {
+  borderRadius: 20,
+  padding: 0,         // remove padding if needed
+  marginBottom: 18,
+  alignItems: 'center',
+  backgroundColor: 'transparent', // ✅ important
+},
+
+
   welcomeTitle: { fontSize: 20, fontWeight: '800', color: 'white', marginBottom: 6 },
   welcomeSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 18 },
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
@@ -1109,7 +1303,7 @@ const styles = StyleSheet.create({
   },
   metricIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   metricValue: { fontSize: 24, fontWeight: '800', color: '#f8fafc' },
-  metricTitle: { fontSize: 10, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
+  metricTitle: { fontSize: 10, fontWeight: '700', color: '#64748b', textTransform: 'uppercase',color: '#cbd5f5', letterSpacing: 0.5, marginTop: 2 },
 
   quickActionsRow: { flexDirection: 'row', gap: 10 },
   quickActionBtn: { flex: 1 },
@@ -1118,7 +1312,12 @@ const styles = StyleSheet.create({
 
   overviewRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.1)' },
   overviewDot: { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
-  overviewLabel: { flex: 1, color: '#94a3b8', fontSize: 14 },
+
+overviewLabel: { 
+  flex: 1, 
+  color: '#f8fafc',   // ✅ WHITE
+  fontSize: 14 
+},
   overviewVal: { fontSize: 18, fontWeight: '800' },
 
   sectionHeader: { marginBottom: 14 },
@@ -1133,7 +1332,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   vehicleName: { fontSize: 16, fontWeight: '700', color: '#f8fafc' },
-  vehicleMeta: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  vehicleMeta: { fontSize: 12, color: '#e2e8f0', marginTop: 2 },
   vehiclePrice: { fontSize: 18, fontWeight: '800', color: '#6366f1', marginTop: 4 },
   vehicleDay: { fontSize: 12, color: '#94a3b8', fontWeight: '400' },
   availBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
@@ -1147,13 +1346,22 @@ const styles = StyleSheet.create({
 
   // Bookings
   filterRow: { marginBottom: 8 },
-  filterChip: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: 'rgba(30,41,59,0.8)', borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
-  },
+filterChip: {
+  paddingHorizontal: 15,
+  paddingVertical: 6,
+  borderRadius: 20,
+  backgroundColor: 'rgba(30,41,59,1)',   // ✅ solid
+  borderWidth: 1.2,
+  borderColor: '#6366f1',                // ✅ visible border
+},
+
   filterChipActive: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  filterChipText: { fontSize: 13, color: '#94a3b8', fontWeight: '600' },
+filterChipText: {
+  fontSize: 13, 
+  color: '#ffffff',   // ✅ bright white
+  fontWeight: '700',
+ 
+},
   filterChipTextActive: { color: 'white' },
 
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
@@ -1262,6 +1470,13 @@ const profileStyles = StyleSheet.create({
     color: '#f8fafc',
     letterSpacing: 0.2,
   },
+welcomeImage: {
+  width: '100%',
+  height: 120,
+  marginTop: 12,
+  borderRadius: 12,
+},
+
   settingsIconBtn: {
     width: 38,
     height: 38,
@@ -1340,6 +1555,7 @@ const profileStyles = StyleSheet.create({
     gap: 12,
     marginBottom: 28,
   },
+  
   statCard: {
     flex: 1,
     backgroundColor: 'rgba(30,41,59,0.85)',
@@ -1389,6 +1605,69 @@ const profileStyles = StyleSheet.create({
     marginBottom: 12,
     marginLeft: 2,
   },
+smallWelcomeImage: {
+  width: 60,
+  height: 60,
+  borderRadius: 30,
+  marginVertical: 10,
+  alignSelf: 'center',
+},
+
+  heroImage: {
+    width: '100%',
+    height: 300,
+    borderRadius: 16,
+    overflow: 'hidden',
+
+  },
+
+heroOverlay: {
+  flex: 1,
+  justifyContent: 'flex-end',
+  alignItems: 'center',           // ← Added for centering
+  padding: 24,
+  paddingBottom: 32,
+},
+
+heroTitle: {
+  color: '#ffffff',
+  fontSize: 29,
+  fontWeight: '900',
+  letterSpacing: 1,
+  textAlign: 'center',
+  textShadowColor: 'rgba(0, 0, 0, 0.8)',
+  textShadowOffset: { width: 0, height: 4 },
+  textShadowRadius: 10,
+  marginBottom: 10,
+},
+
+heroSubtitle: {
+  color: '#e0f2fe',
+  fontSize: 16,
+  fontWeight: '600',
+  textAlign: 'center',
+  marginBottom: 24,
+  textShadowColor: 'rgba(0,0,0,0.6)',
+  textShadowOffset: { width: 0, height: 2 },
+  textShadowRadius: 4,
+},
+
+
+heroButton: {
+  backgroundColor: '#6366f1',
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  borderRadius: 12,
+  alignSelf: 'flex-start',
+},
+
+heroButtonText: {
+  color: '#ffffff',
+  fontWeight: '700',
+  fontSize: 15,
+},
+
+
   glassCard: {
     backgroundColor: 'rgba(30,41,59,0.85)',
     borderRadius: 20,
