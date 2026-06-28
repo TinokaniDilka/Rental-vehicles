@@ -96,6 +96,7 @@ const fetchVehicles = async () => {
             </TouchableOpacity>
           )}
         </View>
+        
       </View>
 
       {/* ── Filter Chips ── */}

@@ -542,7 +542,6 @@ const handleOpenFeedbackModal = (booking) => {
             </div>
 
             <div className="dashboard-grid">
-              <DashboardCard icon="📅" title="YOUR BOOKINGS" value={bookedCount} color="var(--primary)" />
               <DashboardCard icon="💰" title="TOTAL SPENT" value={`$${totalSpent}`} color="var(--success)" />
               <DashboardCard icon="⭐" title="SUBMITTED REVIEWS" value={feedbacks.filter(f => f.type === "feedback").length} color="var(--warning)" />
             </div>

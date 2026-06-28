@@ -34,14 +34,16 @@ const [statusFilter, setStatusFilter] = useState("all");
 const [dateFilter, setDateFilter] = useState("");
 const [vehicleTypeFilter, setVehicleTypeFilter] = useState("all");
 
-  const [showNotifications, setShowNotifications] = useState(false);
+ const [showNotifications, setShowNotifications] = useState(false);
+const [seenBookings, setSeenBookings] = useState(false);
+const [seenComplaints, setSeenComplaints] = useState(false);
 
 const notifications = {
-  newBookings: bookings.filter(b => b.status === "pending").length,
-  lateReturns: bookings.filter(
+  newBookings: seenBookings ? 0 : bookings.filter(b => b.status === "pending" || b.status === "confirmed").length,
+  lateReturns: seenBookings ? 0 : bookings.filter(
     b => b.status === "ongoing" && new Date(b.endDate) < new Date()
   ).length,
-  complaints: feedbacks.filter(
+  complaints: seenComplaints ? 0 : feedbacks.filter(
     f => f.type === "complaint" && f.complaintStatus !== "Resolved"
   ).length
 };
@@ -73,7 +75,7 @@ const totalNotifications =
   const [driverName, setDriverName] = useState("");
   const [discount, setDiscount] = useState("");
   const [additionalFees, setAdditionalFees] = useState("");
-
+ 
   // Return Booking Modal states
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [selectedBookingForReturn, setSelectedBookingForReturn] = useState(null);
@@ -111,6 +113,15 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, []);
 
+useEffect(() => {
+  if (activePage === "bookings") {
+    setSeenBookings(true);
+  }
+  if (activePage === "complaints") {
+    setSeenComplaints(true);
+  }
+}, [activePage]);
+
   const fetchVehicles = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/vehicles/my-vehicles", {
@@ -128,12 +139,20 @@ const fetchBookings = async () => {
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    setBookings(res.data);
+    const newData = res.data;
+    const prevCount = bookings.filter(b => b.status === "pending" || b.status === "confirmed").length;
+    const newCount = newData.filter(b => b.status === "pending" || b.status === "confirmed").length;
 
-    const pendingCount = res.data.filter(b => b.status === "pending").length;
-    const activeCount = res.data.filter(b => b.status === "ongoing").length;
-    
-    const totalEarnings = res.data
+    // Only reset seen if count increased (new booking arrived)
+    if (newCount > prevCount) {
+      setSeenBookings(false);
+    }
+
+    setBookings(newData);
+
+    const pendingCount = newData.filter(b => b.status === "pending").length;
+    const activeCount = newData.filter(b => b.status === "ongoing").length;
+    const totalEarnings = newData
       .filter(b => ["completed", "ongoing", "confirmed"].includes(b.status))
       .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
@@ -144,17 +163,26 @@ const fetchBookings = async () => {
   }
 };
 
-  const fetchFeedbacks = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/feedback", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setFeedbacks(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+const fetchFeedbacks = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/api/feedback", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
+    const newData = res.data;
+    const prevCount = feedbacks.filter(f => f.type === "complaint" && f.complaintStatus !== "Resolved").length;
+    const newCount = newData.filter(f => f.type === "complaint" && f.complaintStatus !== "Resolved").length;
+
+    // Only reset seen if count increased (new complaint arrived)
+    if (newCount > prevCount) {
+      setSeenComplaints(false);
+    }
+
+    setFeedbacks(newData);
+  } catch (err) {
+    console.error(err);
+  }
+};
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
@@ -480,8 +508,9 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
           <div className="nav-links-wrap">
             <NavItem label="Dashboard" active={activePage === "dashboard"} onClick={() => setActivePage("dashboard")} />
             <NavItem label="Manage Vehicles" active={activePage === "vehicles"} onClick={() => setActivePage("vehicles")} />
-            <NavItem label="Booking Approvals" active={activePage === "bookings"} onClick={() => setActivePage("bookings")} />
-            <NavItem label="Complaints & Reviews" active={activePage === "complaints"} onClick={() => setActivePage("complaints")} />
+            <NavItem label="Booking Approvals" active={activePage === "bookings"} onClick={() => { setActivePage("bookings"); setSeenBookings(true); }} />
+            <NavItem label="Complaints & Reviews" active={activePage === "complaints"} onClick={() => { setActivePage("complaints"); setSeenComplaints(true); }} />
+
           </div>
           {/* 🔔 Notification Bell */}
 <div style={{ position: "relative", marginRight: "15px" }}>
@@ -527,17 +556,15 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
       </h4>
 
       <div style={{ fontSize: "13px", lineHeight: "1.6" }}>
-        <p
-  style={{ cursor: "pointer" }}
-  onClick={() => setActivePage("bookings")}
->
+      <p style={{ cursor: "pointer" }} onClick={() => { setActivePage("bookings"); setSeenBookings(true); setShowNotifications(false); }}>
   🆕 New booking requests: <strong>{notifications.newBookings}</strong>
 </p>
 
-<p
-  style={{ cursor: "pointer" }}
-  onClick={() => setActivePage("complaints")}
->
+<p style={{ cursor: "pointer" }} onClick={() => setActivePage("bookings")}>
+  ⏳ Pending pickups: <strong>{notifications.lateReturns}</strong>
+</p>
+
+<p style={{ cursor: "pointer" }} onClick={() => { setActivePage("complaints"); setSeenComplaints(true); setShowNotifications(false); }}>
   💬 Complaints to respond: <strong>{notifications.complaints}</strong>
 </p>
 </div>
@@ -811,47 +838,49 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
                   const start = new Date(b.startDate).toLocaleDateString();
                   const end = new Date(b.endDate).toLocaleDateString();
                   return (
-                    <div key={b._id} className="glass-card" style={{ padding: "20px", display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" }}>
-                      <div style={{ flex: 2 }}>
-                        <h4 style={{ margin: 0, fontSize: "19px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
-                        <p style={{ margin: "4px 0", fontSize: "14px", color: "var(--text-secondary)" }}>
-                          👤 <strong>Customer:</strong> {b.customerId?.name} ({b.customerId?.email})
-                        </p>
-                        <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "14px" }}>📅 Duration: {start} - {end}</p>
-                        {b.pickupTime && <p style={{ margin: "2px 0 0 0", fontSize: "13.5px", color: "var(--text-muted)" }}>🕐 Pickup: {b.pickupTime} | Dropoff: {b.dropoffTime}</p>}
-                        {b.hasDriver && <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--primary)", fontWeight: "600" }}>🚖 Driver Requested {b.driverName ? `| Assigned: ${b.driverName}` : ""}</p>}
-                      </div>
+<div key={b._id} className="glass-card" style={{ padding: "20px", display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(180px, 1fr) minmax(150px, auto)", gap: "20px", alignItems: "center" }}>  
+  {/* Column 1: Booking Info */}
+  <div>
+    <h4 style={{ margin: 0, fontSize: "19px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
+    <p style={{ margin: "4px 0", fontSize: "14px", color: "var(--text-secondary)" }}>
+      👤 <strong>Customer:</strong> {b.customerId?.name} ({b.customerId?.email})
+    </p>
+    <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "14px" }}>📅 {start} - {end}</p>
+    {b.hasDriver && <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--primary)", fontWeight: "600" }}>🚖 Driver Requested {b.driverName ? `| ${b.driverName}` : ""}</p>}
+  </div>
 
-                      <div style={{ flex: 1, minWidth: "150px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
-                        <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)", fontWeight: "700" }}>INVOICE SUMMARY</p>
-                        {b.status !== "pending" ? (
-                          <>
-                            <p style={{ margin: "4px 0 0", fontSize: "13px" }}>Base: ${b.baseCharge}</p>
-                            {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "13px" }}>Driver: ${b.driverCharge}</p>}
-                            {b.discount > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--success)" }}>Discount: -${b.discount}</p>}
-                            {b.additionalFees > 0 && <p style={{ margin: 0, fontSize: "13px" }}>Extra Fees: ${b.additionalFees}</p>}
-                            {b.damageCharge > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--danger)" }}>Damage: ${b.damageCharge}</p>}
-                            <h4 style={{ margin: "4px 0 0", color: "white" }}>Total: ${b.totalAmount}</h4>
-                          </>
-                        ) : (
-                          <p style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "13px", margin: "4px 0 0" }}>Awaiting review...</p>
-                        )}
-                      </div>
+  {/* Column 2: Invoice - always same position */}
+  <div style={{ borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
+    <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)", fontWeight: "700" }}>INVOICE SUMMARY</p>
+    {b.status !== "pending" ? (
+      <>
+        <p style={{ margin: "4px 0 0", fontSize: "13px" }}>Base: ${b.baseCharge}</p>
+        {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "13px" }}>Driver: ${b.driverCharge}</p>}
+        {b.discount > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--success)" }}>Discount: -${b.discount}</p>}
+        {b.additionalFees > 0 && <p style={{ margin: 0, fontSize: "13px" }}>Extra: ${b.additionalFees}</p>}
+        {b.damageCharge > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--danger)" }}>Damage: ${b.damageCharge}</p>}
+        <h4 style={{ margin: "4px 0 0", color: "white" }}>Total: ${b.totalAmount}</h4>
+      </>
+    ) : (
+      <p style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "13px", margin: "4px 0 0" }}>Awaiting review...</p>
+    )}
+  </div>
 
-                      <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
-                        <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
-                        
-                        {b.status === "pending" && (
-                          <button className="btn-base btn-primary" onClick={() => handleOpenReviewModal(b)}>🔍 Review Request</button>
-                        )}
-                        {b.status === "confirmed" && (
-                          <button className="btn-base btn-success" onClick={() => handlePickup(b._id)}>🚗 Start Rental (Pickup)</button>
-                        )}
-                        {b.status === "ongoing" && (
-                          <button className="btn-base btn-primary" style={{ background: "var(--primary-gradient)" }} onClick={() => handleOpenReturnModal(b)}>🔧 Inspect Return</button>
-                        )}
-                      </div>
-                    </div>
+  {/* Column 3: Badge + Action */}
+  <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
+    <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
+    {b.status === "pending" && (
+      <button className="btn-base btn-primary" onClick={() => handleOpenReviewModal(b)}>🔍 Review Request</button>
+    )}
+    {b.status === "confirmed" && (
+      <button className="btn-base btn-primary" onClick={() => handlePickup(b._id)}>🚗 Start Rental</button>
+    )}
+    {b.status === "ongoing" && (
+      <button className="btn-base btn-primary" style={{ background: "var(--primary-gradient)" }} onClick={() => handleOpenReturnModal(b)}>🔧 Inspect Return</button>
+    )}
+  </div>
+
+</div>
                   );
                 })}
               </div>
@@ -916,8 +945,7 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
                       </p>
                     </div>
 
-                    <div style={{ flex: 1, minWidth: "200px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
-                      {f.type === "complaint" ? (
+<div style={{ borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>                      {f.type === "complaint" ? (
                         <div style={{ marginBottom: "10px" }}>
                           <p style={{ margin: 0, fontSize: "13.5px" }}>Status: <strong style={{ color: f.complaintStatus === "Resolved" ? "var(--success)" : "var(--warning)" }}>{f.complaintStatus}</strong></p>
                           {f.staffResponse && (

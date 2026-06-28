@@ -76,7 +76,7 @@ export default function Bookings() {
           customerId: user._id,
           startDate,
           endDate,
-          status: "pending" // or "confirmed" depending on your logic
+          status: "pending" // 
         })
       });
 
