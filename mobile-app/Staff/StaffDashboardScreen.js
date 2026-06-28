@@ -434,31 +434,41 @@ const getGreeting = () => {
 
   const renderDashboard = () => (
     <ScrollView contentContainerStyle={styles.pageContent} showsVerticalScrollIndicator={false}>
-      {/* Welcome Banner */}
+          {/* Welcome Banner */}
       <View style={styles.welcomeBanner} />
       <Text style={styles.welcomeTitle}>{getGreeting()}, {user?.name?.split(' ')[0]}!</Text>
       <Text style={styles.welcomeSubtitle}>Let’s manage your rentals efficiently 🚀</Text>
 
-
-<ImageBackground
-  source={{
-    uri: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2'
-  }}
-  style={styles.heroImage}
-  imageStyle={{ borderRadius: 16, resizeMode: 'cover', height: 200,  }}  // ← Important for clarity
->
-  <LinearGradient
-    colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.0)']}
-    style={styles.heroOverlay}
+     <View style={{ width: '100%', height: 220, borderRadius: 20, overflow: 'hidden', marginTop: 12, marginBottom: 16 }}>
+  <ImageBackground
+    source={{
+      uri: 'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=800'
+    }}
+    style={{ width: '100%', height: '100%' }}
+    imageStyle={{ borderRadius: 20 }}
   >
-    <Text style={styles.heroTitle}>Ready for Today?</Text>
-  </LinearGradient>
-</ImageBackground>
+    <LinearGradient
+      colors={['rgba(0,0,0,0.05)', 'rgba(15,10,60,0.85)']}
+      style={{ flex: 1, justifyContent: 'flex-end', padding: 22, borderRadius: 20 }}
+    >
+      <Text style={{
+        color: '#ffffff',
+        fontSize: 30,
+        fontWeight: '800',
+        letterSpacing: 1,
+        textShadowColor: 'rgba(0,0,0,0.9)',
+        textShadowOffset: { width: 0, height: 3 },
+        textShadowRadius: 10,
+      }}>
+        Ready for Today? 
+      </Text>
+      
+    </LinearGradient>
+  </ImageBackground>
+</View>
 
-<View style={{ height: "30%", backgroundColor: 'transparent' }} />   {/* Big test gap */}
-
-      {/* Metrics Grid */}
-      <View style={styles.metricsGrid}>
+{/* Metrics Grid */}
+<View style={styles.metricsGrid}>
         <MetricCard icon="⏳" title="PENDING" value={stats.pending} color="#f59e0b" />
         <MetricCard icon="🚗" title="ACTIVE" value={stats.active} color="#6366f1" />
         <MetricCard icon="📂" title="FLEET" value={vehicles.length} color="#0ea5e9" />
@@ -1612,33 +1622,30 @@ smallWelcomeImage: {
   marginVertical: 10,
   alignSelf: 'center',
 },
-
-  heroImage: {
-    width: '100%',
-    height: 300,
-    borderRadius: 16,
-    overflow: 'hidden',
-
-  },
+heroImage: {
+  width: '100%',
+  height: 200,        // ✅ increase this
+  marginTop: 12,
+  marginBottom: 16,
+  borderRadius: 20,
+  overflow: 'hidden',
+},
 
 heroOverlay: {
   flex: 1,
   justifyContent: 'flex-end',
-  alignItems: 'center',           // ← Added for centering
-  padding: 24,
-  paddingBottom: 32,
+  paddingHorizontal: 20,
+  paddingBottom: 20,
 },
 
 heroTitle: {
   color: '#ffffff',
-  fontSize: 29,
-  fontWeight: '900',
-  letterSpacing: 1,
-  textAlign: 'center',
-  textShadowColor: 'rgba(0, 0, 0, 0.8)',
+  fontSize: 28,
+  fontWeight: '800',
+  letterSpacing: 1.2,
+  textShadowColor: 'rgba(0,0,0,0.85)',
   textShadowOffset: { width: 0, height: 4 },
-  textShadowRadius: 10,
-  marginBottom: 10,
+  textShadowRadius: 12,
 },
 
 heroSubtitle: {
