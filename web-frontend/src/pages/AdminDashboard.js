@@ -540,11 +540,11 @@ export default function AdminDashboard() {
                   <table className="custom-table">
                     <thead>
   <tr>
-    <th className="custom-th">CUSTOMER</th>
-    <th className="custom-th">VEHICLE</th>   {/* ✅ ADD HERE */}
-    <th className="custom-th">RATING</th>
-    <th className="custom-th">COMMENTS</th>
-    <th className="custom-th">STAFF REPLY</th>
+    <th className="custom-th">VEHICLE </th>
+    <th className="custom-th">CUSTOMER  </th>   {/* ✅ ADD HERE */}
+    <th className="custom-th">   DATE  </th>
+    <th className="custom-th">AMOUNT</th>
+    <th className="custom-th">STATUS </th>
   </tr>
 </thead>
                     <tbody>
