@@ -1,13 +1,25 @@
-export const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric'
+export const formatDate = (dateString) => {
+  if (!dateString) return '—';
+
+  const date = new Date(dateString);
+  
+  if (isNaN(date.getTime())) {
+    return '—';
+  }
+
+  return date.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
   });
 };
 
-export const formatCurrency = (amount) =>
-  `LKR ${Number(amount).toLocaleString()}`;
+export const formatCurrency = (amount) => {
+  if (amount == null) return 'LKR 0';
+  return `LKR ${Number(amount).toLocaleString('en-US')}`;
+};
 
+// Keep your existing getStatusColor if you have it
 export const getStatusColor = (status) => {
   switch (status) {
     case 'confirmed': return '#22c55e';
