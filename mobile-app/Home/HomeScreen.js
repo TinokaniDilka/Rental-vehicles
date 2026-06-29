@@ -1,15 +1,8 @@
-import React, { useContext } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  Dimensions,
-  TextInput,
-  ImageBackground
-} from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  StatusBar, Dimensions, TextInput, ImageBackground, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +12,27 @@ const { width } = Dimensions.get('window');
 export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);
   const firstName = user?.name?.split(' ')[0] || 'Dilka';
+
+  const [location, setLocation] = useState('Colombo');
+const [showLocationModal, setShowLocationModal] = useState(false);
+const [ongoingBooking, setOngoingBooking] = useState(null);
+
+useEffect(() => {
+  fetchOngoingBooking();
+}, []);
+
+const fetchOngoingBooking = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const res = await api.get('/api/bookings/customer', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const ongoing = res.data.find(b => b.status === 'ongoing');
+    setOngoingBooking(ongoing || null);
+  } catch (err) {
+    console.error('Failed to fetch ongoing booking:', err.message);
+  }
+};
 
   return (
     <View style={styles.root}>
@@ -86,36 +100,11 @@ export default function HomeScreen({ navigation }) {
           <Ionicons name="options-outline" size={18} color="#64748b" />
         </View>
 
-        {/* LOCATION */}
-        <View style={styles.locationBox}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="location-outline" size={16} color="#22c55e" />
-            <Text style={styles.locationText}>Colombo</Text>
-          </View>
-
-          <TouchableOpacity>
-            <Text style={styles.changeText}>Change</Text>
-          </TouchableOpacity>
-        </View>
-
+      
         {/* QUICK ACTIONS */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
 
-        <View style={styles.grid}>
-          {[
-            { icon: 'car-sport-outline', label: 'Rent', color: '#6366f1' },
-            { icon: 'calendar-outline', label: 'My Bookings', color: '#0ea5e9' },
-            { icon: 'star-outline', label: 'Top Rated', color: '#ec4899' },
-            { icon: 'location-outline', label: 'Near Me', color: '#10b981' },
-          ].map((item) => (
-            <TouchableOpacity key={item.label} style={styles.card}>
-              <View style={[styles.iconCircle, { backgroundColor: item.color }]}>
-                <Ionicons name={item.icon} size={20} color="#fff" />
-              </View>
-              <Text style={styles.cardText}>{item.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+       
 
         {/* RECOMMENDED */}
         <View style={styles.sectionRow}>
@@ -134,9 +123,64 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.vehicleText}>Car Preview</Text>
           </View>
         </ScrollView>
+        {/* ONGOING BOOKING */}
+{ongoingBooking && (
+  <View style={{
+    marginHorizontal: 20,
+     marginTop: 20,
+    marginBottom: 60,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+    padding: 16,
+  }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+      <View style={{
+        backgroundColor: 'rgba(16,185,129,0.2)',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+      }}>
+        <Text style={{ color: '#10b981', fontWeight: '800', fontSize: 11 }}>🚗 ONGOING</Text>
+      </View>
+    </View>
+
+    <Text style={{ color: '#f8fafc', fontSize: 17, fontWeight: '800', marginBottom: 4 }}>
+      {ongoingBooking.vehicleId?.name || 'Vehicle'}
+    </Text>
+
+    <View style={{ flexDirection: 'row', gap: 16, marginBottom: 10 }}>
+      <Text style={{ color: '#94a3b8', fontSize: 13 }}>
+        📅 {new Date(ongoingBooking.startDate).toLocaleDateString()} → {new Date(ongoingBooking.endDate).toLocaleDateString()}
+      </Text>
+    </View>
+
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Text style={{ color: '#10b981', fontSize: 20, fontWeight: '800' }}>
+        LKR {ongoingBooking.totalAmount?.toLocaleString()}
+      </Text>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Bookings')}
+        style={{
+          backgroundColor: 'rgba(16,185,129,0.2)',
+          borderRadius: 10,
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          borderWidth: 1,
+          borderColor: 'rgba(16,185,129,0.4)',
+        }}
+      >
+        <Text style={{ color: '#10b981', fontWeight: '700', fontSize: 13 }}>View Details →</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      
     </View>
   );
 }
