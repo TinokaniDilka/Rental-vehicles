@@ -44,64 +44,69 @@ export default function MyBookingsScreen({ navigation }) {
     if (s === 'cancelled') return { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', text: '#ef4444' };
     return { bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', text: '#94a3b8' };
   };
+const renderItem = ({ item }) => {
+  console.log("Full Item:", JSON.stringify(item, null, 2));
+  const badge = getStatusBadgeStyle(item.status);
+  
 
-  const renderItem = ({ item }) => {
-    const badge = getStatusBadgeStyle(item.status);
-    return (
-      <View style={styles.bookingCard}>
-        {/* Top Row: Vehicle Name + Status Badge */}
-        <View style={styles.cardTopRow}>
-          <View style={{ flex: 1, marginRight: 10 }}>
-            <Text style={styles.vehicleName} numberOfLines={1}>
-              {item.vehicle?.name || 'Vehicle'}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: badge.bg, borderColor: badge.border },
-            ]}
-          >
-            <Text style={[styles.statusText, { color: badge.text }]}>
-              {item.status?.toUpperCase() || 'N/A'}
-            </Text>
-          </View>
-        </View>
+   let vehicleName = 'Vehicle';
 
-        {/* Dates Row */}
-        <View style={styles.datesRow}>
-          <Ionicons name="calendar-outline" size={14} color="#6366f1" />
-          <Text style={styles.dateText}>{formatDate(item.pickupDate)}</Text>
-          <Ionicons name="arrow-forward" size={13} color="#475569" style={{ marginHorizontal: 6 }} />
-          <Text style={styles.dateText}>{formatDate(item.returnDate)}</Text>
-        </View>
+  if (item.vehicle) {
+    vehicleName = 
+      item.vehicle.name || 
+      item.vehicle.model || 
+      item.vehicle.brand || 
+      item.vehicle.make || 
+      item.vehicle.vehicleName || 
+      item.vehicle.title || 
+      'Vehicle';
+  } else if (item.vehicleName || item.name) {
+    vehicleName = item.vehicleName || item.name;
+  }
 
-        {/* Location */}
-        <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={14} color="#6366f1" />
-          <Text style={styles.locationText} numberOfLines={1}>
-            {item.pickupLocation || '—'}
+  return (
+    <View style={styles.bookingCard}>
+      <View style={styles.cardTopRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.bookingId}>
+            Booking #{(item._id || item.id || '').toString().slice(-6)}
+          </Text>
+          <Text style={styles.vehicleName}>
+            {vehicleName}
           </Text>
         </View>
 
-        <View style={styles.cardDivider} />
-
-        {/* Bottom Row: Amount + View Button */}
-        <View style={styles.cardBottomRow}>
-          <Text style={styles.amountText}>{formatCurrency(item.totalAmount)}</Text>
-          <TouchableOpacity
-            style={styles.viewBtn}
-            activeOpacity={0.75}
-            onPress={() => navigation && navigation.navigate && navigation.navigate('BookingDetail', { booking: item })}
-          >
-            <Text style={styles.viewBtnText}>View</Text>
-            <Ionicons name="chevron-forward" size={13} color="#6366f1" />
-          </TouchableOpacity>
+        <View style={[styles.statusBadge, { 
+          backgroundColor: badge.bg, 
+          borderColor: badge.border 
+        }]}>
+          <Text style={[styles.statusText, { color: badge.text }]}>
+            {item.status?.toUpperCase() || 'ONGOING'}
+          </Text>
         </View>
       </View>
-    );
-  };
 
+      <View style={styles.datesRow}>
+        <Ionicons name="calendar-outline" size={16} color="#6366f1" />
+        <Text style={styles.dateText}>
+          {formatDate(item.pickupDate || item.startDate) || '—'}
+        </Text>
+        <Ionicons name="arrow-forward" size={14} color="#475569" style={{ marginHorizontal: 8 }} />
+        <Text style={styles.dateText}>
+          {formatDate(item.returnDate || item.endDate) || '—'}
+        </Text>
+      </View>
+
+      <View style={styles.cardDivider} />
+
+      <View style={styles.cardBottomRow}>
+        <Text style={styles.amountText}>
+          {formatCurrency(item.totalAmount || item.amount)}
+        </Text>
+      </View>
+    </View>
+  );
+};
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconWrap}>
@@ -259,6 +264,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
 
+    bookingId: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: 2,
+    letterSpacing: 0.5,
+  },
+
+  vehicleName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#f8fafc',
+  },
+
   // Dates
   datesRow: {
     flexDirection: 'row',
@@ -292,10 +311,11 @@ const styles = StyleSheet.create({
   },
 
   // Bottom Row
-  cardBottomRow: {
+   cardBottomRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',   // Changed from space-between
     alignItems: 'center',
+    marginTop: 4,
   },
   amountText: {
     fontSize: 20,
