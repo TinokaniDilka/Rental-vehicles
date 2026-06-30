@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Alert,
   TouchableOpacity,
   StatusBar,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,8 +21,33 @@ const SETTINGS_ITEMS = [
   { icon: 'help-circle-outline', label: 'Help & Support', route: 'Support' },
 ];
 
+
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useContext(AuthContext);
+  
+const [editModalVisible, setEditModalVisible] = useState(false);
+const [editName, setEditName] = useState(user?.name || '');
+const [editPhone, setEditPhone] = useState(user?.phone || '');
+const [editPassword, setEditPassword] = useState('');
+
+const handleSaveProfile = async () => {
+  try {
+    const updatedUser = {
+      name: editName,
+      phone: editPhone,
+      ...(editPassword ? { password: editPassword } : {}),
+    };
+
+    console.log('Updated Data:', updatedUser);
+
+    Alert.alert('Success', 'Profile updated successfully');
+
+    setEditPassword('');
+    setEditModalVisible(false);
+  } catch (error) {
+    Alert.alert('Error', 'Failed to update profile');
+  }
+};
 
   const handleLogout = () => {
     Alert.alert(
@@ -83,22 +110,8 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Bookings</Text>
-          </View>
-          <View style={[styles.statCard, styles.statCardMiddle]}>
-            <Text style={styles.statValue}>{memberSince}</Text>
-            <Text style={styles.statLabel}>Member Since</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View style={styles.statActiveDot} />
-            <Text style={styles.statLabel}>Status</Text>
-            <Text style={styles.statActiveText}>Active</Text>
-          </View>
-        </View>
+        
+        
 
         {/* Info Card */}
         <Text style={styles.sectionLabel}>Account Info</Text>
@@ -127,6 +140,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
         </View>
+        
 
         {/* Settings Section */}
         <Text style={styles.sectionLabel}>Settings</Text>
@@ -135,8 +149,16 @@ export default function ProfileScreen({ navigation }) {
             <React.Fragment key={item.label}>
               <TouchableOpacity
                 style={styles.settingsRow}
-                onPress={() => navigation && navigation.navigate && navigation.navigate(item.route)}
-                activeOpacity={0.7}
+onPress={() => {
+  if (item.label === 'Edit Profile') {
+    setEditName(user?.name || '');
+    setEditPhone(user?.phone || '');
+    setEditPassword('');
+    setEditModalVisible(true);
+  } else {
+    navigation?.navigate(item.route);
+  }
+}}               activeOpacity={0.7}
               >
                 <View style={styles.settingsIconWrap}>
                   <Ionicons name={item.icon} size={18} color="#6366f1" />
@@ -160,6 +182,62 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
+        <Modal
+  visible={editModalVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setEditModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>Edit Profile</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Full Name"
+        placeholderTextColor="#94a3b8"
+        value={editName}
+        onChangeText={setEditName}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Phone Number"
+        placeholderTextColor="#94a3b8"
+        keyboardType="phone-pad"
+        value={editPhone}
+        onChangeText={setEditPhone}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="New Password"
+        placeholderTextColor="#94a3b8"
+        secureTextEntry
+        value={editPassword}
+        onChangeText={setEditPassword}
+      />
+
+      <View style={styles.modalButtons}>
+        <TouchableOpacity
+  style={styles.cancelBtn}
+  onPress={() => {
+    Alert.alert('Cancel');
+    setEditModalVisible(false);
+  }}
+>
+  <Text style={styles.cancelText}>Cancel</Text>
+</TouchableOpacity>
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={handleSaveProfile}
+        >
+          <Text style={styles.saveText}>Save</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
       </ScrollView>
     </LinearGradient>
   );
@@ -375,6 +453,74 @@ const styles = StyleSheet.create({
     color: '#f8fafc',
     fontWeight: '600',
   },
+
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.7)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+modalContainer: {
+  width: '90%',
+  backgroundColor: '#1e293b',
+  borderRadius: 20,
+  padding: 20,
+  borderWidth: 1,
+  borderColor: 'rgba(99,102,241,0.3)',
+},
+
+modalTitle: {
+  color: '#fff',
+  fontSize: 22,
+  fontWeight: '700',
+  textAlign: 'center',
+  marginBottom: 20,
+},
+
+input: {
+  height: 50,
+  borderRadius: 12,
+  backgroundColor: 'rgba(255,255,255,0.05)',
+  borderWidth: 1,
+  borderColor: 'rgba(99,102,241,0.3)',
+  color: '#fff',
+  paddingHorizontal: 15,
+  marginBottom: 15,
+},
+
+modalButtons: {
+  flexDirection: 'row',
+  marginTop: 10,
+},
+
+cancelBtn: {
+  flex: 1,
+  backgroundColor: '#334155',
+  padding: 14,
+  borderRadius: 12,
+  alignItems: 'center',
+  marginRight: 8,
+},
+
+saveBtn: {
+  flex: 1,
+  backgroundColor: '#6366f1',
+  padding: 14,
+  borderRadius: 12,
+  alignItems: 'center',
+  marginLeft: 8,
+},
+
+cancelText: {
+  color: '#fff',
+  fontWeight: '600',
+},
+
+saveText: {
+  color: '#fff',
+  fontWeight: '700',
+},
 
   // Settings Rows
   settingsRow: {
