@@ -865,121 +865,115 @@ const getGreeting = () => {
 
   // ─── Modal: Add/Edit Vehicle ────────────────────────────────────────────────
 
-  // Replace the entire VehicleModal component with this:
-
-// Replace the entire VehicleModal with this:
-// ─── Vehicle Modal (must be OUTSIDE main component to prevent remount) ────────
-const VehicleModal = ({
-  visible, onClose, editingVehicle,
-  vehicleName, setVehicleName,
-  vehicleType, setVehicleType,
-  vehiclePrice, setVehiclePrice,
-  vehicleLocation, setVehicleLocation,
-  vehicleDesc, setVehicleDesc,
-  vehicleSaving, onSave, styles
-}) => (
-  <Modal
-    visible={visible}
-    animationType="slide"
-    transparent
-    onRequestClose={onClose}
-  >
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.modalOverlay}
+  const VehicleModal = () => (
+    <Modal
+      visible={showVehicleModal}
+      animationType="slide"
+      transparent
+      onRequestClose={() => setShowVehicleModal(false)}
     >
-      <View style={styles.modalSheet}>
-        <View style={styles.modalHandle} />
-        <Text style={styles.modalTitle}>
-          {editingVehicle ? '✏️ Edit Vehicle' : '➕ Add Vehicle'}
-        </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={styles.modalOverlay}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>
+            {editingVehicle ? '✏️ Edit Vehicle' : '➕ Add Vehicle'}
+          </Text>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="always"
-          keyboardDismissMode="none"
-          contentContainerStyle={{ paddingBottom: 150 }}
-          bounces={false}
-        >
-          <Text style={styles.inputLabel}>Vehicle Name *</Text>
-          <TextInput
-            style={styles.modalInput}
-            value={vehicleName}
-            onChangeText={setVehicleName}
-            placeholder="e.g. Toyota Corolla"
-            placeholderTextColor="#475569"
-            autoCorrect={false}
-            autoCapitalize="words"
-            returnKeyType="next"
-            blurOnSubmit={false}
-          />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            contentContainerStyle={{ paddingBottom: 150 }}
+            bounces={false}
+          >
+            <Text style={styles.inputLabel}>Vehicle Name *</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={vehicleName}
+              onChangeText={setVehicleName}
+              placeholder="e.g. Toyota Corolla"
+              placeholderTextColor="#475569"
+              autoCorrect={false}
+              autoCapitalize="words"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              enablesReturnKeyAutomatically={true}
+            />
 
-          <Text style={styles.inputLabel}>Category</Text>
-          <View style={styles.typeRow}>
-            {['car', 'scooter', 'three wheel', 'Van'].map(t => (
-              <TouchableOpacity
-                key={t}
-                onPress={() => setVehicleType(t)}
-                style={[styles.typeChip, vehicleType === t && styles.typeChipActive]}
-              >
-                <Text style={[styles.typeChipText, vehicleType === t && { color: 'white' }]}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </Text>
+            <Text style={styles.inputLabel}>Category</Text>
+            <View style={styles.typeRow}>
+              {['car', 'scooter', 'three wheel', 'Van'].map(t => (
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => setVehicleType(t)}
+                  style={[styles.typeChip, vehicleType === t && styles.typeChipActive]}
+                >
+                  <Text style={[styles.typeChipText, vehicleType === t && { color: 'white' }]}>
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.inputLabel}>Price Per Day ($) *</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={vehiclePrice}
+              onChangeText={setVehiclePrice}
+              placeholder="e.g. 45"
+              placeholderTextColor="#475569"
+              keyboardType="numeric"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              enablesReturnKeyAutomatically={true}
+            />
+
+            <Text style={styles.inputLabel}>Location *</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={vehicleLocation}
+              onChangeText={setVehicleLocation}
+              placeholder="e.g. Colombo"
+              placeholderTextColor="#475569"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              enablesReturnKeyAutomatically={true}
+            />
+
+            <Text style={styles.inputLabel}>Description</Text>
+            <TextInput
+              style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
+              value={vehicleDesc}
+              onChangeText={setVehicleDesc}
+              placeholder="Optional description..."
+              placeholderTextColor="#475569"
+              multiline
+              returnKeyType="done"
+              blurOnSubmit={true}
+            />
+
+            <View style={styles.modalBtns}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowVehicleModal(false)}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+              <TouchableOpacity style={{ flex: 2 }} onPress={saveVehicle} disabled={vehicleSaving}>
+                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
+                  {vehicleSaving
+                    ? <ActivityIndicator color="white" size="small" />
+                    : <Text style={styles.primaryBtnText}>Save Vehicle</Text>}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 
-          <Text style={styles.inputLabel}>Price Per Day ($) *</Text>
-          <TextInput
-            style={styles.modalInput}
-            value={vehiclePrice}
-            onChangeText={setVehiclePrice}
-            placeholder="e.g. 45"
-            placeholderTextColor="#475569"
-            keyboardType="numeric"
-            returnKeyType="next"
-            blurOnSubmit={false}
-          />
-
-          <Text style={styles.inputLabel}>Location *</Text>
-          <TextInput
-            style={styles.modalInput}
-            value={vehicleLocation}
-            onChangeText={setVehicleLocation}
-            placeholder="e.g. Colombo"
-            placeholderTextColor="#475569"
-            returnKeyType="next"
-            blurOnSubmit={false}
-          />
-
-          <Text style={styles.inputLabel}>Description</Text>
-          <TextInput
-            style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
-            value={vehicleDesc}
-            onChangeText={setVehicleDesc}
-            placeholder="Optional description..."
-            placeholderTextColor="#475569"
-            multiline
-            returnKeyType="done"
-          />
-
-          <View style={styles.modalBtns}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={{ flex: 2 }} onPress={onSave} disabled={vehicleSaving}>
-              <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
-                {vehicleSaving
-                  ? <ActivityIndicator color="white" size="small" />
-                  : <Text style={styles.primaryBtnText}>Save Vehicle</Text>}
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </View>
-    </KeyboardAvoidingView>
-  </Modal>
-);
   // ─── Modal: Review Booking ────────────────────────────────────────────────
 
   const ReviewModal = () => (
@@ -1212,24 +1206,7 @@ const VehicleModal = ({
       </View>
 
       {/* Modals */}
-      <VehicleModal
-  visible={showVehicleModal}
-  onClose={() => setShowVehicleModal(false)}
-  editingVehicle={editingVehicle}
-  vehicleName={vehicleName}
-  setVehicleName={setVehicleName}
-  vehicleType={vehicleType}
-  setVehicleType={setVehicleType}
-  vehiclePrice={vehiclePrice}
-  setVehiclePrice={setVehiclePrice}
-  vehicleLocation={vehicleLocation}
-  setVehicleLocation={setVehicleLocation}
-  vehicleDesc={vehicleDesc}
-  setVehicleDesc={setVehicleDesc}
-  vehicleSaving={vehicleSaving}
-  onSave={saveVehicle}
-  styles={styles}
-/>
+      <VehicleModal />
       <ReviewModal />
       <ReturnModal />
       <ComplaintModal />
