@@ -27,6 +27,14 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  pickupTime: {
+    type: String,
+    default: "09:00"
+  },
+  dropoffTime: {
+    type: String,
+    default: "09:00"
+  },
   status: {
     type: String,
     enum: ["pending", "approved", "rejected", "confirmed", "ongoing", "completed", "cancelled"],
@@ -62,7 +70,16 @@ const bookingSchema = new mongoose.Schema({
     default: "none"
   },
   refundAmount: { type: Number, default: 0 },
-  refundedAt: { type: Date }
+  refundedAt: { type: Date },
+  
+  // Handover & Verification
+  handoverStatus: {
+    type: String,
+    enum: ["pending_pickup", "rented", "returned", "confirmed_return"],
+    default: "pending_pickup"
+  },
+  conditionPhotos: [{ type: String }],
+  rentalAgreementSigned: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Booking", bookingSchema);
