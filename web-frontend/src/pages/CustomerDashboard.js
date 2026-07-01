@@ -35,6 +35,10 @@ export default function CustomerDashboard() {
   const [profileName, setProfileName] = useState(user.name || "");
   const [profileEmail, setProfileEmail] = useState(user.email || "");
   const [profilePassword, setProfilePassword] = useState("");
+  const [profileNic, setProfileNic] = useState(user.nicNumber || "");
+  const [profileDrivingLicense, setProfileDrivingLicense] = useState(user.drivingLicenseNumber || "");
+  const [profileIdPhoto, setProfileIdPhoto] = useState(user.idPhoto || "");
+  const [profileLicensePhoto, setProfileLicensePhoto] = useState(user.licensePhoto || "");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Booking Modal
@@ -43,6 +47,7 @@ export default function CustomerDashboard() {
   const [bookingStartDate, setBookingStartDate] = useState("");
   const [bookingEndDate, setBookingEndDate] = useState("");
   const [bookingHasDriver, setBookingHasDriver] = useState(false);
+  const [rentalTermsAccepted, setRentalTermsAccepted] = useState(false);
   const [bookingError, setBookingError] = useState("");
   const [vehicleBookedDates, setVehicleBookedDates] = useState([]);
 
@@ -240,6 +245,7 @@ export default function CustomerDashboard() {
     setPickupTime("09:00");
     setDropoffTime("09:00");
     setBookingHasDriver(false);
+    setRentalTermsAccepted(false);
     setBookingError("");
     setVehicleBookedDates([]);
     setShowBookingModal(true);
@@ -360,9 +366,18 @@ const handleOpenFeedbackModal = (booking) => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        name: profileName,
+        email: profileEmail,
+        password: profilePassword,
+        nicNumber: profileNic,
+        drivingLicenseNumber: profileDrivingLicense,
+        idPhoto: profileIdPhoto,
+        licensePhoto: profileLicensePhoto
+      };
       const res = await axios.put(
         "http://localhost:5000/api/auth/profile",
-        { name: profileName, email: profileEmail, password: profilePassword },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -409,6 +424,7 @@ const handleOpenFeedbackModal = (booking) => {
           endDate: tempBookingData.endDate,
           pickupTime: tempBookingData.pickupTime,
           dropoffTime: tempBookingData.dropoffTime,
+          hasDriver: tempBookingData.hasDriver || false,
           paymentMethod,
           amount: finalAmount,
           promoCode: promoApplied ? promoCode : null
@@ -426,7 +442,8 @@ const handleOpenFeedbackModal = (booking) => {
       fetchBookings();
       fetchVehicles();
     } catch (err) {
-      showToast(err.response?.data?.message || "Payment failed");
+      console.error("Payment error:", err);
+      showToast(err.response?.data?.message || "Payment failed", "error");
     }
   };
 
@@ -452,6 +469,20 @@ const handleOpenFeedbackModal = (booking) => {
       await fetchVehicles();
     } catch (err) {
       showToast(err.response?.data?.message || "Failed to submit feedback", "error");
+    }
+  };
+
+  const handleConfirmReceived = async (bookingId) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/bookings/${bookingId}/handover`,
+        { handoverStatus: "rented" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast("Vehicle received successfully! Enjoy your ride 🚗", "success");
+      fetchBookings();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to confirm receipt", "error");
     }
   };
 
@@ -645,9 +676,14 @@ const handleOpenFeedbackModal = (booking) => {
                 <h1 style={{ color: "white", fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>{activePage.data.name}</h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginBottom: "15px" }}>📍 {activePage.data.location}</p>
                 
-                <h2 style={{ color: "var(--primary)", fontSize: "28px", fontWeight: "800", marginBottom: "20px" }}>
-                  ${activePage.data.pricePerDay} <span style={{ fontSize: "16px", color: "var(--text-secondary)" }}>/ day</span>
-                </h2>
+                <div style={{ marginBottom: "20px" }}>
+                  <h2 style={{ color: "var(--primary)", fontSize: "28px", fontWeight: "800", margin: "0 0 5px 0" }}>
+                    ${activePage.data.pricePerDay} <span style={{ fontSize: "16px", color: "var(--text-secondary)" }}>/ day</span>
+                  </h2>
+                  <span style={{ fontSize: "13px", color: "var(--warning)", fontWeight: "600", padding: "4px 8px", background: "rgba(245,158,11,0.15)", borderRadius: "6px" }}>
+                    🔒 Deposit Required: LKR {activePage.data.depositAmount || 5000} (refundable)
+                  </span>
+                </div>
 
                 <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "20px", marginBottom: "25px" }}>
                   <h4 style={{ margin: "0 0 8px 0", color: "white" }}>Specifications</h4>
@@ -799,6 +835,32 @@ const handleOpenFeedbackModal = (booking) => {
                         {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "13.5px" }}>Driver: ${b.driverCharge}</p>}
                         {b.discount > 0 && <p style={{ margin: 0, fontSize: "13.5px", color: "var(--accent)" }}>Discount: -${b.discount}</p>}
                         <h4 style={{ margin: "8px 0 0 0", color: "white", fontSize: "18px", fontWeight: "800" }}>Total: ${b.totalAmount}</h4>
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: "220px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
+                        <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)", fontWeight: "700" }}>HANDOVER STATUS</p>
+                        {(!b.handoverStatus || b.handoverStatus === 'pending_pickup') ? (
+                          <div style={{ marginTop: "10px" }}>
+                            <span style={{ fontSize: "13px", color: "var(--warning)" }}>⏳ Pending Pickup</span>
+                            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                              <button className="btn-base btn-primary" style={{ padding: "6px 10px", fontSize: "12px" }} onClick={() => handleConfirmReceived(b._id)}>Confirm Received</button>
+                              <label style={{ cursor: "pointer", background: "rgba(255,255,255,0.1)", padding: "6px 10px", borderRadius: "6px", fontSize: "16px" }}>
+                                📷<input type="file" style={{ display: "none" }} multiple />
+                              </label>
+                            </div>
+                          </div>
+                        ) : b.handoverStatus === 'rented' ? (
+                          <div style={{ marginTop: "10px" }}>
+                            <span style={{ fontSize: "13px", color: "var(--success)", fontWeight: "bold" }}>🚗 Currently Rented</span>
+                            <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
+                              Time Remaining: {Math.max(0, Math.ceil((new Date(b.endDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days
+                            </p>
+                          </div>
+                        ) : (b.handoverStatus === 'returned' || b.handoverStatus === 'confirmed_return') ? (
+                          <div style={{ marginTop: "10px" }}>
+                            <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>✅ Return Confirmed</span>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
@@ -988,8 +1050,17 @@ const handleOpenFeedbackModal = (booking) => {
       {showProfileModal && (
         <div className="custom-modal-overlay" onClick={() => setShowProfileModal(false)}>
           <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "5px" }}>👤 Edit Customer Profile</h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "20px" }}>Update your contact credentials.</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
+                <h3 style={{ fontSize: "20px", fontWeight: "700", margin: 0 }}>👤 Edit Customer Profile</h3>
+                {user.verificationStatus === 'Verified' ? (
+                  <span style={{ background: "var(--success)", color: "white", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" }}>✅ Verified</span>
+                ) : user.verificationStatus === 'Pending Review' ? (
+                  <span style={{ background: "var(--warning)", color: "white", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" }}>Pending Review</span>
+                ) : (
+                  <span style={{ background: "var(--danger)", color: "white", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" }}>Not Verified</span>
+                )}
+            </div>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "20px" }}>Update your contact and identity credentials.</p>
 
             <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -1000,6 +1071,29 @@ const handleOpenFeedbackModal = (booking) => {
                 <label className="form-label">Email Address</label>
                 <input type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="custom-input" required />
               </div>
+              
+              <div style={{ display: "flex", gap: "10px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
+                  <label className="form-label">NIC Number</label>
+                  <input type="text" placeholder="e.g. 199012345678" value={profileNic} onChange={(e) => setProfileNic(e.target.value)} className="custom-input" />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
+                  <label className="form-label">Driving License Number</label>
+                  <input type="text" placeholder="e.g. B1234567" value={profileDrivingLicense} onChange={(e) => setProfileDrivingLicense(e.target.value)} className="custom-input" />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
+                  <label className="form-label">ID Photo</label>
+                  <input type="file" accept="image/*" onChange={(e) => setProfileIdPhoto("dummy_id_path.jpg")} className="custom-input" style={{ padding: "8px" }} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
+                  <label className="form-label">License Photo</label>
+                  <input type="file" accept="image/*" onChange={(e) => setProfileLicensePhoto("dummy_license_path.jpg")} className="custom-input" style={{ padding: "8px" }} />
+                </div>
+              </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label className="form-label">New Password (leave blank to keep current)</label>
                 <input type="password" placeholder="••••••••" value={profilePassword} onChange={(e) => setProfilePassword(e.target.value)} className="custom-input" />
@@ -1051,9 +1145,14 @@ const handleOpenFeedbackModal = (booking) => {
 
             {bookingError && <p style={{ color: "var(--danger)", fontWeight: "bold", fontSize: "14px", marginTop: "10px" }}>⚠️ {bookingError}</p>}
 
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", padding: "12px", background: "rgba(99,102,241,0.08)", borderRadius: "8px", border: "1px solid rgba(99,102,241,0.2)" }}>
+              <input type="checkbox" id="rentalTerms" checked={rentalTermsAccepted} onChange={(e) => setRentalTermsAccepted(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
+              <label htmlFor="rentalTerms" style={{ cursor: "pointer", fontWeight: "600", fontSize: "13.5px", color: "white" }}>I agree to the rental terms and damage policy</label>
+            </div>
+
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
               <button className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowBookingModal(false)}>Cancel</button>
-              <button className="btn-base btn-primary" style={{ flex: 2 }} onClick={handleProceedToPayment}>Proceed to Payment</button>
+              <button className="btn-base btn-primary" style={{ flex: 2, opacity: rentalTermsAccepted ? 1 : 0.5 }} disabled={!rentalTermsAccepted} onClick={handleProceedToPayment}>Proceed to Payment</button>
             </div>
           </div>
         </div>
