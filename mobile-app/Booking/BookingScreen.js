@@ -20,28 +20,32 @@ export default function BookingScreen({ route, navigation }) {
   const { vehicle } = route.params;
   const [pickupDate, setPickupDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
-  const [pickupLocation, setPickupLocation] = useState('');
+  const [rentalTermsAccepted, setRentalTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const days = pickupDate && returnDate ? calculateDays(pickupDate, returnDate) : 0;
   const total = days * vehicle.pricePerDay;
 
   const handleBooking = async () => {
-    if (!pickupDate || !returnDate || !pickupLocation) {
-      Alert.alert('Error', 'Please fill all fields');
+    if (!pickupDate || !returnDate) {
+      Alert.alert('Error', 'Please select both pickup and return dates');
+      return;
+    }
+    if (!rentalTermsAccepted) {
+      Alert.alert('Error', 'You must agree to the rental terms and damage policy.');
       return;
     }
     setLoading(true);
     try {
       const res = await createBooking({
         vehicleId: vehicle._id,
-        pickupDate,
-        returnDate,
-        pickupLocation,
-        totalAmount: total,
+        startDate: pickupDate,
+        endDate: returnDate,
+        hasDriver: false,
       });
       navigation.navigate('Payment', { booking: res.data });
     } catch (err) {
+      console.error('Booking error:', err);
       Alert.alert('Error', err.response?.data?.message || 'Booking failed');
     } finally {
       setLoading(false);
@@ -120,21 +124,6 @@ export default function BookingScreen({ route, navigation }) {
           />
         </View>
 
-        {/* Pickup Location */}
-        <View style={styles.glassCard}>
-          <View style={styles.fieldLabelRow}>
-            <Ionicons name="location-outline" size={16} color="#6366f1" />
-            <Text style={styles.fieldLabel}>Pickup Location</Text>
-          </View>
-          <TextInput
-            style={styles.darkInput}
-            placeholder="Enter pickup location"
-            placeholderTextColor="#475569"
-            value={pickupLocation}
-            onChangeText={setPickupLocation}
-          />
-        </View>
-
         {/* Price Summary Card */}
         {days > 0 && (
           <View style={styles.summaryCard}>
@@ -151,6 +140,10 @@ export default function BookingScreen({ route, navigation }) {
                 <Text style={styles.summaryLabel}>Rate</Text>
                 <Text style={styles.summaryValue}>{formatCurrency(vehicle.pricePerDay)} × {days}</Text>
               </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Deposit (Refundable)</Text>
+                <Text style={styles.summaryValue}>{formatCurrency(vehicle.depositAmount || 5000)}</Text>
+              </View>
               <View style={styles.divider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryTotalLabel}>Total</Text>
@@ -160,11 +153,22 @@ export default function BookingScreen({ route, navigation }) {
           </View>
         )}
 
+        {/* Terms Checkbox */}
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, paddingHorizontal: 12, paddingVertical: 14, backgroundColor: 'rgba(99,102,241,0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)' }}
+          onPress={() => setRentalTermsAccepted(!rentalTermsAccepted)}
+        >
+          <Ionicons name={rentalTermsAccepted ? "checkbox" : "square-outline"} size={22} color="#6366f1" />
+          <Text style={{ color: '#f8fafc', marginLeft: 10, fontSize: 13, flex: 1, fontWeight: '500' }}>
+            I agree to the rental terms and damage policy
+          </Text>
+        </TouchableOpacity>
+
         {/* Confirm Button */}
         <TouchableOpacity
-          style={styles.confirmBtnWrapper}
+          style={[styles.confirmBtnWrapper, !rentalTermsAccepted && { opacity: 0.5 }]}
           onPress={handleBooking}
-          disabled={loading}
+          disabled={loading || !rentalTermsAccepted}
           activeOpacity={0.85}
         >
           <LinearGradient

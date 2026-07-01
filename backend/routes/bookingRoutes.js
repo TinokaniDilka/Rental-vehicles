@@ -10,7 +10,8 @@ const {
   pickupBooking,
   returnBooking,
   createBookingWithPayment,
-  cancelBooking
+  cancelBooking,
+  updateHandoverStatus
 } = require("../controllers/bookingController");
 
 // Customer routes
@@ -18,11 +19,12 @@ router.post("/", protect, createBooking);
 router.post("/create-with-payment", protect, createBookingWithPayment);
 router.get("/customer", protect, getCustomerBookings);
 router.put("/:id/cancel", protect, cancelBooking);
+router.put("/:id/handover", protect, updateHandoverStatus);
 
 // Staff/Admin routes
 router.get("/staff/all", protect, getAllBookings);
 router.put("/:id/review", protect, reviewBooking);
-router.put("/:id/pay", protect, protect, payBooking); // note: payment is completed by user
+router.put("/:id/pay", protect, payBooking); // note: payment is completed by user
 router.put("/:id/pickup", protect, pickupBooking);
 router.put("/:id/return", protect, returnBooking);
 

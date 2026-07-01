@@ -17,6 +17,7 @@ const vehicleSchema = new mongoose.Schema({
   image: { type: String }, // URL or path
   description: String,
   isAvailable: { type: Boolean, default: true },
+  depositAmount: { type: Number, default: 5000 },
 },{ timestamps: true });  
   
   

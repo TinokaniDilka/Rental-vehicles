@@ -45,7 +45,7 @@ const createBooking = async (req, res) => {
 const getCustomerBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ customerId: req.user.id })
-      .populate("vehicleId")
+      .populate("vehicleId", "name type location pricePerDay image")
       .sort({ createdAt: -1 });
     res.json(bookings);
   } catch (err) {
@@ -62,8 +62,8 @@ const getAllBookings = async (req, res) => {
     if (req.user.role === "admin") {
       // Admin sees all bookings
       bookings = await Booking.find()
-        .populate("vehicleId")
-        .populate("customerId")
+        .populate("vehicleId", "name type location pricePerDay image")
+        .populate("customerId", "name email")
         .sort({ createdAt: -1 });
     } else {
       // Staff only sees bookings for vehicles they own
@@ -71,8 +71,8 @@ const getAllBookings = async (req, res) => {
       const vehicleIds = staffVehicles.map(v => v._id);
 
       bookings = await Booking.find({ vehicleId: { $in: vehicleIds } })
-        .populate("vehicleId")
-        .populate("customerId")
+        .populate("vehicleId", "name type location pricePerDay image")
+        .populate("customerId", "name email")
         .sort({ createdAt: -1 });
     }
 
@@ -252,7 +252,7 @@ const returnBooking = async (req, res) => {
 // Create booking + payment in one step (Customer payment-first flow)
 const createBookingWithPayment = async (req, res) => {
   try {
-    const { vehicleId, startDate, endDate, hasDriver, paymentMethod, amount, promoCode } = req.body;
+    const { vehicleId, startDate, endDate, hasDriver, paymentMethod, amount, promoCode, pickupTime, dropoffTime } = req.body;
     const customerId = req.user.id;
 
     if (!vehicleId || !startDate || !endDate || !paymentMethod) {
@@ -286,12 +286,15 @@ const createBookingWithPayment = async (req, res) => {
       customerId,
       startDate,
       endDate,
-      hasDriver,
+      hasDriver: hasDriver || false,
+      pickupTime: pickupTime || "09:00",
+      dropoffTime: dropoffTime || "09:00",
       status: "confirmed",
       paymentMethod,
       baseCharge,
       driverCharge,
-      totalAmount
+      totalAmount,
+      rentalAgreementSigned: req.body.rentalAgreementSigned || false
     });
     await booking.save();
 
@@ -396,6 +399,33 @@ const cancelBooking = async (req, res) => {
   }
 };
 
+// Update handover status (Customer / Staff)
+const updateHandoverStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { handoverStatus, conditionPhotos } = req.body;
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (handoverStatus) {
+      booking.handoverStatus = handoverStatus;
+    }
+    
+    if (conditionPhotos && Array.isArray(conditionPhotos)) {
+      booking.conditionPhotos = [...(booking.conditionPhotos || []), ...conditionPhotos];
+    }
+
+    await booking.save();
+    res.json({ message: "Handover status updated ✅", booking });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating handover status", error: err.message });
+  }
+};
+
 // AFTER
 module.exports = {
   createBooking,
@@ -406,5 +436,6 @@ module.exports = {
   pickupBooking,
   returnBooking,
   createBookingWithPayment,
-  cancelBooking
+  cancelBooking,
+  updateHandoverStatus
 };
