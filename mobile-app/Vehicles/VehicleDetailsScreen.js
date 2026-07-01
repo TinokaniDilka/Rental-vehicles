@@ -96,6 +96,9 @@ export default function VehicleDetailsScreen({ route, navigation }) {
                 <Text style={styles.priceAmount}>{formatCurrency(vehicle.pricePerDay)}</Text>
                 <Text style={styles.priceUnit}> / day</Text>
               </View>
+              <View style={{ marginTop: 8, alignSelf: 'flex-start', backgroundColor: 'rgba(245,158,11,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                <Text style={{ color: '#f59e0b', fontSize: 12, fontWeight: '600' }}>🔒 Deposit: LKR {vehicle.depositAmount || 5000} (Refundable)</Text>
+              </View>
             </View>
             <View style={styles.ratingBubble}>
               <Ionicons name="star" size={13} color="#f59e0b" />

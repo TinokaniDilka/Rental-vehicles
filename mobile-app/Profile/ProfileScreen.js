@@ -28,6 +28,8 @@ export default function ProfileScreen({ navigation }) {
 const [editModalVisible, setEditModalVisible] = useState(false);
 const [editName, setEditName] = useState(user?.name || '');
 const [editPhone, setEditPhone] = useState(user?.phone || '');
+const [editNic, setEditNic] = useState(user?.nicNumber || '');
+const [editDl, setEditDl] = useState(user?.drivingLicenseNumber || '');
 const [editPassword, setEditPassword] = useState('');
 
 const handleSaveProfile = async () => {
@@ -35,6 +37,8 @@ const handleSaveProfile = async () => {
     const updatedUser = {
       name: editName,
       phone: editPhone,
+      nicNumber: editNic,
+      drivingLicenseNumber: editDl,
       ...(editPassword ? { password: editPassword } : {}),
     };
 
@@ -106,6 +110,14 @@ const handleSaveProfile = async () => {
             <Ionicons name="shield-checkmark" size={12} color="#818cf8" />
             <Text style={styles.roleBadgeText}>
               {user?.role?.toUpperCase() || 'USER'}
+            </Text>
+          </View>
+
+          {/* Verification Badge */}
+          <View style={[styles.roleBadge, { backgroundColor: user?.verificationStatus === 'Verified' ? 'rgba(16,185,129,0.15)' : user?.verificationStatus === 'Pending Review' ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)', borderColor: user?.verificationStatus === 'Verified' ? 'rgba(16,185,129,0.3)' : user?.verificationStatus === 'Pending Review' ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)', marginTop: 8 }]}>
+            <Ionicons name={user?.verificationStatus === 'Verified' ? "checkmark-circle" : "alert-circle"} size={12} color={user?.verificationStatus === 'Verified' ? "#10b981" : user?.verificationStatus === 'Pending Review' ? "#f59e0b" : "#ef4444"} />
+            <Text style={[styles.roleBadgeText, { color: user?.verificationStatus === 'Verified' ? "#10b981" : user?.verificationStatus === 'Pending Review' ? "#f59e0b" : "#ef4444" }]}>
+              {user?.verificationStatus?.toUpperCase() || 'NOT VERIFIED'}
             </Text>
           </View>
         </View>
@@ -208,6 +220,33 @@ onPress={() => {
         value={editPhone}
         onChangeText={setEditPhone}
       />
+
+      <TextInput
+        style={styles.input}
+        placeholder="NIC Number"
+        placeholderTextColor="#94a3b8"
+        value={editNic}
+        onChangeText={setEditNic}
+      />
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Driving License"
+        placeholderTextColor="#94a3b8"
+        value={editDl}
+        onChangeText={setEditDl}
+      />
+
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 15 }}>
+        <TouchableOpacity style={styles.photoBtn}>
+           <Ionicons name="camera-outline" size={20} color="#fff" />
+           <Text style={styles.photoBtnText}>ID Photo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.photoBtn}>
+           <Ionicons name="camera-outline" size={20} color="#fff" />
+           <Text style={styles.photoBtnText}>License</Text>
+        </TouchableOpacity>
+      </View>
 
       <TextInput
         style={styles.input}
@@ -520,6 +559,23 @@ cancelText: {
 saveText: {
   color: '#fff',
   fontWeight: '700',
+},
+photoBtn: {
+  flex: 1,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: 'rgba(255,255,255,0.05)',
+  borderWidth: 1,
+  borderColor: 'rgba(99,102,241,0.3)',
+  borderRadius: 12,
+  padding: 10,
+  gap: 5
+},
+photoBtnText: {
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: '600'
 },
 
   // Settings Rows

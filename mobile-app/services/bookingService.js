@@ -11,3 +11,6 @@ export const cancelBooking = (id) =>
 
 export const getBookingById = (id) =>
   api.get(`/api/bookings/${id}`);
+
+export const updateHandoverStatus = (id, data) =>
+  api.put(`/api/bookings/${id}/handover`, data);
