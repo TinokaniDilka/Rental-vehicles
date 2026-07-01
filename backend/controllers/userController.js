@@ -39,7 +39,12 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        isActive: user.isActive
+        isActive: user.isActive,
+        nicNumber: user.nicNumber,
+        drivingLicenseNumber: user.drivingLicenseNumber,
+        idPhoto: user.idPhoto,
+        licensePhoto: user.licensePhoto,
+        verificationStatus: user.verificationStatus
       }
     });
 
@@ -111,13 +116,21 @@ const toggleUserActive = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, nicNumber, drivingLicenseNumber, idPhoto, licensePhoto } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (name) user.name = name;
     if (email) user.email = email.trim().toLowerCase();
     if (password) user.password = password;
+    if (nicNumber !== undefined) user.nicNumber = nicNumber;
+    if (drivingLicenseNumber !== undefined) user.drivingLicenseNumber = drivingLicenseNumber;
+    if (idPhoto) user.idPhoto = idPhoto;
+    if (licensePhoto) user.licensePhoto = licensePhoto;
+
+    if ((nicNumber || drivingLicenseNumber) && user.verificationStatus === 'Not Verified') {
+        user.verificationStatus = 'Pending Review';
+    }
 
     await user.save();
     res.json({
@@ -126,7 +139,12 @@ const updateProfile = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        nicNumber: user.nicNumber,
+        drivingLicenseNumber: user.drivingLicenseNumber,
+        idPhoto: user.idPhoto,
+        licensePhoto: user.licensePhoto,
+        verificationStatus: user.verificationStatus
       }
     });
   } catch (err) {
