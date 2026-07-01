@@ -25,6 +25,27 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  nicNumber: {
+    type: String,
+    default: ""
+  },
+  drivingLicenseNumber: {
+    type: String,
+    default: ""
+  },
+  idPhoto: {
+    type: String,
+    default: ""
+  },
+  licensePhoto: {
+    type: String,
+    default: ""
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['Not Verified', 'Pending Review', 'Verified'],
+    default: 'Not Verified'
   }
 }, { timestamps: true });
 
