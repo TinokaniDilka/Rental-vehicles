@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { getMyBookings } from '../services/bookingService';
+import { getMyBookings, updateHandoverStatus } from '../services/bookingService';
 import Loader from '../components/Loader';
 import { formatDate, formatCurrency, getStatusColor } from '../utils/helpers';
+import { Alert } from 'react-native';
 
 const TABS = ['All', 'Pending', 'Active', 'Completed'];
 
@@ -44,6 +45,22 @@ export default function MyBookingsScreen({ navigation }) {
     if (s === 'cancelled') return { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', text: '#ef4444' };
     return { bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', text: '#94a3b8' };
   };
+
+  const handleConfirmReceived = async (bookingId) => {
+    try {
+      setLoading(true);
+      await updateHandoverStatus(bookingId, { handoverStatus: 'rented' });
+      Alert.alert('Success', 'Vehicle received successfully! Enjoy your ride 🚗');
+      const res = await getMyBookings();
+      setBookings(res.data);
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to confirm receipt');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 const renderItem = ({ item }) => {
   console.log("Full Item:", JSON.stringify(item, null, 2));
   const badge = getStatusBadgeStyle(item.status);
@@ -100,6 +117,25 @@ const renderItem = ({ item }) => {
       <View style={styles.cardDivider} />
 
       <View style={styles.cardBottomRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '600', marginBottom: 4, letterSpacing: 0.5 }}>HANDOVER STATUS</Text>
+          {(!item.handoverStatus || item.handoverStatus === 'pending_pickup') ? (
+            <View>
+              <Text style={{ fontSize: 13, color: '#f59e0b', fontWeight: '600', marginBottom: 6 }}>⏳ Pending Pickup</Text>
+              <TouchableOpacity style={{ backgroundColor: 'rgba(99,102,241,0.15)', borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, alignSelf: 'flex-start' }} onPress={() => handleConfirmReceived(item._id)}>
+                <Text style={{ color: '#818cf8', fontSize: 12, fontWeight: '700' }}>Confirm Received</Text>
+              </TouchableOpacity>
+            </View>
+          ) : item.handoverStatus === 'rented' ? (
+            <View>
+              <Text style={{ fontSize: 13, color: '#10b981', fontWeight: '600', marginBottom: 2 }}>🚗 Currently Rented</Text>
+              <Text style={{ fontSize: 11, color: '#94a3b8' }}>Time Remaining: {Math.max(0, Math.ceil((new Date(item.endDate || item.returnDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days</Text>
+            </View>
+          ) : (item.handoverStatus === 'returned' || item.handoverStatus === 'confirmed_return') ? (
+            <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>✅ Return Confirmed</Text>
+          ) : null}
+        </View>
+
         <Text style={styles.amountText}>
           {formatCurrency(item.totalAmount || item.amount)}
         </Text>
