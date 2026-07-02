@@ -38,11 +38,33 @@ const [vehicleTypeFilter, setVehicleTypeFilter] = useState("all");
 const [seenBookings, setSeenBookings] = useState(false);
 const [seenComplaints, setSeenComplaints] = useState(false);
 
+const COMPLAINT_CATEGORIES = ["Vehicle Damage", "No-show", "Vehicle Not as Described", "Theft/Suspicious", "Other"];
+
+const getPendingConfirmationsCount = (list) =>
+  list.filter(b =>
+    (b.paymentMethod === "cash" && !b.cashPaymentConfirmed && ["confirmed", "ongoing"].includes(b.status)) ||
+    (!b.staffHandoverConfirmed && ["confirmed", "ongoing"].includes(b.status))
+  ).length;
+
+const getOverdueCount = (list) =>
+  list.filter(b => b.status === "ongoing" && new Date(b.endDate) < new Date()).length;
+
+const isBookingOverdue = (booking) =>
+  booking.status === "ongoing" && new Date(booking.endDate) < new Date();
+
+const getDepositLabel = (booking) => {
+  const amount = booking.depositAmount || booking.vehicleId?.depositAmount || 0;
+  if (amount <= 0) return null;
+  if (booking.depositStatus === "released") return { text: `Deposit Released: $${amount}`, color: "var(--success)" };
+  if (booking.depositStatus === "captured") return { text: `Deposit Captured (Dispute): $${amount}`, color: "var(--danger)" };
+  return { text: `Deposit Held: $${amount}`, color: "var(--warning)" };
+};
+
 const notifications = {
   newBookings: seenBookings ? 0 : bookings.filter(b => b.status === "pending" || b.status === "confirmed").length,
-  lateReturns: seenBookings ? 0 : bookings.filter(
-    b => b.status === "ongoing" && new Date(b.endDate) < new Date()
-  ).length,
+  lateReturns: seenBookings ? 0 : getOverdueCount(bookings),
+  cashPaymentsPending: seenBookings ? 0 : bookings.filter(b => b.paymentMethod === "cash" && !b.cashPaymentConfirmed && ["confirmed", "ongoing"].includes(b.status)).length,
+  handoversPending: seenBookings ? 0 : bookings.filter(b => !b.staffHandoverConfirmed && ["confirmed", "ongoing"].includes(b.status)).length,
   complaints: seenComplaints ? 0 : feedbacks.filter(
     f => f.type === "complaint" && f.complaintStatus !== "Resolved"
   ).length
@@ -51,6 +73,8 @@ const notifications = {
 const totalNotifications =
   notifications.newBookings +
   notifications.lateReturns +
+  notifications.cashPaymentsPending +
+  notifications.handoversPending +
   notifications.complaints;
 
   // Profile state
@@ -67,6 +91,10 @@ const totalNotifications =
   const [vehicleLocation, setVehicleLocation] = useState("");
   const [vehicleDesc, setVehicleDesc] = useState("");
   const [vehicleImageFile, setVehicleImageFile] = useState(null);
+  const [vehicleRequireVerification, setVehicleRequireVerification] = useState(false);
+
+  // Complaint category filter
+  const [complaintCategoryFilter, setComplaintCategoryFilter] = useState("all");
 
   // Review Booking Modal states
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -213,12 +241,14 @@ const fetchFeedbacks = async () => {
       setVehiclePrice(vehicle.pricePerDay);
       setVehicleLocation(vehicle.location);
       setVehicleDesc(vehicle.description || "");
+      setVehicleRequireVerification(!!vehicle.requireVerification);
     } else {
       setVehicleName("");
       setVehicleType("car");
       setVehiclePrice("");
       setVehicleLocation("");
       setVehicleDesc("");
+      setVehicleRequireVerification(false);
     }
     setVehicleImageFile(null);
     setShowVehicleModal(true);
@@ -236,6 +266,7 @@ const fetchFeedbacks = async () => {
     formData.append("pricePerDay", vehiclePrice);
     formData.append("location", vehicleLocation);
     formData.append("description", vehicleDesc);
+    formData.append("requireVerification", vehicleRequireVerification);
     if (vehicleImageFile) {
       formData.append("image", vehicleImageFile);
     }
@@ -322,6 +353,49 @@ const fetchFeedbacks = async () => {
       fetchBookings();
     } catch (err) {
       showToast(err.response?.data?.message || "Pickup start failed", "error");
+    }
+  };
+
+  const handleConfirmCash = async (bookingId) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/bookings/${bookingId}/confirm-cash`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast("Cash payment confirmed ✅");
+      fetchBookings();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to confirm cash payment", "error");
+    }
+  };
+
+  const handleConfirmHandover = async (bookingId) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/bookings/${bookingId}/confirm-handover`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast("Vehicle handover confirmed ✅");
+      fetchBookings();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to confirm handover", "error");
+    }
+  };
+
+  const handleEscalateComplaint = async (complaintId) => {
+    if (!window.confirm("Escalate this complaint to admin for review?")) return;
+    try {
+      await axios.put(
+        `http://localhost:5000/api/feedback/${complaintId}/escalate`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast("Complaint escalated to admin ✅");
+      fetchFeedbacks();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to escalate complaint", "error");
     }
   };
 
@@ -460,6 +534,9 @@ const fetchFeedbacks = async () => {
 
 const reviews = feedbacks.filter(f => f.type === "feedback");
 const complaints = feedbacks.filter(f => f.type === "complaint");
+const filteredComplaints = complaintCategoryFilter === "all"
+  ? complaints
+  : complaints.filter(f => f.category === complaintCategoryFilter);
 
 
   const filteredBookings = bookings.filter(b => {
@@ -560,8 +637,12 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
   🆕 New booking requests: <strong>{notifications.newBookings}</strong>
 </p>
 
-<p style={{ cursor: "pointer" }} onClick={() => setActivePage("bookings")}>
-  ⏳ Pending pickups: <strong>{notifications.lateReturns}</strong>
+<p style={{ cursor: "pointer" }} onClick={() => { setActivePage("bookings"); setShowNotifications(false); }}>
+  💵 Cash payments pending confirmation: <strong>{notifications.cashPaymentsPending}</strong>
+</p>
+
+<p style={{ cursor: "pointer" }} onClick={() => { setActivePage("bookings"); setShowNotifications(false); }}>
+  ⏰ Overdue returns: <strong>{notifications.lateReturns}</strong>
 </p>
 
 <p style={{ cursor: "pointer" }} onClick={() => { setActivePage("complaints"); setSeenComplaints(true); setShowNotifications(false); }}>
@@ -618,6 +699,7 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
               <DashboardCard icon="🚗" title="ACTIVE RENTALS" value={stats.active} color="var(--primary)" />
               <DashboardCard icon="📂" title="TOTAL VEHICLES" value={vehicles.length} color="var(--secondary)" onClick={() => setActivePage("vehicle-details")} />
               <DashboardCard icon="💰" title="TOTAL EARNINGS" value={`$${earnings}`} color="var(--success)" />
+              <DashboardCard icon="⏳" title="PENDING CONFIRMATIONS" value={getPendingConfirmationsCount(bookings)} color="var(--warning)" />
             </div>
                         {/* ==================== NEW: ACTIVE RENTALS ON DASHBOARD ==================== */}
             {stats.active > 0 && (
@@ -626,17 +708,35 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
                 <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                   {bookings
                     .filter(b => b.status === "ongoing")
-                    .map(b => (
-                      <div key={b._id} className="glass-card" style={{ padding: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <strong>{b.vehicleId?.name}</strong> — {b.customerId?.name}
-                          <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: "4px 0 0" }}>
-                            {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
-                          </p>
+                    .map(b => {
+                      const endDate = new Date(b.endDate);
+                      const now = new Date();
+                      const hoursRemaining = Math.floor((endDate - now) / (1000 * 60 * 60));
+                      const isOverdue = hoursRemaining < 0;
+                      return (
+                        <div key={b._id} className="glass-card" style={{ padding: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <strong>{b.vehicleId?.name}</strong> — {b.customerId?.name}
+                            <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: "4px 0 0" }}>
+                              {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
+                            </p>
+                            <span style={{
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              background: isOverdue ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)",
+                              color: isOverdue ? "#ef4444" : "#10b981",
+                              marginTop: "4px",
+                              display: "inline-block"
+                            }}>
+                              {isOverdue ? `OVERDUE by ${Math.abs(hoursRemaining)}h` : `Due in ${hoursRemaining}h`}
+                            </span>
+                          </div>
+                          <button className="btn-base btn-primary" onClick={() => handleOpenReturnModal(b)}>Inspect Return</button>
                         </div>
-                        <button className="btn-base btn-primary" onClick={() => handleOpenReturnModal(b)}>Inspect Return</button>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -685,6 +785,9 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
                     <div style={{ padding: "20px", display: "flex", flexDirection: "column", flex: 1 }}>
                       <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "white" }}>{v.name}</h4>
                       <p style={{ margin: "5px 0", color: "var(--text-secondary)", fontSize: "14px" }}>📍 {v.location} | 📂 {v.type}</p>
+                      {v.requireVerification && (
+                        <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--warning)", marginBottom: "4px", display: "inline-block" }}>🔒 ID Verification Required</span>
+                      )}
                       <h3 style={{ margin: "5px 0 15px", fontSize: "20px", fontWeight: "800", color: "var(--primary)" }}>
                         ${v.pricePerDay} <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>/day</span>
                       </h3>
@@ -837,13 +940,23 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
                 {filteredBookings.map(b => {
                   const start = new Date(b.startDate).toLocaleDateString();
                   const end = new Date(b.endDate).toLocaleDateString();
+                  const overdue = isBookingOverdue(b);
+                  const depositInfo = getDepositLabel(b);
+                  const isVerified = b.customerId?.verificationStatus === "Verified";
                   return (
-<div key={b._id} className="glass-card" style={{ padding: "20px", display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(180px, 1fr) minmax(150px, auto)", gap: "20px", alignItems: "center" }}>  
+<div key={b._id} className="glass-card" style={{ padding: "20px", display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(180px, 1fr) minmax(180px, auto)", gap: "20px", alignItems: "center" }}>  
   {/* Column 1: Booking Info */}
   <div>
     <h4 style={{ margin: 0, fontSize: "19px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
-    <p style={{ margin: "4px 0", fontSize: "14px", color: "var(--text-secondary)" }}>
+    <p style={{ margin: "4px 0", fontSize: "14px", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
       👤 <strong>Customer:</strong> {b.customerId?.name} ({b.customerId?.email})
+      <span style={{
+        fontSize: "11px", fontWeight: "700", padding: "2px 8px", borderRadius: "12px",
+        background: isVerified ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
+        color: isVerified ? "#10b981" : "#f59e0b"
+      }}>
+        {isVerified ? "✅ Verified" : "⚠️ Not Verified"}
+      </span>
     </p>
     <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "14px" }}>📅 {start} - {end}</p>
     {b.hasDriver && <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--primary)", fontWeight: "600" }}>🚖 Driver Requested {b.driverName ? `| ${b.driverName}` : ""}</p>}
@@ -859,6 +972,7 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
         {b.discount > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--success)" }}>Discount: -${b.discount}</p>}
         {b.additionalFees > 0 && <p style={{ margin: 0, fontSize: "13px" }}>Extra: ${b.additionalFees}</p>}
         {b.damageCharge > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--danger)" }}>Damage: ${b.damageCharge}</p>}
+        {depositInfo && <p style={{ margin: "4px 0 0", fontSize: "13px", color: depositInfo.color, fontWeight: "600" }}>{depositInfo.text}</p>}
         <h4 style={{ margin: "4px 0 0", color: "white" }}>Total: ${b.totalAmount}</h4>
       </>
     ) : (
@@ -866,14 +980,34 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
     )}
   </div>
 
-  {/* Column 3: Badge + Action */}
+  {/* Column 3: Badge + Actions */}
   <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
-    <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
+    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+      <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
+      {overdue && (
+        <span style={{ fontSize: "11px", fontWeight: "700", padding: "4px 8px", borderRadius: "12px", background: "rgba(239,68,68,0.2)", color: "#ef4444" }}>OVERDUE</span>
+      )}
+      {b.paymentMethod === "cash" && (
+        <span style={{
+          fontSize: "11px", fontWeight: "700", padding: "4px 8px", borderRadius: "12px",
+          background: b.cashPaymentConfirmed ? "rgba(16,185,129,0.2)" : "rgba(148,163,184,0.2)",
+          color: b.cashPaymentConfirmed ? "#10b981" : "#94a3b8"
+        }}>
+          {b.cashPaymentConfirmed ? "Cash - Confirmed" : "Cash - Awaiting Confirmation"}
+        </span>
+      )}
+    </div>
     {b.status === "pending" && (
       <button className="btn-base btn-primary" onClick={() => handleOpenReviewModal(b)}>🔍 Review Request</button>
     )}
     {b.status === "confirmed" && (
       <button className="btn-base btn-primary" onClick={() => handlePickup(b._id)}>🚗 Start Rental</button>
+    )}
+    {["confirmed", "ongoing"].includes(b.status) && !b.staffHandoverConfirmed && (
+      <button className="btn-base btn-secondary" onClick={() => handleConfirmHandover(b._id)}>🤝 Confirm Handover</button>
+    )}
+    {b.paymentMethod === "cash" && !b.cashPaymentConfirmed && ["confirmed", "ongoing"].includes(b.status) && (
+      <button className="btn-base btn-success" onClick={() => handleConfirmCash(b._id)}>💵 Confirm Cash Received</button>
     )}
     {b.status === "ongoing" && (
       <button className="btn-base btn-primary" style={{ background: "var(--primary-gradient)" }} onClick={() => handleOpenReturnModal(b)}>🔧 Inspect Return</button>
@@ -912,6 +1046,28 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
       ⚠ Complaints
     </button>
   </div>
+
+  {feedbackTab === "complaints" && (
+    <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
+      <button
+        className={`btn-base ${complaintCategoryFilter === "all" ? "btn-primary" : "btn-secondary"}`}
+        style={{ padding: "6px 12px", fontSize: "12px" }}
+        onClick={() => setComplaintCategoryFilter("all")}
+      >
+        All Categories
+      </button>
+      {COMPLAINT_CATEGORIES.filter(c => c !== "Other").map(cat => (
+        <button
+          key={cat}
+          className={`btn-base ${complaintCategoryFilter === cat ? "btn-primary" : "btn-secondary"}`}
+          style={{ padding: "6px 12px", fontSize: "12px" }}
+          onClick={() => setComplaintCategoryFilter(cat)}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+  )}
             {feedbacks.length === 0 ? (
               <div className="glass-card" style={{ padding: "50px", textAlign: "center" }}>
                 <span style={{ fontSize: "64px" }}>💬</span>
@@ -920,7 +1076,7 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-  {(feedbackTab === "reviews" ? reviews : complaints).length === 0 ? (
+  {(feedbackTab === "reviews" ? reviews : filteredComplaints).length === 0 ? (
 
     <div className="glass-card" style={{ padding: "40px", textAlign: "center" }}>
       <h3>No {feedbackTab} found</h3>
@@ -928,15 +1084,29 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
 
   ) : (
 
-    (feedbackTab === "reviews" ? reviews : complaints).map(f => (
-                  <div key={f._id} className="glass-card" style={{ padding: "20px", display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" }}>
+    (feedbackTab === "reviews" ? reviews : filteredComplaints).map(f => (
+                  <div key={f._id} className="glass-card" style={{
+                    padding: "20px", display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center",
+                    border: f.type === "complaint" && f.category === "Theft/Suspicious" ? "2px solid #ef4444" : undefined,
+                    boxShadow: f.type === "complaint" && f.category === "Theft/Suspicious" ? "0 0 12px rgba(239,68,68,0.3)" : undefined
+                  }}>
                     <div style={{ flex: 2 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px", flexWrap: "wrap" }}>
                         <span style={{
                           background: f.type === "complaint" ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
                           color: f.type === "complaint" ? "var(--danger)" : "var(--warning)",
                           padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700"
                         }}>{f.type.toUpperCase()}</span>
+                        {f.type === "complaint" && f.category && (
+                          <span style={{
+                            background: f.category === "Theft/Suspicious" ? "rgba(239,68,68,0.25)" : "rgba(99,102,241,0.15)",
+                            color: f.category === "Theft/Suspicious" ? "#ef4444" : "#818cf8",
+                            padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700"
+                          }}>{f.category}</span>
+                        )}
+                        {f.escalated && (
+                          <span style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700" }}>ESCALATED</span>
+                        )}
                         {f.type === "feedback" && <span style={{ color: "#fbbf24" }}>{"★".repeat(f.rating)}</span>}
                       </div>
                       <p style={{ margin: "5px 0", fontSize: "16px", color: "white", fontStyle: "italic" }}>"{f.comment}"</p>
@@ -952,6 +1122,9 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
                             <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--text-secondary)" }}><strong>Action comments:</strong> {f.staffResponse}</p>
                           )}
                           <button className="btn-base btn-secondary" style={{ marginTop: "10px", padding: "6px 12px", fontSize: "12.5px" }} onClick={() => handleOpenComplaintModal(f)}>Resolve / Answer</button>
+                          {!f.escalated && (
+                            <button className="btn-base btn-warning" style={{ marginTop: "10px", marginLeft: "8px", padding: "6px 12px", fontSize: "12.5px" }} onClick={() => handleEscalateComplaint(f._id)}>🚨 Escalate to Admin</button>
+                          )}
                         </div>
                       ) : null}
                       
@@ -1039,6 +1212,30 @@ const complaints = feedbacks.filter(f => f.type === "complaint");
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label className="form-label">Upload Photo</label>
                 <input type="file" accept="image/*" onChange={(e) => setVehicleImageFile(e.target.files[0])} className="custom-input" />
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                <div>
+                  <label className="form-label" style={{ margin: 0 }}>Require ID verification before booking</label>
+                  <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>Customers must be verified before renting this vehicle</p>
+                </div>
+                <label style={{ position: "relative", display: "inline-block", width: "48px", height: "26px", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={vehicleRequireVerification}
+                    onChange={(e) => setVehicleRequireVerification(e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <span style={{
+                    position: "absolute", inset: 0, borderRadius: "26px", transition: "0.3s",
+                    background: vehicleRequireVerification ? "var(--primary)" : "var(--border-color)"
+                  }}>
+                    <span style={{
+                      position: "absolute", height: "20px", width: "20px", left: vehicleRequireVerification ? "24px" : "3px",
+                      bottom: "3px", background: "white", borderRadius: "50%", transition: "0.3s"
+                    }} />
+                  </span>
+                </label>
               </div>
 
               <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>

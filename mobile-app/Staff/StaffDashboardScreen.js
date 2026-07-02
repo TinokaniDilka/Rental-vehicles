@@ -15,7 +15,8 @@ import {
   KeyboardAvoidingView,     // ✅ ADD THIS
   Platform,                 // ✅ ADD THIS
   ActivityIndicator,
-  FlatList         // ✅ ADD THIS
+  FlatList,
+  Switch
 } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -54,12 +55,24 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const SectionHeader = ({ title, subtitle }) => (
-  <View style={styles.sectionHeader}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {subtitle && <Text style={styles.sectionSubtitle}>{subtitle}</Text>}
-  </View>
-);
+const COMPLAINT_CATEGORIES = ['Vehicle Damage', 'No-show', 'Vehicle Not as Described', 'Theft/Suspicious', 'Other'];
+
+const getPendingConfirmationsCount = (list) =>
+  list.filter(b =>
+    (b.paymentMethod === 'cash' && !b.cashPaymentConfirmed && ['confirmed', 'ongoing'].includes(b.status)) ||
+    (!b.staffHandoverConfirmed && ['confirmed', 'ongoing'].includes(b.status))
+  ).length;
+
+const isBookingOverdue = (booking) =>
+  booking.status === 'ongoing' && new Date(booking.endDate) < new Date();
+
+const getDepositLabel = (booking) => {
+  const amount = booking.depositAmount || booking.vehicleId?.depositAmount || 0;
+  if (amount <= 0) return null;
+  if (booking.depositStatus === 'released') return { text: `Deposit Released: $${amount}`, color: '#10b981' };
+  if (booking.depositStatus === 'captured') return { text: `Deposit Captured (Dispute): $${amount}`, color: '#ef4444' };
+  return { text: `Deposit Held: $${amount}`, color: '#f59e0b' };
+};
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
@@ -70,6 +83,8 @@ export default function StaffDashboardScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbackTab, setFeedbackTab] = useState('complaints');
+  const [complaintCategoryFilter, setComplaintCategoryFilter] = useState('all');
   
   const [stats, setStats] = useState({ active: 0, pending: 0 });
   const [earnings, setEarnings] = useState(0);
@@ -85,6 +100,7 @@ export default function StaffDashboardScreen({ navigation }) {
   const [vehiclePrice, setVehiclePrice] = useState('');
   const [vehicleLocation, setVehicleLocation] = useState('');
   const [vehicleDesc, setVehicleDesc] = useState('');
+  const [vehicleRequireVerification, setVehicleRequireVerification] = useState(false);
   const [vehicleSaving, setVehicleSaving] = useState(false);
 
   // Review booking modal
@@ -194,6 +210,7 @@ const fetchBookings = async (t) => {
   setVehiclePrice(vehicle?.pricePerDay?.toString() || '');
   setVehicleLocation(vehicle?.location || '');
   setVehicleDesc(vehicle?.description || '');
+  setVehicleRequireVerification(!!vehicle?.requireVerification);
 
   setShowVehicleModal(true);
 };
@@ -209,9 +226,10 @@ const saveVehicle = async () => {
     const payload = {
       name: vehicleName, 
       type: vehicleType,
-      pricePerDay: parseFloat(vehiclePrice), // better to send as number
+      pricePerDay: parseFloat(vehiclePrice),
       location: vehicleLocation,
       description: vehicleDesc,
+      requireVerification: vehicleRequireVerification,
     };
 
     if (editingVehicle) {
@@ -301,7 +319,7 @@ const saveReply = async () => {
     setReviewSaving(true);
     try {
       await api.put(
-        `/bookings/${selectedBookingForReview._id}/review`,
+        `/api/bookings/${selectedBookingForReview._id}/review`,
         { status: reviewStatus, driverName, discount: Number(discount) || 0, additionalFees: Number(additionalFees) || 0 },
         authHeaders()
       );
@@ -315,12 +333,51 @@ const saveReply = async () => {
 
   const handlePickup = async (bookingId) => {
     try {
-      await api.put(`/bookings/${bookingId}/pickup`, {}, authHeaders());
+      await api.put(`/api/bookings/${bookingId}/pickup`, {}, authHeaders());
       Alert.alert('Success', 'Rental started! Booking is now ongoing 🚗');
       fetchBookings();
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Pickup failed');
     }
+  };
+
+  const handleConfirmCash = async (bookingId) => {
+    try {
+      await api.put(`/api/bookings/${bookingId}/confirm-cash`, {}, authHeaders());
+      Alert.alert('Success', 'Cash payment confirmed ✅');
+      fetchBookings();
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to confirm cash');
+    }
+  };
+
+  const handleConfirmHandover = async (bookingId) => {
+    try {
+      await api.put(`/api/bookings/${bookingId}/confirm-handover`, {}, authHeaders());
+      Alert.alert('Success', 'Vehicle handover confirmed ✅');
+      fetchBookings();
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to confirm handover');
+    }
+  };
+
+  const handleEscalateComplaint = (complaintId) => {
+    Alert.alert('Escalate to Admin', 'Send this complaint to admin for review?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Escalate',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.put(`/api/feedback/${complaintId}/escalate`, {}, authHeaders());
+            Alert.alert('Success', 'Complaint escalated to admin ✅');
+            fetchFeedbacks();
+          } catch (err) {
+            Alert.alert('Error', err.response?.data?.message || 'Escalation failed');
+          }
+        }
+      }
+    ]);
   };
 
   const openReturnModal = (booking) => {
@@ -424,6 +481,16 @@ const saveComplaintResponse = async () => {
     ? bookings
     : bookings.filter(b => b.status === filterStatus);
 
+  const reviews = feedbacks.filter(f => f.type === 'feedback');
+  const complaints = feedbacks.filter(f => f.type === 'complaint');
+  const filteredComplaints = complaintCategoryFilter === 'all'
+    ? complaints
+    : complaints.filter(f => f.category === complaintCategoryFilter);
+  const displayFeedbacks = feedbackTab === 'reviews' ? reviews : filteredComplaints;
+
+  const overdueCount = bookings.filter(b => b.status === 'ongoing' && new Date(b.endDate) < new Date()).length;
+  const cashPendingCount = bookings.filter(b => b.paymentMethod === 'cash' && !b.cashPaymentConfirmed && ['confirmed', 'ongoing'].includes(b.status)).length;
+
   // ─── Render Pages ──────────────────────────────────────────────────────────
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -473,6 +540,7 @@ const getGreeting = () => {
         <MetricCard icon="🚗" title="ACTIVE" value={stats.active} color="#6366f1" />
         <MetricCard icon="📂" title="FLEET" value={vehicles.length} color="#0ea5e9" />
         <MetricCard icon="💰" title="EARNINGS" value={`$${earnings}`} color="#10b981" />
+        <MetricCard icon="✅" title="CONFIRMATIONS" value={getPendingConfirmationsCount(bookings)} color="#8b5cf6" />
       </View>
 
       {/* Quick Actions */}
@@ -507,6 +575,9 @@ const getGreeting = () => {
           { label: 'Pending Approvals', val: stats.pending, color: '#f59e0b' },
           { label: 'Active Rentals', val: stats.active, color: '#10b981' },
           { label: 'Total Fleet', val: vehicles.length, color: '#6366f1' },
+          { label: 'Pending Confirmations', val: getPendingConfirmationsCount(bookings), color: '#8b5cf6' },
+          { label: 'Cash Pending', val: cashPendingCount, color: '#94a3b8' },
+          { label: 'Overdue Returns', val: overdueCount, color: '#ef4444' },
         ].map((item, i) => (
           <View key={i} style={styles.overviewRow}>
             <View style={[styles.overviewDot, { backgroundColor: item.color }]} />
@@ -515,6 +586,47 @@ const getGreeting = () => {
           </View>
         ))}
       </View>
+
+      {/* Active Rentals with Overdue Tags */}
+      {stats.active > 0 && (
+        <View style={styles.glassCard}>
+          <Text style={styles.cardTitle}>🚗 Currently Active Rentals</Text>
+          {bookings
+            .filter(b => b.status === 'ongoing')
+            .map(b => {
+              const endDate = new Date(b.endDate);
+              const now = new Date();
+              const hoursRemaining = Math.floor((endDate - now) / (1000 * 60 * 60));
+              const isOverdue = hoursRemaining < 0;
+              return (
+                <View key={b._id} style={styles.activeRentalCard}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.activeRentalVehicle}>{b.vehicleId?.name || 'Vehicle'}</Text>
+                    <Text style={styles.activeRentalCustomer}>{b.customerId?.name || 'Customer'}</Text>
+                    <Text style={styles.activeRentalDates}>
+                      {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
+                    </Text>
+                    <View style={[
+                      styles.overdueTag,
+                      { backgroundColor: isOverdue ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)' }
+                    ]}>
+                      <Text style={[
+                        styles.overdueTagText,
+                        { color: isOverdue ? '#ef4444' : '#10b981' }
+                      ]}>
+                        {isOverdue ? `OVERDUE by ${Math.abs(hoursRemaining)}h` : `Due in ${hoursRemaining}h`}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.inspectBtn} onPress={() => openReturnModal(b)}>
+                    <Ionicons name="clipboard" size={18} color="white" />
+                    <Text style={styles.inspectBtnText}>Inspect</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+        </View>
+      )}
     </ScrollView>
   );
 
@@ -552,6 +664,9 @@ const getGreeting = () => {
               <View style={{ flex: 1 }}>
                 <Text style={styles.vehicleName}>{v.name}</Text>
                 <Text style={styles.vehicleMeta}>📍 {v.location} · {v.type}</Text>
+                {v.requireVerification && (
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#f59e0b', marginTop: 2 }}>🔒 ID Verification Required</Text>
+                )}
                 <Text style={styles.vehiclePrice}>${v.pricePerDay}<Text style={styles.vehicleDay}>/day</Text></Text>
               </View>
               <View style={[styles.availBadge, { backgroundColor: v.isAvailable ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)' }]}>
@@ -607,21 +722,56 @@ const getGreeting = () => {
             <Text style={styles.emptyText}>No bookings found</Text>
           </View>
         }
-        renderItem={({ item: b }) => (
+        renderItem={({ item: b }) => {
+          const overdue = isBookingOverdue(b);
+          const depositInfo = getDepositLabel(b);
+          const isVerified = b.customerId?.verificationStatus === 'Verified';
+          return (
           <View style={styles.glassCard}>
             <View style={styles.bookingHeaderRow}>
               <Text style={styles.bookingVehicle}>{b.vehicleId?.name || 'Vehicle'}</Text>
-              <StatusBadge status={b.status} />
+              <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <StatusBadge status={b.status} />
+                {overdue && (
+                  <View style={[styles.badge, { backgroundColor: 'rgba(239,68,68,0.2)' }]}>
+                    <Text style={[styles.badgeText, { color: '#ef4444' }]}>OVERDUE</Text>
+                  </View>
+                )}
+              </View>
             </View>
-            <Text style={styles.bookingCustomer}>👤 {b.customerId?.name} · {b.customerId?.email}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+              <Text style={styles.bookingCustomer}>👤 {b.customerId?.name} · {b.customerId?.email}</Text>
+              <View style={[styles.verifyBadge, { backgroundColor: isVerified ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)' }]}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: isVerified ? '#10b981' : '#f59e0b' }}>
+                  {isVerified ? '✅ Verified' : '⚠️ Not Verified'}
+                </Text>
+              </View>
+            </View>
             <Text style={styles.bookingDates}>
               📅 {new Date(b.startDate).toLocaleDateString()} → {new Date(b.endDate).toLocaleDateString()}
             </Text>
             {b.hasDriver && (
               <Text style={styles.driverNote}>🚖 Driver requested {b.driverName ? `· ${b.driverName}` : ''}</Text>
             )}
-            <View style={styles.bookingAmountRow}>
-              <Text style={styles.bookingAmount}>${b.totalAmount || '—'}</Text>
+            {b.status !== 'pending' && (
+              <View style={styles.invoiceBox}>
+                <Text style={styles.invoiceTitle}>INVOICE SUMMARY</Text>
+                <Text style={styles.invoiceLine}>Base: ${b.baseCharge || 0}</Text>
+                {b.driverCharge > 0 && <Text style={styles.invoiceLine}>Driver: ${b.driverCharge}</Text>}
+                {depositInfo && <Text style={[styles.invoiceLine, { color: depositInfo.color, fontWeight: '600' }]}>{depositInfo.text}</Text>}
+                <Text style={styles.bookingAmount}>Total: ${b.totalAmount || '—'}</Text>
+              </View>
+            )}
+            {b.paymentMethod === 'cash' && (
+              <View style={[styles.cashBadge, {
+                backgroundColor: b.cashPaymentConfirmed ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)'
+              }]}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: b.cashPaymentConfirmed ? '#10b981' : '#94a3b8' }}>
+                  {b.cashPaymentConfirmed ? 'Cash - Confirmed' : 'Cash - Awaiting Confirmation'}
+                </Text>
+              </View>
+            )}
+            <View style={styles.bookingActionsCol}>
               {b.status === 'pending' && (
                 <TouchableOpacity onPress={() => openReviewModal(b)}>
                   <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.bookingActionBtn}>
@@ -636,6 +786,20 @@ const getGreeting = () => {
                   </LinearGradient>
                 </TouchableOpacity>
               )}
+              {['confirmed', 'ongoing'].includes(b.status) && !b.staffHandoverConfirmed && (
+                <TouchableOpacity onPress={() => handleConfirmHandover(b._id)}>
+                  <LinearGradient colors={['rgba(99,102,241,0.4)', 'rgba(79,70,229,0.4)']} style={styles.bookingActionBtn}>
+                    <Text style={styles.bookingActionText}>🤝 Confirm Handover</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+              {b.paymentMethod === 'cash' && !b.cashPaymentConfirmed && ['confirmed', 'ongoing'].includes(b.status) && (
+                <TouchableOpacity onPress={() => handleConfirmCash(b._id)}>
+                  <LinearGradient colors={['#10b981', '#059669']} style={styles.bookingActionBtn}>
+                    <Text style={styles.bookingActionText}>💵 Confirm Cash Received</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
               {b.status === 'ongoing' && (
                 <TouchableOpacity onPress={() => openReturnModal(b)}>
                   <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.bookingActionBtn}>
@@ -645,7 +809,8 @@ const getGreeting = () => {
               )}
             </View>
           </View>
-        )}
+          );
+        }}
       />
     </View>
   );
@@ -791,19 +956,55 @@ const getGreeting = () => {
           <Text style={styles.pageSubtitle}>Respond to customers & monitor feedback</Text>
         </View>
       </View>
+      <View style={styles.feedbackTabs}>
+        <TouchableOpacity
+          style={[styles.feedbackTab, feedbackTab === 'reviews' && styles.feedbackTabActive]}
+          onPress={() => setFeedbackTab('reviews')}
+        >
+          <Text style={[styles.feedbackTabText, feedbackTab === 'reviews' && styles.feedbackTabTextActive]}>⭐ Reviews</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.feedbackTab, feedbackTab === 'complaints' && styles.feedbackTabActiveComplaint]}
+          onPress={() => setFeedbackTab('complaints')}
+        >
+          <Text style={[styles.feedbackTabText, feedbackTab === 'complaints' && styles.feedbackTabTextActive]}>⚠ Complaints</Text>
+        </TouchableOpacity>
+      </View>
+      {feedbackTab === 'complaints' && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 8 }}>
+          <TouchableOpacity
+            style={[styles.filterChip, complaintCategoryFilter === 'all' && styles.filterChipActive]}
+            onPress={() => setComplaintCategoryFilter('all')}
+          >
+            <Text style={[styles.filterChipText, complaintCategoryFilter === 'all' && styles.filterChipTextActive]}>All</Text>
+          </TouchableOpacity>
+          {COMPLAINT_CATEGORIES.filter(c => c !== 'Other').map(cat => (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.filterChip, complaintCategoryFilter === cat && styles.filterChipActive]}
+              onPress={() => setComplaintCategoryFilter(cat)}
+            >
+              <Text style={[styles.filterChipText, complaintCategoryFilter === cat && styles.filterChipTextActive]}>{cat}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
       <FlatList
-        data={feedbacks}
+        data={displayFeedbacks}
         keyExtractor={(item) => item._id}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={{ fontSize: 48 }}>💬</Text>
-            <Text style={styles.emptyText}>No feedback yet</Text>
+            <Text style={styles.emptyText}>No {feedbackTab} found</Text>
           </View>
         }
         renderItem={({ item: f }) => (
-          <View style={styles.glassCard}>
+          <View style={[
+            styles.glassCard,
+            f.type === 'complaint' && f.category === 'Theft/Suspicious' && styles.theftComplaintCard
+          ]}>
             <View style={styles.feedbackHeaderRow}>
               <View style={[styles.typePill, {
                 backgroundColor: f.type === 'complaint' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'
@@ -812,6 +1013,20 @@ const getGreeting = () => {
                   {f.type?.toUpperCase()}
                 </Text>
               </View>
+              {f.type === 'complaint' && f.category && (
+                <View style={[styles.typePill, {
+                  backgroundColor: f.category === 'Theft/Suspicious' ? 'rgba(239,68,68,0.3)' : 'rgba(99,102,241,0.2)'
+                }]}>
+                  <Text style={{ color: f.category === 'Theft/Suspicious' ? '#ef4444' : '#818cf8', fontSize: 10, fontWeight: '700' }}>
+                    {f.category}
+                  </Text>
+                </View>
+              )}
+              {f.escalated && (
+                <View style={[styles.typePill, { backgroundColor: 'rgba(245,158,11,0.2)' }]}>
+                  <Text style={{ color: '#f59e0b', fontSize: 10, fontWeight: '700' }}>ESCALATED</Text>
+                </View>
+              )}
               {f.type === 'feedback' && (
                 <Text style={{ color: '#fbbf24', fontSize: 14 }}>{'★'.repeat(f.rating || 0)}</Text>
               )}
@@ -834,11 +1049,20 @@ const getGreeting = () => {
             ) : null}
             <View style={styles.feedbackActions}>
               {f.type === 'complaint' && (
-                <TouchableOpacity style={styles.feedbackActionBtn} onPress={() => openComplaintModal(f)}>
-                  <LinearGradient colors={['rgba(99,102,241,0.3)', 'rgba(79,70,229,0.3)']} style={styles.feedbackActionGrad}>
-                    <Text style={styles.feedbackActionText}>Resolve</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity style={styles.feedbackActionBtn} onPress={() => openComplaintModal(f)}>
+                    <LinearGradient colors={['rgba(99,102,241,0.3)', 'rgba(79,70,229,0.3)']} style={styles.feedbackActionGrad}>
+                      <Text style={styles.feedbackActionText}>Resolve</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  {!f.escalated && (
+                    <TouchableOpacity style={styles.feedbackActionBtn} onPress={() => handleEscalateComplaint(f._id)}>
+                      <LinearGradient colors={['rgba(239,68,68,0.3)', 'rgba(220,38,38,0.3)']} style={styles.feedbackActionGrad}>
+                        <Text style={styles.feedbackActionText}>🚨 Escalate</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                </>
               )}
               <TouchableOpacity style={styles.feedbackActionBtn} onPress={() => openReplyModal(f)}>
                 <LinearGradient colors={['rgba(14,165,233,0.3)', 'rgba(2,132,199,0.3)']} style={styles.feedbackActionGrad}>
@@ -955,6 +1179,19 @@ const getGreeting = () => {
               returnKeyType="done"
               blurOnSubmit={true}
             />
+
+            <View style={styles.toggleRow}>
+              <View style={{ flex: 1, marginRight: 12 }}>
+                <Text style={styles.inputLabel}>Require ID verification before booking</Text>
+                <Text style={styles.toggleHint}>Customers must be verified before renting</Text>
+              </View>
+              <Switch
+                value={vehicleRequireVerification}
+                onValueChange={setVehicleRequireVerification}
+                trackColor={{ false: '#334155', true: '#6366f1' }}
+                thumbColor="#f8fafc"
+              />
+            </View>
 
             <View style={styles.modalBtns}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowVehicleModal(false)}>
@@ -1363,6 +1600,29 @@ filterChipText: {
   bookingAmount: { fontSize: 20, fontWeight: '800', color: '#6366f1' },
   bookingActionBtn: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   bookingActionText: { color: 'white', fontWeight: '700', fontSize: 13 },
+  bookingActionsCol: { gap: 8, marginTop: 10 },
+  verifyBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  invoiceBox: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(99,102,241,0.15)' },
+  invoiceTitle: { fontSize: 10, fontWeight: '700', color: '#64748b', marginBottom: 4, letterSpacing: 0.5 },
+  invoiceLine: { fontSize: 12, color: '#94a3b8', marginBottom: 2 },
+  cashBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 },
+  activeRentalCard: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.1)' },
+  activeRentalVehicle: { fontSize: 15, fontWeight: '700', color: '#f8fafc' },
+  activeRentalCustomer: { fontSize: 13, color: '#94a3b8', marginTop: 2 },
+  activeRentalDates: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  overdueTag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginTop: 6 },
+  overdueTagText: { fontSize: 11, fontWeight: '700' },
+  inspectBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#6366f1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  inspectBtnText: { color: 'white', fontWeight: '700', fontSize: 12 },
+  feedbackTabs: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginBottom: 8 },
+  feedbackTab: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: 'rgba(30,41,59,0.8)', borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)' },
+  feedbackTabActive: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
+  feedbackTabActiveComplaint: { backgroundColor: '#ef4444', borderColor: '#ef4444' },
+  feedbackTabText: { fontSize: 13, fontWeight: '700', color: '#94a3b8' },
+  feedbackTabTextActive: { color: 'white' },
+  theftComplaintCard: { borderColor: '#ef4444', borderWidth: 2, shadowColor: '#ef4444', shadowOpacity: 0.3, shadowRadius: 8 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, padding: 14, backgroundColor: 'rgba(15,23,42,0.4)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)' },
+  toggleHint: { fontSize: 11, color: '#64748b', marginTop: 4 },
 
   // Complaints / Feedback
   feedbackHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
