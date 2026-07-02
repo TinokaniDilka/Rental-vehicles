@@ -8,7 +8,7 @@ const Vehicle = require("../models/Vehicle");
 // Submit feedback or complaint (Customer)
 router.post("/", protect, async (req, res) => {
   try {
-    const { bookingId, type, rating, comment } = req.body;
+    const { bookingId, type, rating, comment, category } = req.body;
     const customerId = req.user.id;
 
     if (!bookingId || !type || !comment) {
@@ -35,6 +35,7 @@ router.post("/", protect, async (req, res) => {
       type,
       rating: type === "feedback" ? Number(rating) || 5 : undefined,
       comment,
+      category: type === "complaint" ? (category || "Other") : undefined,
       complaintStatus: type === "complaint" ? "Open" : undefined
     });
 
@@ -165,6 +166,33 @@ router.put("/:id/respond", protect, async (req, res) => {
     res.status(500).json({ message: "Error updating response" });
   }
 });
+
+// Escalate complaint to admin (Staff)
+router.put("/:id/escalate", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "staff") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ message: "Submission not found" });
+    }
+
+    if (feedback.type !== "complaint") {
+      return res.status(400).json({ message: "Only complaints can be escalated" });
+    }
+
+    feedback.escalated = true;
+    feedback.complaintStatus = "In Progress";
+    await feedback.save();
+
+    res.json({ message: "Complaint escalated to admin ✅", feedback });
+  } catch (err) {
+    res.status(500).json({ message: "Error escalating complaint", error: err.message });
+  }
+});
+
 // Update feedback (Customer)
 router.put("/:id", protect, async (req, res) => {
   try {
