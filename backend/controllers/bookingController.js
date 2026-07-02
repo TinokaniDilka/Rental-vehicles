@@ -62,8 +62,8 @@ const getAllBookings = async (req, res) => {
     if (req.user.role === "admin") {
       // Admin sees all bookings
       bookings = await Booking.find()
-        .populate("vehicleId", "name type location pricePerDay image")
-        .populate("customerId", "name email")
+        .populate("vehicleId", "name type location pricePerDay image depositAmount requireVerification")
+        .populate("customerId", "name email verificationStatus")
         .sort({ createdAt: -1 });
     } else {
       // Staff only sees bookings for vehicles they own
@@ -71,8 +71,8 @@ const getAllBookings = async (req, res) => {
       const vehicleIds = staffVehicles.map(v => v._id);
 
       bookings = await Booking.find({ vehicleId: { $in: vehicleIds } })
-        .populate("vehicleId", "name type location pricePerDay image")
-        .populate("customerId", "name email")
+        .populate("vehicleId", "name type location pricePerDay image depositAmount requireVerification")
+        .populate("customerId", "name email verificationStatus")
         .sort({ createdAt: -1 });
     }
 
@@ -121,6 +121,10 @@ const reviewBooking = async (req, res) => {
 
       // Calculate total
       booking.totalAmount = booking.baseCharge + booking.driverCharge + booking.additionalFees - booking.discount;
+
+      // Copy deposit from vehicle
+      booking.depositAmount = booking.vehicleId.depositAmount || 0;
+      booking.depositStatus = booking.depositAmount > 0 ? "held" : "released";
     }
 
     await booking.save();
@@ -160,9 +164,13 @@ const payBooking = async (req, res) => {
     });
     await payment.save();
 
-    // Update booking status
-    booking.paymentMethod = paymentMethod;
+    if (paymentMethod) {
+      booking.paymentMethod = paymentMethod;
+    }
     booking.status = "confirmed";
+    if (paymentMethod !== "cash") {
+      booking.cashPaymentConfirmed = true;
+    }
     await booking.save();
 
     res.json({ message: "Payment confirmed successfully! Booking active ✅", booking });
@@ -186,6 +194,10 @@ const pickupBooking = async (req, res) => {
     }
 
     booking.status = "ongoing";
+    booking.handoverStatus = "rented";
+    if (booking.depositAmount > 0 && booking.depositStatus !== "released" && booking.depositStatus !== "captured") {
+      booking.depositStatus = "held";
+    }
     await booking.save();
 
     // Mark vehicle as physically unavailable right now
@@ -238,6 +250,18 @@ const returnBooking = async (req, res) => {
     // Adjust total amount
     booking.totalAmount += booking.lateReturnCharge + booking.damageCharge;
     booking.status = "completed";
+    booking.handoverStatus = "confirmed_return";
+    booking.staffReturnConfirmed = true;
+
+    // Update deposit status on return
+    if (booking.depositAmount > 0) {
+      if (booking.damageCharge > 0 || returnCondition === "Damaged") {
+        booking.depositStatus = "captured";
+      } else {
+        booking.depositStatus = "released";
+      }
+    }
+
     await booking.save();
 
     // Mark vehicle as physically available again
@@ -294,6 +318,9 @@ const createBookingWithPayment = async (req, res) => {
       baseCharge,
       driverCharge,
       totalAmount,
+      depositAmount: vehicle.depositAmount || 0,
+      depositStatus: vehicle.depositAmount > 0 ? "held" : "released",
+      cashPaymentConfirmed: paymentMethod !== "cash",
       rentalAgreementSigned: req.body.rentalAgreementSigned || false
     });
     await booking.save();
@@ -399,6 +426,63 @@ const cancelBooking = async (req, res) => {
   }
 };
 
+// Staff confirms cash payment received
+const confirmCashPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.paymentMethod !== "cash") {
+      return res.status(400).json({ message: "This booking is not a cash payment" });
+    }
+
+    if (booking.cashPaymentConfirmed) {
+      return res.status(400).json({ message: "Cash payment already confirmed" });
+    }
+
+    booking.cashPaymentConfirmed = true;
+    await booking.save();
+
+    res.json({ message: "Cash payment confirmed ✅", booking });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error confirming cash payment", error: err.message });
+  }
+};
+
+// Staff confirms physical vehicle handover
+const confirmStaffHandover = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (!["confirmed", "ongoing"].includes(booking.status)) {
+      return res.status(400).json({ message: "Handover can only be confirmed for confirmed or ongoing bookings" });
+    }
+
+    if (booking.staffHandoverConfirmed) {
+      return res.status(400).json({ message: "Handover already confirmed by staff" });
+    }
+
+    booking.staffHandoverConfirmed = true;
+    booking.handoverStatus = "rented";
+    await booking.save();
+
+    res.json({ message: "Vehicle handover confirmed by staff ✅", booking });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error confirming handover", error: err.message });
+  }
+};
+
 // Update handover status (Customer / Staff)
 const updateHandoverStatus = async (req, res) => {
   try {
@@ -412,6 +496,14 @@ const updateHandoverStatus = async (req, res) => {
 
     if (handoverStatus) {
       booking.handoverStatus = handoverStatus;
+    }
+
+    if (req.body.customerHandoverConfirmed === true) {
+      booking.customerHandoverConfirmed = true;
+    }
+
+    if (req.body.staffHandoverConfirmed === true) {
+      booking.staffHandoverConfirmed = true;
     }
     
     if (conditionPhotos && Array.isArray(conditionPhotos)) {
@@ -437,5 +529,7 @@ module.exports = {
   returnBooking,
   createBookingWithPayment,
   cancelBooking,
-  updateHandoverStatus
+  updateHandoverStatus,
+  confirmCashPayment,
+  confirmStaffHandover
 };
