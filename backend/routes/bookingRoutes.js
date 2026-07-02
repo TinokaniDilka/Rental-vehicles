@@ -11,7 +11,9 @@ const {
   returnBooking,
   createBookingWithPayment,
   cancelBooking,
-  updateHandoverStatus
+  updateHandoverStatus,
+  confirmCashPayment,
+  confirmStaffHandover
 } = require("../controllers/bookingController");
 
 // Customer routes
@@ -27,6 +29,8 @@ router.put("/:id/review", protect, reviewBooking);
 router.put("/:id/pay", protect, payBooking); // note: payment is completed by user
 router.put("/:id/pickup", protect, pickupBooking);
 router.put("/:id/return", protect, returnBooking);
+router.put("/:id/confirm-cash", protect, confirmCashPayment);
+router.put("/:id/confirm-handover", protect, confirmStaffHandover);
 
 // ✅ BACKWARD COMPATIBILITY: GET bookings of a vehicle for blocking dates
 router.get("/vehicle/:vehicleId", async (req, res) => {

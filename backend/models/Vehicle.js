@@ -18,6 +18,7 @@ const vehicleSchema = new mongoose.Schema({
   description: String,
   isAvailable: { type: Boolean, default: true },
   depositAmount: { type: Number, default: 5000 },
+  requireVerification: { type: Boolean, default: false }
 },{ timestamps: true });  
   
   

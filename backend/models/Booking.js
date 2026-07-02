@@ -79,7 +79,20 @@ const bookingSchema = new mongoose.Schema({
     default: "pending_pickup"
   },
   conditionPhotos: [{ type: String }],
-  rentalAgreementSigned: { type: Boolean, default: false }
+  rentalAgreementSigned: { type: Boolean, default: false },
+
+  // Deposit & Cash Confirmation
+  depositAmount: { type: Number, default: 0 },
+  depositStatus: {
+    type: String,
+    enum: ["held", "released", "captured"],
+    default: "held"
+  },
+  cashPaymentConfirmed: { type: Boolean, default: false },
+  customerHandoverConfirmed: { type: Boolean, default: false },
+  staffHandoverConfirmed: { type: Boolean, default: false },
+  customerReturnConfirmed: { type: Boolean, default: false },
+  staffReturnConfirmed: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Booking", bookingSchema);

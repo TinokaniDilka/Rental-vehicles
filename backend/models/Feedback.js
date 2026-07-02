@@ -51,6 +51,12 @@ const feedbackSchema = new mongoose.Schema({
     enum: ["Open", "In Progress", "Resolved", "Closed"],
     default: "Open"
   }, // Only for complaints
+  category: {
+    type: String,
+    enum: ["Vehicle Damage", "No-show", "Vehicle Not as Described", "Theft/Suspicious", "Other"],
+    default: "Other"
+  },
+  escalated: { type: Boolean, default: false },
   staffResponse: {
     type: String,
     default: ""
