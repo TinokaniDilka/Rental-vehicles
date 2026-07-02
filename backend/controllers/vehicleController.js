@@ -35,7 +35,9 @@ const createVehicle = async (req, res) => {
       type: req.body.type || "car",
       location: req.body.location || "Colombo",
       isAvailable: true,
-      image: req.file ? `/uploads/${req.file.filename}` : null
+      image: req.file ? `/uploads/${req.file.filename}` : null,
+      requireVerification: req.body.requireVerification === "true" || req.body.requireVerification === true,
+      depositAmount: req.body.depositAmount ? Number(req.body.depositAmount) : undefined
     };
 
     const vehicle = new Vehicle(vehicleData);
@@ -58,6 +60,14 @@ const updateVehicle = async (req, res) => {
       type: req.body.type,
       location: req.body.location,
     };
+
+    if (req.body.requireVerification !== undefined) {
+      updateData.requireVerification = req.body.requireVerification === "true" || req.body.requireVerification === true;
+    }
+
+    if (req.body.depositAmount !== undefined) {
+      updateData.depositAmount = Number(req.body.depositAmount);
+    }
 
     if (req.file) {
       updateData.image = `/uploads/${req.file.filename}`;
