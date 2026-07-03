@@ -8,6 +8,7 @@ export default function AdminDashboard() {
   // Navigation
   const [activePage, setActivePage] = useState("dashboard");
   const [activeReportTab, setActiveReportTab] = useState("payments");
+  const [complaintFilter, setComplaintFilter] = useState("all");
 
   // Ref for scrolling to payments section
   const paymentsRef = useRef(null);
@@ -27,7 +28,7 @@ export default function AdminDashboard() {
   // Data Lists
   const [users, setUsers] = useState([]);
   const [promos, setPromos] = useState([]);
-  const [reports, setReports] = useState({ bookings: [], payments: [], vehicles: [], feedback: [] });
+  const [reports, setReports] = useState({ bookings: [], payments: [], vehicles: [], feedback: [], auditLog: [] });
   const [selectedDate, setSelectedDate] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
   const [searchTransaction, setSearchTransaction] = useState("");
@@ -46,6 +47,10 @@ export default function AdminDashboard() {
   const [staffEmail, setStaffEmail] = useState("");
   const [staffPassword, setStaffPassword] = useState("");
   const [userFilter, setUserFilter] = useState("all");
+
+  // ID Verification Modal
+  const [showIdVerificationModal, setShowIdVerificationModal] = useState(false);
+  const [selectedUserForVerification, setSelectedUserForVerification] = useState(null);
 
   // Promo Code Form
   const [showPromoModal, setShowPromoModal] = useState(false);
@@ -201,10 +206,10 @@ export default function AdminDashboard() {
     try {
       const res = await axios.put(
         "http://localhost:5000/api/auth/profile",
-        { 
-          name: profileName, 
-          email: profileEmail, 
-          password: profilePassword || undefined 
+        {
+          name: profileName,
+          email: profileEmail,
+          password: profilePassword || undefined
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -214,6 +219,45 @@ export default function AdminDashboard() {
       setShowProfileModal(false);
     } catch (err) {
       alert(err.response?.data?.message || "Profile update failed");
+    }
+  };
+
+  const handleOpenIdVerification = (user) => {
+    setSelectedUserForVerification(user);
+    setShowIdVerificationModal(true);
+  };
+
+  const handleApproveVerification = async () => {
+    if (!selectedUserForVerification) return;
+    try {
+      await axios.put(
+        `http://localhost:5000/api/auth/users/${selectedUserForVerification._id}/verify`,
+        { verificationStatus: "Verified" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("ID verification approved ✅");
+      setShowIdVerificationModal(false);
+      setSelectedUserForVerification(null);
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to approve verification");
+    }
+  };
+
+  const handleRejectVerification = async () => {
+    if (!selectedUserForVerification) return;
+    try {
+      await axios.put(
+        `http://localhost:5000/api/auth/users/${selectedUserForVerification._id}/verify`,
+        { verificationStatus: "Not Verified" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("ID verification rejected ❌");
+      setShowIdVerificationModal(false);
+      setSelectedUserForVerification(null);
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to reject verification");
     }
   };
 
@@ -395,6 +439,7 @@ export default function AdminDashboard() {
                     <th className="custom-th">NAME</th>
                     <th className="custom-th">EMAIL</th>
                     <th className="custom-th">ROLE</th>
+                    <th className="custom-th">VERIFICATION STATUS</th>
                     <th className="custom-th">ACCOUNT STATUS</th>
                     <th className="custom-th">ACTIONS</th>
                   </tr>
@@ -422,22 +467,48 @@ export default function AdminDashboard() {
                         }}>{u.role.toUpperCase()}</span>
                       </td>
                       <td className="custom-td">
+                        {u.role === "customer" ? (
+                          <span style={{
+                            padding: "4px 8px",
+                            borderRadius: "12px",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            background: u.verificationStatus === "Verified" ? "rgba(16,185,129,0.15)" : u.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.15)" : "rgba(148,163,184,0.15)",
+                            color: u.verificationStatus === "Verified" ? "#10b981" : u.verificationStatus === "Pending Review" ? "#f59e0b" : "#94a3b8",
+                            border: u.verificationStatus === "Verified" ? "1px solid rgba(16,185,129,0.25)" : u.verificationStatus === "Pending Review" ? "1px solid rgba(245,158,11,0.25)" : "1px solid rgba(148,163,184,0.25)"
+                          }}>
+                            {u.verificationStatus || "Not Verified"}
+                          </span>
+                        ) : (
+                          <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>—</span>
+                        )}
+                      </td>
+                      <td className="custom-td">
                         <span style={{ color: u.isActive ? "var(--success)" : "var(--danger)", fontWeight: "bold" }}>
                           ● {u.isActive ? "Active" : "Deactivated"}
                         </span>
                       </td>
                       <td className="custom-td">
-                        {u._id !== user._id ? (
-                          <button
-                            className={`btn-base ${u.isActive ? "btn-danger" : "btn-success"}`}
-                            style={{ padding: "6px 12px", fontSize: "12px" }}
-                            onClick={() => handleToggleUser(u._id)}
-                          >
-                            {u.isActive ? "Deactivate" : "Activate"}
-                          </button>
-                        ) : (
-                          <span style={{ color: "var(--text-muted)", fontSize: "13px", fontStyle: "italic" }}>Self Account</span>
-                        )}
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          {u.role === "customer" && (
+                            <button
+                              className="btn-base btn-secondary"
+                              style={{ padding: "4px 8px", fontSize: "11px" }}
+                              onClick={() => handleOpenIdVerification(u)}
+                            >
+                              View ID
+                            </button>
+                          )}
+                          {u._id !== user._id && (
+                            <button
+                              className={`btn-base ${u.isActive ? "btn-danger" : "btn-success"}`}
+                              style={{ padding: "4px 8px", fontSize: "11px" }}
+                              onClick={() => handleToggleUser(u._id)}
+                            >
+                              {u.isActive ? "Deactivate" : "Activate"}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -541,9 +612,10 @@ export default function AdminDashboard() {
                     <thead>
   <tr>
     <th className="custom-th">VEHICLE </th>
-    <th className="custom-th">CUSTOMER  </th>   {/* ✅ ADD HERE */}
+    <th className="custom-th">CUSTOMER  </th>
     <th className="custom-th">   DATE  </th>
     <th className="custom-th">AMOUNT</th>
+    <th className="custom-th">DEPOSIT STATUS</th>
     <th className="custom-th">STATUS </th>
   </tr>
 </thead>
@@ -577,6 +649,29 @@ export default function AdminDashboard() {
   </td>
 
   <td className="custom-td">${b.totalAmount}</td>
+
+  <td className="custom-td">
+    {b.depositAmount > 0 ? (
+      <span style={{
+        padding: "4px 8px",
+        borderRadius: "12px",
+        fontSize: "11px",
+        fontWeight: "700",
+        background: b.depositStatus === "released" ? "rgba(16,185,129,0.15)" : 
+                   b.depositStatus === "captured" ? "rgba(239,68,68,0.15)" : 
+                   "rgba(245,158,11,0.15)",
+        color: b.depositStatus === "released" ? "#10b981" : 
+               b.depositStatus === "captured" ? "#ef4444" : 
+               "#f59e0b"
+      }}>
+        {b.depositStatus === "released" ? `Released: $${b.depositAmount}` : 
+         b.depositStatus === "captured" ? `Captured: $${b.depositAmount}` : 
+         `Held: $${b.depositAmount}`}
+      </span>
+    ) : (
+      <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>—</span>
+    )}
+  </td>
 
   <td className="custom-td">
     <span className={`badge-base badge-${b.status}`}>
@@ -648,10 +743,11 @@ export default function AdminDashboard() {
                       <tr>
                         <th className="custom-th">TRANSACTION ID</th>
                         <th className="custom-th">CUSTOMER</th>
-                        <th className="custom-th">VEHICLE</th>        {/* ✅ */}
-                        <th className="custom-th">VEHICLE ID</th>     {/* ✅ */}
+                        <th className="custom-th">VEHICLE</th>
+                        <th className="custom-th">VEHICLE ID</th>
+                        <th className="custom-th">TYPE</th>
                         <th className="custom-th">AMOUNT</th>
-<                       th className="custom-th">TIMESTAMP</th>
+                        <th className="custom-th">TIMESTAMP</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -670,7 +766,16 @@ export default function AdminDashboard() {
 
     return matchDate && matchSearch;
   })
-  .map(p => (
+  .map(p => {
+    // Determine transaction type
+    let transactionType = "Payment";
+    if (p.amount < 0) {
+      transactionType = "Refund";
+    } else if (p.status === "cancelled" || p.status === "refunded") {
+      transactionType = "Cancellation";
+    }
+    
+    return (
 <tr key={p._id} className="custom-tr">
 
   <td className="custom-td" style={{ fontFamily: "monospace" }}>
@@ -681,25 +786,52 @@ export default function AdminDashboard() {
     {p.customerId?.name || "Deleted"}
   </td>
 
-  {/* ✅ VEHICLE NAME */}
+  {/* VEHICLE NAME */}
   <td className="custom-td">
     {p.bookingId?.vehicleId?.name || "N/A"}
   </td>
 
-  {/* ✅ VEHICLE ID */}
+  {/* VEHICLE ID */}
   <td className="custom-td">
     {p.bookingId?.vehicleId?.vehicleId ||
      p.bookingId?.vehicleId?._id?.slice(-6) ||
      "N/A"}
   </td>
 
-  <td className="custom-td">${p.amount}</td>
+  {/* TYPE */}
+  <td className="custom-td">
+    <span style={{
+      padding: "4px 8px",
+      borderRadius: "12px",
+      fontSize: "11px",
+      fontWeight: "700",
+      background: transactionType === "Payment" ? "rgba(16,185,129,0.15)" : 
+                 transactionType === "Refund" ? "rgba(239,68,68,0.15)" : 
+                 "rgba(148,163,184,0.15)",
+      color: transactionType === "Payment" ? "#10b981" : 
+             transactionType === "Refund" ? "#ef4444" : 
+             "#94a3b8"
+    }}>
+      {transactionType}
+    </span>
+  </td>
+
+  {/* AMOUNT */}
+  <td className="custom-td">
+    <span style={{ 
+      color: transactionType === "Refund" ? "#ef4444" : "white",
+      fontWeight: transactionType === "Refund" ? "bold" : "normal"
+    }}>
+      ${Math.abs(p.amount)}
+    </span>
+  </td>
 
   <td className="custom-td">
     {new Date(p.paidAt || p.createdAt).toLocaleString()}
   </td>
 </tr>
-                      ))}
+    );
+  })}
                     </tbody>
                   </table>
                 </div>
@@ -795,6 +927,21 @@ export default function AdminDashboard() {
                 }}
               >
                 <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💬 Customer Feedbacks & Complaints</h4>
+                
+                {/* Complaint Filter for Admin */}
+                <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ color: "white", fontWeight: "600" }}>Filter:</span>
+                  <select
+                    value={complaintFilter}
+                    onChange={(e) => setComplaintFilter(e.target.value)}
+                    className="custom-input"
+                    style={{ maxWidth: "200px" }}
+                  >
+                    <option value="all">All Feedback</option>
+                    <option value="serious">Serious/Escalated Only</option>
+                  </select>
+                </div>
+                
                 <div className="custom-table-container">
                   <table className="custom-table">
                     <thead>
@@ -815,6 +962,11 @@ export default function AdminDashboard() {
       new Date(f.createdAt).toDateString() ===
       new Date(selectedDate).toDateString()
     );
+  })
+  .filter(f => {
+    if (complaintFilter === "all") return true;
+    // Show only serious/escalated complaints
+    return f.type === "complaint" && (f.category === "Theft/Suspicious" || f.escalated);
   })
   .map(f => (
 
@@ -862,6 +1014,54 @@ export default function AdminDashboard() {
 
 </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* STAFF ACTION AUDIT LOG */}
+              <div className="glass-card" style={{ padding: "25px" }}>
+                <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>📋 Staff Action Audit Log</h4>
+                <div className="custom-table-container">
+                  <table className="custom-table">
+                    <thead>
+                      <tr>
+                        <th className="custom-th">STAFF NAME</th>
+                        <th className="custom-th">ACTION</th>
+                        <th className="custom-th">BOOKING ID</th>
+                        <th className="custom-th">TIMESTAMP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.auditLog && reports.auditLog.length > 0 ? (
+                        reports.auditLog.map((log, index) => (
+                          <tr key={index} className="custom-tr">
+                            <td className="custom-td">{log.staffName || "Unknown Staff"}</td>
+                            <td className="custom-td">
+                              <span style={{
+                                padding: "4px 8px",
+                                borderRadius: "12px",
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                background: log.action === "Cash Payment Confirmed" ? "rgba(16,185,129,0.15)" : 
+                                           log.action === "Handover Confirmed" ? "rgba(99,102,241,0.15)" : 
+                                           "rgba(148,163,184,0.15)",
+                                color: log.action === "Cash Payment Confirmed" ? "#10b981" : 
+                                       log.action === "Handover Confirmed" ? "#818cf8" : 
+                                       "#94a3b8"
+                              }}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td className="custom-td" style={{ fontFamily: "monospace" }}>{log.bookingId || "N/A"}</td>
+                            <td className="custom-td">{new Date(log.timestamp).toLocaleString()}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>No staff actions recorded yet.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -979,6 +1179,134 @@ export default function AdminDashboard() {
                 <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>Add Promo</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ID VERIFICATION MODAL */}
+      {showIdVerificationModal && selectedUserForVerification && (
+        <div className="custom-modal-overlay" onClick={() => setShowIdVerificationModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "20px" }}>🪪 ID Verification Review</h3>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>CUSTOMER NAME</p>
+                  <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "white" }}>{selectedUserForVerification.name}</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>EMAIL</p>
+                  <p style={{ margin: 0, fontSize: "14px", color: "white" }}>{selectedUserForVerification.email}</p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "20px" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>NIC NUMBER</p>
+                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.nicNumber || "Not provided"}</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>DRIVING LICENSE</p>
+                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.drivingLicenseNumber || "Not provided"}</p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "20px" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>ID PHOTO</p>
+                  <div style={{ 
+                    width: "100%", 
+                    height: "200px", 
+                    background: "rgba(255,255,255,0.05)", 
+                    borderRadius: "8px", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    border: "1px solid var(--border-color)"
+                  }}>
+                    {selectedUserForVerification.idPhoto ? (
+                      <img 
+                        src={`http://localhost:5000${selectedUserForVerification.idPhoto}`} 
+                        alt="ID Photo" 
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No ID photo uploaded</span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>LICENSE PHOTO</p>
+                  <div style={{ 
+                    width: "100%", 
+                    height: "200px", 
+                    background: "rgba(255,255,255,0.05)", 
+                    borderRadius: "8px", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    border: "1px solid var(--border-color)"
+                  }}>
+                    {selectedUserForVerification.licensePhoto ? (
+                      <img 
+                        src={`http://localhost:5000${selectedUserForVerification.licensePhoto}`} 
+                        alt="License Photo" 
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No license photo uploaded</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ 
+                padding: "12px", 
+                background: selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.1)" : 
+                          selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.1)" : 
+                          "rgba(148,163,184,0.1)",
+                borderRadius: "8px",
+                border: "1px solid " + (selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.3)" : 
+                          selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.3)" : 
+                          "rgba(148,163,184,0.3)")
+              }}>
+                <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
+                  Current Status: <span style={{
+                    color: selectedUserForVerification.verificationStatus === "Verified" ? "#10b981" : 
+                           selectedUserForVerification.verificationStatus === "Pending Review" ? "#f59e0b" : 
+                           "#94a3b8"
+                  }}>{selectedUserForVerification.verificationStatus || "Not Verified"}</span>
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button 
+                  className="btn-base btn-secondary" 
+                  style={{ flex: 1 }} 
+                  onClick={() => {
+                    setShowIdVerificationModal(false);
+                    setSelectedUserForVerification(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn-base btn-danger" 
+                  style={{ flex: 1 }} 
+                  onClick={handleRejectVerification}
+                >
+                  Reject
+                </button>
+                <button 
+                  className="btn-base btn-success" 
+                  style={{ flex: 1 }} 
+                  onClick={handleApproveVerification}
+                >
+                  Approve
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
