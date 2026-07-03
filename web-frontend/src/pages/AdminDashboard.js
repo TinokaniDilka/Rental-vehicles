@@ -47,7 +47,7 @@ export default function AdminDashboard() {
   const [staffEmail, setStaffEmail] = useState("");
   const [staffPassword, setStaffPassword] = useState("");
   const [userFilter, setUserFilter] = useState("all");
-
+const [staffRole, setStaffRole] = useState("staff");
   // ID Verification Modal
   const [showIdVerificationModal, setShowIdVerificationModal] = useState(false);
   const [selectedUserForVerification, setSelectedUserForVerification] = useState(null);
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
   };
 
   // Toggle user activation status
-  const handleToggleUser = async (userId) => {
+   const handleToggleUser = async (userId) => {
     try {
       const res = await axios.put(
         `http://localhost:5000/api/auth/users/${userId}/toggle-active`,
@@ -139,27 +139,51 @@ export default function AdminDashboard() {
     }
   };
 
-  // Staff creation
-  const handleCreateStaff = async (e) => {
-    e.preventDefault();
-    if (!staffName || !staffEmail || !staffPassword) return alert("Fill all fields");
+  // NEW: Delete User (only for deactivated users)
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to permanently delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+
     try {
-      await axios.post(
-        "http://localhost:5000/api/auth/staff",
-        { name: staffName, email: staffEmail, password: staffPassword },
+      await axios.delete(
+        `http://localhost:5000/api/auth/users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Staff created successfully ✅");
-      setShowStaffModal(false);
-      setStaffName("");
-      setStaffEmail("");
-      setStaffPassword("");
+      alert("User deleted successfully ✅");
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.message || "Creation failed");
+      alert(err.response?.data?.message || "Failed to delete user");
     }
   };
 
+  // Staff creation
+const handleCreateStaff = async (e) => {
+  e.preventDefault();
+  if (!staffName || !staffEmail || !staffPassword) return alert("Fill all fields");
+
+  try {
+    await axios.post(
+      "http://localhost:5000/api/auth/staff",
+      { 
+        name: staffName, 
+        email: staffEmail, 
+        password: staffPassword,
+        role: staffRole 
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    alert(`New ${staffRole} created successfully ✅`);
+    setShowStaffModal(false);
+    setStaffName("");
+    setStaffEmail("");
+    setStaffPassword("");
+    setStaffRole("staff");
+    fetchUsers();
+  } catch (err) {
+    alert(err.response?.data?.message || "Creation failed");
+  }
+};
   // Promo code creation
   const handleCreatePromo = async (e) => {
     e.preventDefault();
@@ -260,6 +284,43 @@ export default function AdminDashboard() {
       alert(err.response?.data?.message || "Failed to reject verification");
     }
   };
+
+  // ====================== ADD THIS FUNCTION HERE ======================
+    // Improved getFullImageUrl - Replace your current one
+  const getFullImageUrl = (path) => {
+    if (!path) {
+      console.log("❌ No image path provided");
+      return "";
+    }
+
+    console.log("🔍 Raw path from DB:", path);
+
+    // If it's already a full URL
+    if (path.startsWith('http')) {
+      console.log("✅ Full URL:", path);
+      return path;
+    }
+
+    // Clean the path
+    let cleanPath = path.trim();
+
+    // Remove leading/trailing slashes for normalization
+    cleanPath = cleanPath.replace(/^\/+|\/+$/g, '');
+
+    // If it already contains 'uploads', use it as is
+    if (cleanPath.includes('uploads')) {
+      cleanPath = '/' + cleanPath;
+    } else {
+      // Otherwise assume it's just the filename
+      cleanPath = `/uploads/${cleanPath}`;
+    }
+
+    const fullUrl = `http://localhost:5000${cleanPath}`;
+    console.log("✅ Final URL:", fullUrl);
+
+    return fullUrl;
+  };
+  // ===================================================================
 
   return (
     <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }} className="fade-in">
@@ -429,8 +490,7 @@ export default function AdminDashboard() {
                  </select>
           </div>
 
-            <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Staff</button>
-            </div>
+<button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Admin</button>            </div>
 
             <div className="custom-table-container">
               <table className="custom-table">
@@ -489,27 +549,41 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="custom-td">
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                          {u.role === "customer" && (
-                            <button
-                              className="btn-base btn-secondary"
-                              style={{ padding: "4px 8px", fontSize: "11px" }}
-                              onClick={() => handleOpenIdVerification(u)}
-                            >
-                              View ID
-                            </button>
-                          )}
-                          {u._id !== user._id && (
-                            <button
-                              className={`btn-base ${u.isActive ? "btn-danger" : "btn-success"}`}
-                              style={{ padding: "4px 8px", fontSize: "11px" }}
-                              onClick={() => handleToggleUser(u._id)}
-                            >
-                              {u.isActive ? "Deactivate" : "Activate"}
-                            </button>
-                          )}
-                        </div>
-                      </td>
+  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+    {u.role === "customer" && (
+      <button
+        className="btn-base btn-secondary"
+        style={{ padding: "4px 8px", fontSize: "11px" }}
+        onClick={() => handleOpenIdVerification(u)}
+      >
+        View ID
+      </button>
+    )}
+
+    {u._id !== user._id && (
+      <>
+        <button
+          className={`btn-base ${u.isActive ? "btn-danger" : "btn-success"}`}
+          style={{ padding: "4px 8px", fontSize: "11px" }}
+          onClick={() => handleToggleUser(u._id)}
+        >
+          {u.isActive ? "Deactivate" : "Activate"}
+        </button>
+
+        {!u.isActive && (
+          <button
+            className="btn-base btn-danger"
+            style={{ padding: "4px 8px", fontSize: "11px" }}
+            onClick={() => handleDeleteUser(u._id, u.name)}
+            title="Permanently Delete User"
+          >
+            🗑️
+          </button>
+        )}
+      </>
+    )}
+  </div>
+</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1127,35 +1201,52 @@ export default function AdminDashboard() {
       </main>
 
       {/* STAFF CREATE MODAL */}
-      {showStaffModal && (
-        <div className="custom-modal-overlay" onClick={() => setShowStaffModal(false)}>
-          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: "20px", fontWeight: "700" }}>👤 Register Staff Account</h3>
+      {/* REGISTER STAFF / ADMIN MODAL */}
+{showStaffModal && (
+  <div className="custom-modal-overlay" onClick={() => setShowStaffModal(false)}>
+    <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+      <h3 style={{ fontSize: "20px", fontWeight: "700" }}>Register New Account</h3>
 
-            <form onSubmit={handleCreateStaff} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label className="form-label">Name</label>
-                <input type="text" placeholder="e.g. John Staff" value={staffName} onChange={(e) => setStaffName(e.target.value)} className="custom-input" required />
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label className="form-label">Email Address</label>
-                <input type="email" placeholder="staff@quickride.com" value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} className="custom-input" required />
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label className="form-label">Password</label>
-                <input type="password" placeholder="••••••••" value={staffPassword} onChange={(e) => setStaffPassword(e.target.value)} className="custom-input" required />
-              </div>
-
-              <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-                <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowStaffModal(false)}>Cancel</button>
-                <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>Register Staff</button>
-              </div>
-            </form>
-          </div>
+      <form onSubmit={handleCreateStaff} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <label className="form-label">Name</label>
+          <input type="text" placeholder="e.g. John Doe" value={staffName} onChange={(e) => setStaffName(e.target.value)} className="custom-input" required />
         </div>
-      )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <label className="form-label">Email Address</label>
+          <input type="email" placeholder="example@quickride.com" value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} className="custom-input" required />
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <label className="form-label">Password</label>
+          <input type="password" placeholder="••••••••" value={staffPassword} onChange={(e) => setStaffPassword(e.target.value)} className="custom-input" required />
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <label className="form-label">Role</label>
+          <select 
+            value={staffRole} 
+            onChange={(e) => setStaffRole(e.target.value)}
+            className="custom-input"
+            required
+          >
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+          <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowStaffModal(false)}>
+            Cancel
+          </button>
+          <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>
+            Register 
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       {/* PROMO CREATE MODAL */}
       {showPromoModal && (
@@ -1184,133 +1275,148 @@ export default function AdminDashboard() {
       )}
 
       {/* ID VERIFICATION MODAL */}
-      {showIdVerificationModal && selectedUserForVerification && (
-        <div className="custom-modal-overlay" onClick={() => setShowIdVerificationModal(false)}>
-          <div className="custom-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
-            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "20px" }}>🪪 ID Verification Review</h3>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>CUSTOMER NAME</p>
-                  <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "white" }}>{selectedUserForVerification.name}</p>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>EMAIL</p>
-                  <p style={{ margin: 0, fontSize: "14px", color: "white" }}>{selectedUserForVerification.email}</p>
-                </div>
-              </div>
+{/* ID VERIFICATION MODAL */}
+{showIdVerificationModal && selectedUserForVerification && (
+  <div className="custom-modal-overlay" onClick={() => setShowIdVerificationModal(false)}>
+    <div className="custom-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+      <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "20px" }}>🪪 ID Verification Review</h3>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>CUSTOMER NAME</p>
+            <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "white" }}>{selectedUserForVerification.name}</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>EMAIL</p>
+            <p style={{ margin: 0, fontSize: "14px", color: "white" }}>{selectedUserForVerification.email}</p>
+          </div>
+        </div>
 
-              <div style={{ display: "flex", gap: "20px" }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>NIC NUMBER</p>
-                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.nicNumber || "Not provided"}</p>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>DRIVING LICENSE</p>
-                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.drivingLicenseNumber || "Not provided"}</p>
-                </div>
-              </div>
+        <div style={{ display: "flex", gap: "20px" }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>NIC NUMBER</p>
+            <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.nicNumber || "Not provided"}</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>DRIVING LICENSE</p>
+            <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.drivingLicenseNumber || "Not provided"}</p>
+          </div>
+        </div>
 
-              <div style={{ display: "flex", gap: "20px" }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>ID PHOTO</p>
-                  <div style={{ 
-                    width: "100%", 
-                    height: "200px", 
-                    background: "rgba(255,255,255,0.05)", 
-                    borderRadius: "8px", 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center",
-                    border: "1px solid var(--border-color)"
-                  }}>
-                    {selectedUserForVerification.idPhoto ? (
-                      <img 
-                        src={`http://localhost:5000${selectedUserForVerification.idPhoto}`} 
-                        alt="ID Photo" 
-                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }}
-                      />
-                    ) : (
-                      <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No ID photo uploaded</span>
-                    )}
-                  </div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>LICENSE PHOTO</p>
-                  <div style={{ 
-                    width: "100%", 
-                    height: "200px", 
-                    background: "rgba(255,255,255,0.05)", 
-                    borderRadius: "8px", 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center",
-                    border: "1px solid var(--border-color)"
-                  }}>
-                    {selectedUserForVerification.licensePhoto ? (
-                      <img 
-                        src={`http://localhost:5000${selectedUserForVerification.licensePhoto}`} 
-                        alt="License Photo" 
-                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }}
-                      />
-                    ) : (
-                      <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No license photo uploaded</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ 
-                padding: "12px", 
-                background: selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.1)" : 
-                          selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.1)" : 
-                          "rgba(148,163,184,0.1)",
-                borderRadius: "8px",
-                border: "1px solid " + (selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.3)" : 
-                          selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.3)" : 
-                          "rgba(148,163,184,0.3)")
-              }}>
-                <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
-                  Current Status: <span style={{
-                    color: selectedUserForVerification.verificationStatus === "Verified" ? "#10b981" : 
-                           selectedUserForVerification.verificationStatus === "Pending Review" ? "#f59e0b" : 
-                           "#94a3b8"
-                  }}>{selectedUserForVerification.verificationStatus || "Not Verified"}</span>
-                </p>
-              </div>
-
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button 
-                  className="btn-base btn-secondary" 
-                  style={{ flex: 1 }} 
-                  onClick={() => {
-                    setShowIdVerificationModal(false);
-                    setSelectedUserForVerification(null);
+        {/* FIXED PHOTO SECTION */}
+        <div style={{ display: "flex", gap: "20px" }}>
+          {/* ID Photo */}
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>ID PHOTO</p>
+            <div style={{ 
+              width: "100%", 
+              height: "220px", 
+              background: "rgba(255,255,255,0.05)", 
+              borderRadius: "12px", 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              border: "1px solid var(--border-color)",
+              overflow: "hidden"
+            }}>
+              {selectedUserForVerification.idPhoto ? (
+                <img 
+                  src={getFullImageUrl(selectedUserForVerification.idPhoto)}
+                  alt="ID Photo" 
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/300x220/1f2937/6b7280?text=ID+Photo+Not+Found";
                   }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className="btn-base btn-danger" 
-                  style={{ flex: 1 }} 
-                  onClick={handleRejectVerification}
-                >
-                  Reject
-                </button>
-                <button 
-                  className="btn-base btn-success" 
-                  style={{ flex: 1 }} 
-                  onClick={handleApproveVerification}
-                >
-                  Approve
-                </button>
-              </div>
+                />
+              ) : (
+                <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No ID photo uploaded</span>
+              )}
+            </div>
+          </div>
+
+          {/* License Photo */}
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>LICENSE PHOTO</p>
+            <div style={{ 
+              width: "100%", 
+              height: "220px", 
+              background: "rgba(255,255,255,0.05)", 
+              borderRadius: "12px", 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              border: "1px solid var(--border-color)",
+              overflow: "hidden"
+            }}>
+              {selectedUserForVerification.licensePhoto ? (
+                <img 
+                  src={getFullImageUrl(selectedUserForVerification.licensePhoto)}
+                  alt="License Photo" 
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/300x220/1f2937/6b7280?text=License+Not+Found";
+                  }}
+                />
+              ) : (
+                <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No license photo uploaded</span>
+              )}
             </div>
           </div>
         </div>
-      )}
 
+        {/* Status */}
+        <div style={{ 
+          padding: "12px", 
+          background: selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.1)" : 
+                      selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.1)" : 
+                      "rgba(148,163,184,0.1)",
+          borderRadius: "8px",
+          border: "1px solid " + (selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.3)" : 
+                    selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.3)" : 
+                    "rgba(148,163,184,0.3)")
+        }}>
+          <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
+            Current Status: <span style={{
+              color: selectedUserForVerification.verificationStatus === "Verified" ? "#10b981" : 
+                     selectedUserForVerification.verificationStatus === "Pending Review" ? "#f59e0b" : 
+                     "#94a3b8"
+            }}>{selectedUserForVerification.verificationStatus || "Not Verified"}</span>
+          </p>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+          <button 
+            className="btn-base btn-secondary" 
+            style={{ flex: 1 }} 
+            onClick={() => {
+              setShowIdVerificationModal(false);
+              setSelectedUserForVerification(null);
+            }}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn-base btn-danger" 
+            style={{ flex: 1 }} 
+            onClick={handleRejectVerification}
+          >
+            Reject
+          </button>
+          <button 
+            className="btn-base btn-success" 
+            style={{ flex: 1 }} 
+            onClick={handleApproveVerification}
+          >
+            Approve
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

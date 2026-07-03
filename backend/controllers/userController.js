@@ -1,4 +1,32 @@
 const User = require("../models/User");
+const multer = require("multer");
+const path = require("path");
+
+// Multer setup for user ID photo uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|webp|avif/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
+  }
+});
 
 const loginUser = async (req, res) => {
   try {
@@ -116,7 +144,7 @@ const toggleUserActive = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, email, password, nicNumber, drivingLicenseNumber, idPhoto, licensePhoto } = req.body;
+    const { name, email, password, nicNumber, drivingLicenseNumber } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -125,8 +153,14 @@ const updateProfile = async (req, res) => {
     if (password) user.password = password;
     if (nicNumber !== undefined) user.nicNumber = nicNumber;
     if (drivingLicenseNumber !== undefined) user.drivingLicenseNumber = drivingLicenseNumber;
-    if (idPhoto) user.idPhoto = idPhoto;
-    if (licensePhoto) user.licensePhoto = licensePhoto;
+    
+    // Handle file uploads from multer
+    if (req.files && req.files.idPhoto) {
+      user.idPhoto = "/uploads/" + req.files.idPhoto[0].filename;
+    }
+    if (req.files && req.files.licensePhoto) {
+      user.licensePhoto = "/uploads/" + req.files.licensePhoto[0].filename;
+    }
 
     if ((nicNumber || drivingLicenseNumber) && user.verificationStatus === 'Not Verified') {
         user.verificationStatus = 'Pending Review';
@@ -181,5 +215,6 @@ module.exports = {
   registerStaff,
   toggleUserActive,
   updateProfile,
-  updateVerificationStatus
+  updateVerificationStatus,
+  upload
 };

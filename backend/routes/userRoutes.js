@@ -8,7 +8,8 @@ const {
   registerStaff,
   toggleUserActive,
   updateProfile,
-  updateVerificationStatus
+  updateVerificationStatus,
+  upload
 } = require("../controllers/userController");
 
 // Public routes
@@ -64,8 +65,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Protected profile route
-router.put("/profile", protect, updateProfile);
+// Protected profile route with file upload support
+router.put("/profile", protect, upload.fields([{ name: 'idPhoto', maxCount: 1 }, { name: 'licensePhoto', maxCount: 1 }]), updateProfile);
 router.get("/profile", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");

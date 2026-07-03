@@ -37,8 +37,8 @@ export default function CustomerDashboard() {
   const [profilePassword, setProfilePassword] = useState("");
   const [profileNic, setProfileNic] = useState(user.nicNumber || "");
   const [profileDrivingLicense, setProfileDrivingLicense] = useState(user.drivingLicenseNumber || "");
-  const [profileIdPhoto, setProfileIdPhoto] = useState(user.idPhoto || "");
-  const [profileLicensePhoto, setProfileLicensePhoto] = useState(user.licensePhoto || "");
+  const [profileIdPhoto, setProfileIdPhoto] = useState(null);
+  const [profileLicensePhoto, setProfileLicensePhoto] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Booking Modal
@@ -366,23 +366,25 @@ const handleOpenFeedbackModal = (booking) => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        name: profileName,
-        email: profileEmail,
-        password: profilePassword,
-        nicNumber: profileNic,
-        drivingLicenseNumber: profileDrivingLicense,
-        idPhoto: profileIdPhoto,
-        licensePhoto: profileLicensePhoto
-      };
+      const formData = new FormData();
+      formData.append("name", profileName);
+      formData.append("email", profileEmail);
+      if (profilePassword) formData.append("password", profilePassword);
+      formData.append("nicNumber", profileNic);
+      formData.append("drivingLicenseNumber", profileDrivingLicense);
+      if (profileIdPhoto) formData.append("idPhoto", profileIdPhoto);
+      if (profileLicensePhoto) formData.append("licensePhoto", profileLicensePhoto);
+
       const res = await axios.put(
         "http://localhost:5000/api/auth/profile",
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } }
       );
       localStorage.setItem("user", JSON.stringify(res.data.user));
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
+      setProfileIdPhoto(null);
+      setProfileLicensePhoto(null);
       setShowProfileModal(false);
     } catch (err) {
       showToast(err.response?.data?.message || "Profile update failed", "error");
@@ -1097,11 +1099,17 @@ const handleOpenFeedbackModal = (booking) => {
               <div style={{ display: "flex", gap: "10px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
                   <label className="form-label">ID Photo</label>
-                  <input type="file" accept="image/*" onChange={(e) => setProfileIdPhoto("dummy_id_path.jpg")} className="custom-input" style={{ padding: "8px" }} />
+                  <input type="file" accept="image/*" onChange={(e) => setProfileIdPhoto(e.target.files[0])} className="custom-input" style={{ padding: "8px" }} />
+                  {user.idPhoto && !profileIdPhoto && (
+                    <img src={`http://localhost:5000${user.idPhoto}`} alt="Current ID" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px", marginTop: "5px" }} />
+                  )}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
                   <label className="form-label">License Photo</label>
-                  <input type="file" accept="image/*" onChange={(e) => setProfileLicensePhoto("dummy_license_path.jpg")} className="custom-input" style={{ padding: "8px" }} />
+                  <input type="file" accept="image/*" onChange={(e) => setProfileLicensePhoto(e.target.files[0])} className="custom-input" style={{ padding: "8px" }} />
+                  {user.licensePhoto && !profileLicensePhoto && (
+                    <img src={`http://localhost:5000${user.licensePhoto}`} alt="Current License" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px", marginTop: "5px" }} />
+                  )}
                 </div>
               </div>
 

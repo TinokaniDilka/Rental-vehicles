@@ -1097,8 +1097,8 @@ const getGreeting = () => {
       onRequestClose={() => setShowVehicleModal(false)}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         style={styles.modalOverlay}
       >
         <View style={styles.modalSheet}>
@@ -1111,7 +1111,7 @@ const getGreeting = () => {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
-            contentContainerStyle={{ paddingBottom: 150 }}
+            contentContainerStyle={{ paddingBottom: 120 }}
             bounces={false}
           >
             <Text style={styles.inputLabel}>Vehicle Name *</Text>
@@ -1126,6 +1126,9 @@ const getGreeting = () => {
               returnKeyType="next"
               blurOnSubmit={false}
               enablesReturnKeyAutomatically={true}
+              onSubmitEditing={() => {
+                // Focus next input would go here
+              }}
             />
 
             <Text style={styles.inputLabel}>Category</Text>
@@ -1154,6 +1157,9 @@ const getGreeting = () => {
               returnKeyType="next"
               blurOnSubmit={false}
               enablesReturnKeyAutomatically={true}
+              onSubmitEditing={() => {
+                // Focus next input would go here
+              }}
             />
 
             <Text style={styles.inputLabel}>Location *</Text>
@@ -1166,6 +1172,9 @@ const getGreeting = () => {
               returnKeyType="next"
               blurOnSubmit={false}
               enablesReturnKeyAutomatically={true}
+              onSubmitEditing={() => {
+                // Focus next input would go here
+              }}
             />
 
             <Text style={styles.inputLabel}>Description</Text>
@@ -1215,13 +1224,13 @@ const getGreeting = () => {
 
   const ReviewModal = () => (
     <Modal visible={showReviewModal} animationType="slide" transparent onRequestClose={() => setShowReviewModal(false)}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
         <View style={styles.modalSheet}>
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>🔍 Review Booking</Text>
           <Text style={styles.modalSubtitle}>Customer: {selectedBookingForReview?.customerId?.name}</Text>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingBottom: 120 }}>
             <Text style={styles.inputLabel}>Decision</Text>
             <View style={styles.typeRow}>
               {['approved', 'rejected'].map(s => (
@@ -1239,13 +1248,13 @@ const getGreeting = () => {
                 {selectedBookingForReview?.hasDriver && (
                   <>
                     <Text style={styles.inputLabel}>Assign Driver Name *</Text>
-                    <TextInput style={styles.modalInput} value={driverName} onChangeText={setDriverName} placeholder="Driver full name" placeholderTextColor="#475569" />
+                    <TextInput style={styles.modalInput} value={driverName} onChangeText={setDriverName} placeholder="Driver full name" placeholderTextColor="#475569" returnKeyType="next" blurOnSubmit={false} />
                   </>
                 )}
                 <Text style={styles.inputLabel}>Discount Amount ($)</Text>
-                <TextInput style={styles.modalInput} value={discount} onChangeText={setDiscount} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" />
+                <TextInput style={styles.modalInput} value={discount} onChangeText={setDiscount} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
                 <Text style={styles.inputLabel}>Additional Fees ($)</Text>
-                <TextInput style={styles.modalInput} value={additionalFees} onChangeText={setAdditionalFees} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" />
+                <TextInput style={styles.modalInput} value={additionalFees} onChangeText={setAdditionalFees} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="done" blurOnSubmit={true} />
               </>
             )}
 
@@ -1269,20 +1278,20 @@ const getGreeting = () => {
 
   const ReturnModal = () => (
     <Modal visible={showReturnModal} animationType="slide" transparent onRequestClose={() => setShowReturnModal(false)}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
         <View style={styles.modalSheet}>
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>🔧 Return Inspection</Text>
           <Text style={styles.modalSubtitle}>{selectedBookingForReturn?.vehicleId?.name}</Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingBottom: 120 }}>
             <Text style={styles.inputLabel}>Actual Return Date</Text>
-            <TextInput style={styles.modalInput} value={actualReturnDate} onChangeText={setActualReturnDate} placeholder="YYYY-MM-DD" placeholderTextColor="#475569" />
+            <TextInput style={styles.modalInput} value={actualReturnDate} onChangeText={setActualReturnDate} placeholder="YYYY-MM-DD" placeholderTextColor="#475569" returnKeyType="next" blurOnSubmit={false} />
 
             <Text style={styles.inputLabel}>Return Mileage (km) *</Text>
-            <TextInput style={styles.modalInput} value={returnMileage} onChangeText={setReturnMileage} placeholder="e.g. 12500" placeholderTextColor="#475569" keyboardType="numeric" />
+            <TextInput style={styles.modalInput} value={returnMileage} onChangeText={setReturnMileage} placeholder="e.g. 12500" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
 
             <Text style={styles.inputLabel}>Fuel Level (%)</Text>
-            <TextInput style={styles.modalInput} value={returnFuelLevel} onChangeText={setReturnFuelLevel} placeholder="100" placeholderTextColor="#475569" keyboardType="numeric" />
+            <TextInput style={styles.modalInput} value={returnFuelLevel} onChangeText={setReturnFuelLevel} placeholder="100" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
 
             <Text style={styles.inputLabel}>Vehicle Condition</Text>
             <View style={styles.typeRow}>
@@ -1297,9 +1306,9 @@ const getGreeting = () => {
             {returnCondition === 'Damaged' && (
               <>
                 <Text style={styles.inputLabel}>Damage Description</Text>
-                <TextInput style={styles.modalInput} value={damages} onChangeText={setDamages} placeholder="Describe the damage..." placeholderTextColor="#475569" />
+                <TextInput style={styles.modalInput} value={damages} onChangeText={setDamages} placeholder="Describe the damage..." placeholderTextColor="#475569" returnKeyType="next" blurOnSubmit={false} />
                 <Text style={styles.inputLabel}>Damage Repair Charge ($)</Text>
-                <TextInput style={styles.modalInput} value={damageCharge} onChangeText={setDamageCharge} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" />
+                <TextInput style={styles.modalInput} value={damageCharge} onChangeText={setDamageCharge} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="done" blurOnSubmit={true} />
               </>
             )}
 
@@ -1323,12 +1332,12 @@ const getGreeting = () => {
 
   const ComplaintModal = () => (
     <Modal visible={showComplaintModal} animationType="slide" transparent onRequestClose={() => setShowComplaintModal(false)}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
         <View style={styles.modalSheet}>
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>💬 Respond to Complaint</Text>
           <Text style={styles.modalSubtitle}>"{selectedComplaint?.comment}"</Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingBottom: 120 }}>
             <Text style={styles.inputLabel}>Update Status</Text>
             <View style={styles.typeRow}>
               {['Open', 'In Progress', 'Resolved', 'Closed'].map(s => (
@@ -1344,6 +1353,7 @@ const getGreeting = () => {
               style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
               value={staffResponse} onChangeText={setStaffResponse}
               placeholder="Type your response..." placeholderTextColor="#475569" multiline
+              returnKeyType="done" blurOnSubmit={true}
             />
 
             <View style={styles.modalBtns}>
@@ -1366,12 +1376,12 @@ const getGreeting = () => {
 
   const ReplyModal = () => (
     <Modal visible={showReplyModal} animationType="slide" transparent onRequestClose={() => setShowReplyModal(false)}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
         <View style={styles.modalSheet}>
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>💬 Add Reply</Text>
           <Text style={styles.modalSubtitle}>"{selectedFeedbackForReply?.comment}"</Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingBottom: 120 }}>
             {selectedFeedbackForReply?.staffReplies?.length > 0 && (
               <View style={styles.previousReplies}>
                 <Text style={styles.prevRepliesTitle}>Previous Replies</Text>
@@ -1389,6 +1399,7 @@ const getGreeting = () => {
               style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
               value={replyText} onChangeText={setReplyText}
               placeholder="Type your reply..." placeholderTextColor="#475569" multiline
+              returnKeyType="done" blurOnSubmit={true}
             />
 
             <View style={styles.modalBtns}>
