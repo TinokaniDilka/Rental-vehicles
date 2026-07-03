@@ -6,6 +6,7 @@ const Vehicle = require("../models/Vehicle");
 const User = require("../models/User");
 const Payment = require("../models/Payment");
 const Feedback = require("../models/Feedback");
+const AuditLog = require("../models/AuditLog");
 
 // Get overall stats for Admin/Staff dashboard
 router.get("/stats", protect, async (req, res) => {
@@ -85,11 +86,16 @@ router.get("/reports", protect, async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
+    const auditLog = await AuditLog.find()
+      .sort({ timestamp: -1 })
+      .limit(100);
+
     res.json({
       bookings,
       payments,
       vehicles,
-      feedback
+      feedback,
+      auditLog
     });
   } catch (err) {
     res.status(500).json({ message: "Error generating reports" });
