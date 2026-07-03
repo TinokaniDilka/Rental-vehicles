@@ -851,10 +851,21 @@ const handleOpenFeedbackModal = (booking) => {
                           </div>
                         ) : b.handoverStatus === 'rented' ? (
                           <div style={{ marginTop: "10px" }}>
-                            <span style={{ fontSize: "13px", color: "var(--success)", fontWeight: "bold" }}>🚗 Currently Rented</span>
-                            <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
-                              Time Remaining: {Math.max(0, Math.ceil((new Date(b.endDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days
-                            </p>
+                            {new Date(b.endDate) < new Date() ? (
+                              <>
+                                <span style={{ fontSize: "13px", color: "var(--danger)", fontWeight: "bold" }}>🔴 Return Overdue</span>
+                                <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
+                                  Overdue by {Math.ceil((new Date() - new Date(b.endDate)) / (1000 * 60 * 60 * 24))} Days
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <span style={{ fontSize: "13px", color: "var(--success)", fontWeight: "bold" }}>🚗 Currently Rented</span>
+                                <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
+                                  Time Remaining: {Math.max(0, Math.ceil((new Date(b.endDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days
+                                </p>
+                              </>
+                            )}
                           </div>
                         ) : (b.handoverStatus === 'returned' || b.handoverStatus === 'confirmed_return') ? (
                           <div style={{ marginTop: "10px" }}>
