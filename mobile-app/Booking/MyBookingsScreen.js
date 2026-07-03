@@ -128,8 +128,17 @@ const renderItem = ({ item }) => {
             </View>
           ) : item.handoverStatus === 'rented' ? (
             <View>
-              <Text style={{ fontSize: 13, color: '#10b981', fontWeight: '600', marginBottom: 2 }}>🚗 Currently Rented</Text>
-              <Text style={{ fontSize: 11, color: '#94a3b8' }}>Time Remaining: {Math.max(0, Math.ceil((new Date(item.endDate || item.returnDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days</Text>
+              {new Date(item.endDate || item.returnDate) < new Date() ? (
+                <>
+                  <Text style={{ fontSize: 13, color: '#ef4444', fontWeight: '600', marginBottom: 2 }}>🔴 Return Overdue</Text>
+                  <Text style={{ fontSize: 11, color: '#94a3b8' }}>Overdue by {Math.ceil((new Date() - new Date(item.endDate || item.returnDate)) / (1000 * 60 * 60 * 24))} Days</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{ fontSize: 13, color: '#10b981', fontWeight: '600', marginBottom: 2 }}>🚗 Currently Rented</Text>
+                  <Text style={{ fontSize: 11, color: '#94a3b8' }}>Time Remaining: {Math.max(0, Math.ceil((new Date(item.endDate || item.returnDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days</Text>
+                </>
+              )}
             </View>
           ) : (item.handoverStatus === 'returned' || item.handoverStatus === 'confirmed_return') ? (
             <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>✅ Return Confirmed</Text>
