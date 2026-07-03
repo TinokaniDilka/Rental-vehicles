@@ -1,6 +1,7 @@
 const Booking = require("../models/Booking");
 const Vehicle = require("../models/Vehicle");
 const Payment = require("../models/Payment");
+const AuditLog = require("../models/AuditLog");
 
 // Create pending booking
 const createBooking = async (req, res) => {
@@ -447,6 +448,16 @@ const confirmCashPayment = async (req, res) => {
     booking.cashPaymentConfirmed = true;
     await booking.save();
 
+    // Log staff action to audit log
+    const auditLog = new AuditLog({
+      staffId: req.user.id,
+      staffName: req.user.name,
+      action: "Cash Payment Confirmed",
+      bookingId: booking._id,
+      timestamp: new Date()
+    });
+    await auditLog.save();
+
     res.json({ message: "Cash payment confirmed ✅", booking });
   } catch (err) {
     console.error(err);
@@ -475,6 +486,16 @@ const confirmStaffHandover = async (req, res) => {
     booking.staffHandoverConfirmed = true;
     booking.handoverStatus = "rented";
     await booking.save();
+
+    // Log staff action to audit log
+    const auditLog = new AuditLog({
+      staffId: req.user.id,
+      staffName: req.user.name,
+      action: "Handover Confirmed",
+      bookingId: booking._id,
+      timestamp: new Date()
+    });
+    await auditLog.save();
 
     res.json({ message: "Vehicle handover confirmed by staff ✅", booking });
   } catch (err) {
