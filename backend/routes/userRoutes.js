@@ -7,7 +7,8 @@ const {
   getAllUsers,
   registerStaff,
   toggleUserActive,
-  updateProfile
+  updateProfile,
+  updateVerificationStatus
 } = require("../controllers/userController");
 
 // Public routes
@@ -95,6 +96,14 @@ router.put("/users/:id/toggle-active", protect, async (req, res, next) => {
   }
   next();
 }, toggleUserActive);
+
+router.put("/users/:id/verify", protect, async (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Access denied. Admin only." });
+  }
+  next();
+}, updateVerificationStatus);
+
 // ===================== TEMPORARY CLEANUP ROUTE =====================
 router.delete("/cleanup-renters", async (req, res) => {
   try {
