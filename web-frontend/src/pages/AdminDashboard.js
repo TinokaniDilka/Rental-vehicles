@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 export default function AdminDashboard() {
@@ -10,7 +10,11 @@ export default function AdminDashboard() {
   const [activeReportTab, setActiveReportTab] = useState("payments");
   const [complaintFilter, setComplaintFilter] = useState("all");
 
- // Stats State
+  // Ref for scrolling to payments section
+  const paymentsRef = useRef(null);
+   const vehiclesRef = useRef(null);
+  const feedbackRef = useRef(null);
+  // Stats State
   const [stats, setStats] = useState({
     totalVehicles: 0,
     activeRentals: 0,
@@ -43,32 +47,37 @@ export default function AdminDashboard() {
   const [staffEmail, setStaffEmail] = useState("");
   const [staffPassword, setStaffPassword] = useState("");
   const [userFilter, setUserFilter] = useState("all");
-const [staffRole, setStaffRole] = useState("staff");
+
   // ID Verification Modal
   const [showIdVerificationModal, setShowIdVerificationModal] = useState(false);
   const [selectedUserForVerification, setSelectedUserForVerification] = useState(null);
-
-  
-  const [notifications, setNotifications] = useState([]);
-const [showNotifications, setShowNotifications] = useState(false);
-const [unreadCount, setUnreadCount] = useState(0);
 
   // Promo Code Form
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState("");
 
+  // Auto-scroll to correct section when coming from dashboard cards
+  useEffect(() => {
+    if (activePage === "reports") {
+      setTimeout(() => {
+        if (activeReportTab === "payments" && paymentsRef.current) {
+          paymentsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (activeReportTab === "vehicles" && vehiclesRef.current) {
+          vehiclesRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (activeReportTab === "feedback" && feedbackRef.current) {
+          feedbackRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+    }
+  }, [activePage, activeReportTab]);
   useEffect(() => {
     fetchStats();
     fetchUsers();
     fetchPromos();
     fetchReports();
-    fetchPendingVerifications();
   }, []);
-useEffect(() => {
-    const interval = setInterval(fetchPendingVerifications, 25000); // every 25 seconds
-    return () => clearInterval(interval);
-  }, []);
+
   const fetchStats = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/dashboard/stats", {
@@ -116,7 +125,7 @@ useEffect(() => {
   };
 
   // Toggle user activation status
-   const handleToggleUser = async (userId) => {
+  const handleToggleUser = async (userId) => {
     try {
       const res = await axios.put(
         `http://localhost:5000/api/auth/users/${userId}/toggle-active`,
@@ -130,51 +139,27 @@ useEffect(() => {
     }
   };
 
-  // NEW: Delete User (only for deactivated users)
-  const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`Are you sure you want to permanently delete ${userName}? This action cannot be undone.`)) {
-      return;
-    }
-
+  // Staff creation
+  const handleCreateStaff = async (e) => {
+    e.preventDefault();
+    if (!staffName || !staffEmail || !staffPassword) return alert("Fill all fields");
     try {
-      await axios.delete(
-        `http://localhost:5000/api/auth/users/${userId}`,
+      await axios.post(
+        "http://localhost:5000/api/auth/staff",
+        { name: staffName, email: staffEmail, password: staffPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("User deleted successfully ✅");
+      alert("Staff created successfully ✅");
+      setShowStaffModal(false);
+      setStaffName("");
+      setStaffEmail("");
+      setStaffPassword("");
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete user");
+      alert(err.response?.data?.message || "Creation failed");
     }
   };
 
-  // Staff creation
-const handleCreateStaff = async (e) => {
-  e.preventDefault();
-  if (!staffName || !staffEmail || !staffPassword) return alert("Fill all fields");
-
-  try {
-    await axios.post(
-      "http://localhost:5000/api/auth/staff",
-      { 
-        name: staffName, 
-        email: staffEmail, 
-        password: staffPassword,
-        role: staffRole 
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    alert(`New ${staffRole} created successfully ✅`);
-    setShowStaffModal(false);
-    setStaffName("");
-    setStaffEmail("");
-    setStaffPassword("");
-    setStaffRole("staff");
-    fetchUsers();
-  } catch (err) {
-    alert(err.response?.data?.message || "Creation failed");
-  }
-};
   // Promo code creation
   const handleCreatePromo = async (e) => {
     e.preventDefault();
@@ -275,53 +260,6 @@ const handleCreateStaff = async (e) => {
       alert(err.response?.data?.message || "Failed to reject verification");
     }
   };
-const fetchPendingVerifications = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/auth/users?verificationStatus=Pending Review", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotifications(res.data);
-      setUnreadCount(res.data.length);
-    } catch (err) {
-      console.error("Failed to fetch notifications", err);
-    }
-  };
-  // ====================== ADD THIS FUNCTION HERE ======================
-    // Improved getFullImageUrl - Replace your current one
-  const getFullImageUrl = (path) => {
-    if (!path) {
-      console.log("❌ No image path provided");
-      return "";
-    }
-
-    console.log("🔍 Raw path from DB:", path);
-
-    // If it's already a full URL
-    if (path.startsWith('http')) {
-      console.log("✅ Full URL:", path);
-      return path;
-    }
-
-    // Clean the path
-    let cleanPath = path.trim();
-
-    // Remove leading/trailing slashes for normalization
-    cleanPath = cleanPath.replace(/^\/+|\/+$/g, '');
-
-    // If it already contains 'uploads', use it as is
-    if (cleanPath.includes('uploads')) {
-      cleanPath = '/' + cleanPath;
-    } else {
-      // Otherwise assume it's just the filename
-      cleanPath = `/uploads/${cleanPath}`;
-    }
-
-    const fullUrl = `http://localhost:5000${cleanPath}`;
-    console.log("✅ Final URL:", fullUrl);
-
-    return fullUrl;
-  };
-  // ===================================================================
 
   return (
     <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }} className="fade-in">
@@ -337,34 +275,12 @@ const fetchPendingVerifications = async () => {
             <span>QuickRide <span style={{ color: "var(--accent)" }}>Admin </span></span>
           </div>
 
-         <div className="nav-links-wrap">
-  <NavItem label="Overview" active={activePage === "dashboard"} onClick={() => setActivePage("dashboard")} />
-  <NavItem label="Users List" active={activePage === "users"} onClick={() => setActivePage("users")} />
-  <NavItem label="Promo Codes" active={activePage === "promos"} onClick={() => setActivePage("promos")} />
-</div>
-
-          {/* Notification Bell Icon */}
-          <div 
-            style={{ position: "relative", marginRight: "20px", cursor: "pointer", fontSize: "26px" }}
-            onClick={() => setShowNotifications(!showNotifications)}
-          >
-            🛎️
-            {unreadCount > 0 && (
-              <span style={{
-                position: "absolute",
-                top: "-8px",
-                right: "-8px",
-                backgroundColor: "#ef4444",
-                color: "white",
-                fontSize: "12px",
-                fontWeight: "bold",
-                borderRadius: "50%",
-                padding: "3px 7px",
-                lineHeight: "1"
-              }}>
-                {unreadCount}
-              </span>
-            )}
+          <div className="nav-links-wrap">
+            <NavItem label="Overview" active={activePage === "dashboard"} onClick={() => setActivePage("dashboard")} />
+            <NavItem label="Users List" active={activePage === "users"} onClick={() => setActivePage("users")} />
+            <NavItem label="Promo Codes" active={activePage === "promos"} onClick={() => setActivePage("promos")} />
+            <NavItem label="System Reports" active={activePage === "reports"} onClick={() => setActivePage("reports")} />
+            
           </div>
 
           {/* Profile Pill (like Customer Dashboard) */}
@@ -422,55 +338,77 @@ const fetchPendingVerifications = async () => {
       }}>
         
         {/* OVERVIEW STATS */}
-        {/* OVERVIEW STATS + REPORT CARDS */}
-{activePage === "dashboard" && (
-  <div className="slide-up">
-    <div className="welcome-banner-wrap">
-      <div>
-        <h1 style={{ margin: 0, fontSize: "28px", fontWeight: "800", color: "white" }}>Welcome Admin, {user.name}! 👑</h1>
-        <p style={{ margin: "8px 0 0", color: "var(--text-secondary)", fontSize: "15px" }}>Oversee user accounts, register operational staff, configure promo offers, and read activity reports.</p>
-      </div>
-      <div style={{ fontSize: "70px", opacity: 0.8, filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.3))" }}>📊</div>
-    </div>
+        {activePage === "dashboard" && (
+          <div className="slide-up">
+            <div className="welcome-banner-wrap">
+              <div>
+                <h1 style={{ margin: 0, fontSize: "28px", fontWeight: "800", color: "white" }}>Welcome Admin, {user.name}! 👑</h1>
+                <p style={{ margin: "8px 0 0", color: "var(--text-secondary)", fontSize: "15px" }}>Oversee user accounts, register operational staff, configure promo offers, and read activity reports.</p>
+              </div>
+              <div style={{ fontSize: "70px", opacity: 0.8, filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.3))" }}>📊</div>
+            </div>
 
-    {/* Existing Stats Cards */}
-    <div className="dashboard-grid">
-      <DashboardCard icon="💰" title="MONTHLY REVENUE" value={`$${stats.monthlyRevenue}`} color="var(--success)" onClick={() => { setActiveReportTab("payments"); setActivePage("reports"); }} />
-      <DashboardCard icon="🚗" title="ACTIVE RENTALS" value={stats.activeRentals} color="var(--primary)" onClick={() => { setActiveReportTab("vehicles"); setActivePage("reports"); }} />
-      <DashboardCard icon="⏳" title="PENDING ORDERS" value={stats.pendingBookings} color="var(--warning)" onClick={() => setActivePage("reports")} />
-      <DashboardCard icon="👤" title="TOTAL CUSTOMERS" value={stats.totalCustomers} color="var(--secondary)" onClick={() => setActivePage("users")} />
-      <DashboardCard icon="⭐" title="SATISFACTION RATING" value={`${stats.customerSatisfaction} / 5`} color="var(--accent)" onClick={() => { setActiveReportTab("feedback"); setActivePage("reports"); }} />
-    </div>
+            <div className="dashboard-grid">
+  <DashboardCard 
+    icon="💰" 
+    title="MONTHLY REVENUE" 
+    value={`$${stats.monthlyRevenue}`} 
+    color="var(--success)" 
+    onClick={() => {
+      setActiveReportTab("payments");
+      setActivePage("reports");
+    }}
+  />
 
-    
+  <DashboardCard 
+    icon="🚗" 
+    title="ACTIVE RENTALS" 
+    value={stats.activeRentals} 
+    color="var(--primary)" 
+    onClick={() => {
+      setActiveReportTab("vehicles");
+      setActivePage("reports");
+    }}
+  />
 
-    {/* Report Cards - Clickable */}
-<div style={{ marginTop: "50px" }}>
-  
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
+  <DashboardCard 
+    icon="⏳" 
+    title="PENDING ORDERS" 
+    value={stats.pendingBookings} 
+    color="var(--warning)" 
+    onClick={() => setActivePage("reports")}
+  />
 
-    <div 
-      className="glass-card" 
-      style={{ padding: "25px", cursor: "pointer", transition: "transform 0.2s ease" }}
-      onClick={() => { setActiveReportTab("bookings"); setActivePage("reports"); }}
-      onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
-      onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-    >
-      <h3 style={{ margin: "0 0 10px 0" }}>📊 Quick Reports</h3>
-      <p style={{ color: "var(--text-secondary)", margin: 0 }}>View all bookings and their current status</p>
-    </div>
+  <DashboardCard 
+    icon="👤" 
+    title="TOTAL CUSTOMERS" 
+    value={stats.totalCustomers} 
+    color="var(--secondary)" 
+    onClick={() => setActivePage("users")} // 👈 open users list
+  />
 
-
-   
-
-    
-
-    
-
-  </div>
+  <DashboardCard 
+    icon="⭐" 
+    title="SATISFACTION RATING" 
+    value={`${stats.customerSatisfaction} / 5`} 
+    color="var(--accent)" 
+    onClick={() => {
+      setActiveReportTab("feedback");
+      setActivePage("reports");
+    }}
+  />
 </div>
-  </div>
-)}
+
+            <div className="glass-card" style={{ padding: "25px", marginTop: "35px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "15px" }}>Quick Operations Shortcuts</h3>
+              <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+                <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>👤 Register New Staff Account</button>
+                <button className="btn-base btn-secondary" onClick={() => setShowPromoModal(true)}>🏷️ Add Promo Discount</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* USERS LIST */}
         {activePage === "users" && (
           <div className="slide-up" style={{ marginTop: "50px" }}>
@@ -491,7 +429,8 @@ const fetchPendingVerifications = async () => {
                  </select>
           </div>
 
-<button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Admin</button>            </div>
+            <button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Staff</button>
+            </div>
 
             <div className="custom-table-container">
               <table className="custom-table">
@@ -550,41 +489,27 @@ const fetchPendingVerifications = async () => {
                         </span>
                       </td>
                       <td className="custom-td">
-  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-    {u.role === "customer" && (
-      <button
-        className="btn-base btn-secondary"
-        style={{ padding: "4px 8px", fontSize: "11px" }}
-        onClick={() => handleOpenIdVerification(u)}
-      >
-        View ID
-      </button>
-    )}
-
-    {u._id !== user._id && (
-      <>
-        <button
-          className={`btn-base ${u.isActive ? "btn-danger" : "btn-success"}`}
-          style={{ padding: "4px 8px", fontSize: "11px" }}
-          onClick={() => handleToggleUser(u._id)}
-        >
-          {u.isActive ? "Deactivate" : "Activate"}
-        </button>
-
-        {!u.isActive && (
-          <button
-            className="btn-base btn-danger"
-            style={{ padding: "4px 8px", fontSize: "11px" }}
-            onClick={() => handleDeleteUser(u._id, u.name)}
-            title="Permanently Delete User"
-          >
-            🗑️
-          </button>
-        )}
-      </>
-    )}
-  </div>
-</td>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          {u.role === "customer" && (
+                            <button
+                              className="btn-base btn-secondary"
+                              style={{ padding: "4px 8px", fontSize: "11px" }}
+                              onClick={() => handleOpenIdVerification(u)}
+                            >
+                              View ID
+                            </button>
+                          )}
+                          {u._id !== user._id && (
+                            <button
+                              className={`btn-base ${u.isActive ? "btn-danger" : "btn-success"}`}
+                              style={{ padding: "4px 8px", fontSize: "11px" }}
+                              onClick={() => handleToggleUser(u._id)}
+                            >
+                              {u.isActive ? "Deactivate" : "Activate"}
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -644,380 +569,507 @@ const fetchPendingVerifications = async () => {
           </div>
         )}
 
-        {/* REPORTS VIEW - Shows ONLY the selected report */}
-{activePage === "reports" && (
-  <div className="slide-up" style={{ marginTop: "50px" }}>
-    <h2>Operations Analysis Reports 📊</h2>
-    <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
-      Extract and audit transaction listings, bookings, feedback logs, and fleet status.
-    </p>
+        {/* REPORTS VIEW */}
+        {activePage === "reports" && (
+          <div className="slide-up" style={{ marginTop: "50px" }}>
+            <h2>Operations Analysis Reports 📊</h2>
+            
+            <p style={{ color: "var(--text-secondary)", marginBottom: "30px" }}>
+              Extract and audit transaction listings, bookings, feedback logs, and fleet status.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+              
+              {/* BOOKINGS TABLE */}
+              {/* BOOKINGS TABLE */}
+<div className="glass-card" style={{ padding: "25px" }}>
+  <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>
+    📅 System Booking Logs
+  </h4>
 
-    {/* Tab Switcher */}
-    <div style={{ display: "flex", gap: "10px", marginBottom: "30px", flexWrap: "wrap" }}>
-      <button
-        className={`btn-base ${activeReportTab === "bookings" ? "btn-primary" : "btn-secondary"}`}
-        onClick={() => setActiveReportTab("bookings")}
-      >
-        📅 Bookings
-      </button>
-      <button
-        className={`btn-base ${activeReportTab === "payments" ? "btn-primary" : "btn-secondary"}`}
-        onClick={() => setActiveReportTab("payments")}
-      >
-        💰 Payments
-      </button>
-      <button
-        className={`btn-base ${activeReportTab === "vehicles" ? "btn-primary" : "btn-secondary"}`}
-        onClick={() => setActiveReportTab("vehicles")}
-      >
-        🚘 Vehicle Fleet
-      </button>
-      <button
-        className={`btn-base ${activeReportTab === "feedback" ? "btn-primary" : "btn-secondary"}`}
-        onClick={() => setActiveReportTab("feedback")}
-      >
-        💬 Feedback
-      </button>
-      <button
-        className={`btn-base ${activeReportTab === "audit" ? "btn-primary" : "btn-secondary"}`}
-        onClick={() => setActiveReportTab("audit")}
-      >
-        📋 Audit Log
-      </button>
-    </div>
+  {/* ✅ ONLY ONE FILTER BAR */}
+  <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
+    <span style={{ color: "white", fontWeight: "600" }}>Filter by Date:</span>
 
-    {/* BOOKINGS TABLE - only shows when selected */}
-    {activeReportTab === "bookings" && (
-      <div className="glass-card" style={{ padding: "25px" }}>
-        <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>📅 System Booking Logs</h4>
+    <input
+      type="date"
+      value={selectedDate}
+      onChange={(e) => setSelectedDate(e.target.value)}
+      className="custom-input"
+      style={{ maxWidth: "180px" }}
+    />
 
-        <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ color: "white", fontWeight: "600" }}>Filter by Date:</span>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="custom-input"
-            style={{ maxWidth: "180px" }}
-          />
-          <button className="btn-base btn-secondary" onClick={() => setSelectedDate("")}>Reset</button>
-        </div>
-
-        <div className="custom-table-container">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th className="custom-th">VEHICLE</th>
-                <th className="custom-th">CUSTOMER</th>
-                <th className="custom-th">DATE</th>
-                <th className="custom-th">AMOUNT</th>
-                <th className="custom-th">DEPOSIT STATUS</th>
-                <th className="custom-th">STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.bookings
-                .filter(b => {
-                  if (!selectedDate) return true;
-                  const selected = new Date(selectedDate).setHours(0, 0, 0, 0);
-                  const start = new Date(b.startDate).setHours(0, 0, 0, 0);
-                  const end = new Date(b.endDate).setHours(0, 0, 0, 0);
-                  return selected >= start && selected <= end;
-                })
-                .map(b => (
-                  <tr key={b._id} className="custom-tr">
-                    <td className="custom-td custom-td-primary">
-                      {b.vehicleId?.name || "Deleted"}
-                      <br />
-                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                        ID: {b.vehicleId?.vehicleId || b.vehicleId?._id?.slice(-6)}
-                      </span>
-                    </td>
-                    <td className="custom-td">{b.customerId?.name}</td>
-                    <td className="custom-td">
-                      {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
-                    </td>
-                    <td className="custom-td">${b.totalAmount}</td>
-                    <td className="custom-td">
-                      {b.depositAmount > 0 ? (
-                        <span style={{
-                          padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "700",
-                          background: b.depositStatus === "released" ? "rgba(16,185,129,0.15)" :
-                                      b.depositStatus === "captured" ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
-                          color: b.depositStatus === "released" ? "#10b981" :
-                                 b.depositStatus === "captured" ? "#ef4444" : "#f59e0b"
-                        }}>
-                          {b.depositStatus === "released" ? `Released: $${b.depositAmount}` :
-                           b.depositStatus === "captured" ? `Captured: $${b.depositAmount}` :
-                           `Held: $${b.depositAmount}`}
-                        </span>
-                      ) : (
-                        <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>—</span>
-                      )}
-                    </td>
-                    <td className="custom-td">
-                      <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )}
-
-    {/* PAYMENTS TABLE - only shows when selected */}
-    {activeReportTab === "payments" && (
-      <div className="glass-card" style={{ padding: "25px" }}>
-        <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💰 Invoice Payments Log</h4>
-
-        <div style={{ marginBottom: "15px", display: "flex", gap: "10px", alignItems: "center" }}>
-          <input
-            type="text"
-            placeholder="Search Transaction ID..."
-            value={searchTransaction}
-            onChange={(e) => setSearchTransaction(e.target.value)}
-            className="custom-input"
-            style={{ maxWidth: "250px" }}
-          />
-          <button className="btn-base btn-secondary" onClick={() => setSearchTransaction("")}>Clear</button>
-        </div>
-
-        <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ color: "white", fontWeight: "600" }}>Filter by Date:</span>
-          <input
-            type="date"
-            value={paymentDate}
-            onChange={(e) => setPaymentDate(e.target.value)}
-            className="custom-input"
-            style={{ maxWidth: "180px" }}
-          />
-          <button className="btn-base btn-secondary" onClick={() => setPaymentDate("")}>Reset</button>
-        </div>
-
-        <div className="custom-table-container">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th className="custom-th">TRANSACTION ID</th>
-                <th className="custom-th">CUSTOMER</th>
-                <th className="custom-th">VEHICLE</th>
-                <th className="custom-th">VEHICLE ID</th>
-                <th className="custom-th">TYPE</th>
-                <th className="custom-th">AMOUNT</th>
-                <th className="custom-th">TIMESTAMP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.payments
-                .filter(p => {
-                  const matchDate = paymentDate
-                    ? new Date(p.paidAt || p.createdAt).toDateString() === new Date(paymentDate).toDateString()
-                    : true;
-                  const matchSearch = searchTransaction
-                    ? p._id.toLowerCase().includes(searchTransaction.toLowerCase())
-                    : true;
-                  return matchDate && matchSearch;
-                })
-                .map(p => {
-                  let transactionType = "Payment";
-                  if (p.amount < 0) transactionType = "Refund";
-                  else if (p.status === "cancelled" || p.status === "refunded") transactionType = "Cancellation";
-
-                  return (
-                    <tr key={p._id} className="custom-tr">
-                      <td className="custom-td" style={{ fontFamily: "monospace" }}>{p._id}</td>
-                      <td className="custom-td">{p.customerId?.name || "Deleted"}</td>
-                      <td className="custom-td">{p.bookingId?.vehicleId?.name || "N/A"}</td>
-                      <td className="custom-td">
-                        {p.bookingId?.vehicleId?.vehicleId || p.bookingId?.vehicleId?._id?.slice(-6) || "N/A"}
-                      </td>
-                      <td className="custom-td">
-                        <span style={{
-                          padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "700",
-                          background: transactionType === "Payment" ? "rgba(16,185,129,0.15)" :
-                                      transactionType === "Refund" ? "rgba(239,68,68,0.15)" : "rgba(148,163,184,0.15)",
-                          color: transactionType === "Payment" ? "#10b981" :
-                                 transactionType === "Refund" ? "#ef4444" : "#94a3b8"
-                        }}>
-                          {transactionType}
-                        </span>
-                      </td>
-                      <td className="custom-td">
-                        <span style={{
-                          color: transactionType === "Refund" ? "#ef4444" : "white",
-                          fontWeight: transactionType === "Refund" ? "bold" : "normal"
-                        }}>
-                          ${Math.abs(p.amount)}
-                        </span>
-                      </td>
-                      <td className="custom-td">{new Date(p.paidAt || p.createdAt).toLocaleString()}</td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )}
-
-    {/* VEHICLE FLEET TABLE - only shows when selected */}
-    {activeReportTab === "vehicles" && (
-      <div className="glass-card" style={{ padding: "25px" }}>
-        <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>🚘 Vehicle Fleet Availability</h4>
-        <div className="custom-table-container">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th className="custom-th">VEHICLE ID</th>
-                <th className="custom-th">VEHICLE NAME</th>
-                <th className="custom-th">CATEGORY</th>
-                <th className="custom-th">DAILY RATE</th>
-                <th className="custom-th">LOCATION</th>
-                <th className="custom-th">ADDED DATE</th>
-                <th className="custom-th">PHYSICAL STATE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.vehicles.map(v => (
-                <tr key={v._id} className="custom-tr">
-                  <td className="custom-td" style={{ fontFamily: "monospace" }}>{v.vehicleId || v._id.slice(-6)}</td>
-                  <td className="custom-td custom-td-primary">{v.name}</td>
-                  <td className="custom-td">{v.type.toUpperCase()}</td>
-                  <td className="custom-td">${v.pricePerDay}</td>
-                  <td className="custom-td">{v.location}</td>
-                  <td className="custom-td">{v.createdAt ? new Date(v.createdAt).toLocaleDateString() : "N/A"}</td>
-                  <td className="custom-td">
-                    <span style={{ color: v.isAvailable ? "var(--success)" : "var(--warning)", fontWeight: "bold" }}>
-                      ● {v.isAvailable ? "Available In Stock" : "Rented Out"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )}
-
-    {/* FEEDBACK TABLE - only shows when selected */}
-    {activeReportTab === "feedback" && (
-      <div className="glass-card" style={{ padding: "25px" }}>
-        <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💬 Customer Feedbacks & Complaints</h4>
-
-        <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ color: "white", fontWeight: "600" }}>Filter:</span>
-          <select
-            value={complaintFilter}
-            onChange={(e) => setComplaintFilter(e.target.value)}
-            className="custom-input"
-            style={{ maxWidth: "200px" }}
-          >
-            <option value="all">All Feedback</option>
-            <option value="serious">Serious/Escalated Only</option>
-          </select>
-        </div>
-
-        <div className="custom-table-container">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th className="custom-th">CUSTOMER</th>
-                <th className="custom-th">VEHICLE</th>
-                <th className="custom-th">RATING</th>
-                <th className="custom-th">COMMENTS</th>
-                <th className="custom-th">STAFF REPLY</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.feedback
-                .filter(f => {
-                  if (!selectedDate) return true;
-                  return new Date(f.createdAt).toDateString() === new Date(selectedDate).toDateString();
-                })
-                .filter(f => {
-                  if (complaintFilter === "all") return true;
-                  return f.type === "complaint" && (f.category === "Theft/Suspicious" || f.escalated);
-                })
-                .map(f => (
-                  <tr key={f._id} className="custom-tr">
-                    <td className="custom-td">{f.customerId?.name || "Deleted"}</td>
-                    <td className="custom-td">
-                      {f.bookingId?.vehicleId?.name || "N/A"}
-                      <br />
-                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                        ID: {f.bookingId?.vehicleId?.vehicleId || f.bookingId?.vehicleId?._id?.slice(-6)}
-                      </span>
-                    </td>
-                    <td className="custom-td">{f.rating ? `${f.rating} ★` : "-"}</td>
-                    <td className="custom-td" style={{ fontStyle: "italic" }}>"{f.comment}"</td>
-                    <td className="custom-td">
-                      {f.staffReplies && f.staffReplies.length > 0 ? (
-                        <div>
-                          {f.staffReplies.map(r => <p key={r._id}>• {r.replyText}</p>)}
-                        </div>
-                      ) : f.staffResponse ? (
-                        <p>{f.staffResponse}</p>
-                      ) : (
-                        <em style={{ color: "var(--text-muted)" }}>No response</em>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )}
-
-    {/* AUDIT LOG TABLE - only shows when selected */}
-    {activeReportTab === "audit" && (
-      <div className="glass-card" style={{ padding: "25px" }}>
-        <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>📋 Staff Action Audit Log</h4>
-        <div className="custom-table-container">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th className="custom-th">STAFF NAME</th>
-                <th className="custom-th">ACTION</th>
-                <th className="custom-th">BOOKING ID</th>
-                <th className="custom-th">TIMESTAMP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.auditLog && reports.auditLog.length > 0 ? (
-                reports.auditLog.map((log, index) => (
-                  <tr key={index} className="custom-tr">
-                    <td className="custom-td">{log.staffName || "Unknown Staff"}</td>
-                    <td className="custom-td">
-                      <span style={{
-                        padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "700",
-                        background: log.action === "Cash Payment Confirmed" ? "rgba(16,185,129,0.15)" :
-                                    log.action === "Handover Confirmed" ? "rgba(99,102,241,0.15)" : "rgba(148,163,184,0.15)",
-                        color: log.action === "Cash Payment Confirmed" ? "#10b981" :
-                               log.action === "Handover Confirmed" ? "#818cf8" : "#94a3b8"
-                      }}>
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="custom-td" style={{ fontFamily: "monospace" }}>{log.bookingId || "N/A"}</td>
-                    <td className="custom-td">{new Date(log.timestamp).toLocaleString()}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
-                    No staff actions recorded yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )}
+    <button
+      className="btn-base btn-secondary"
+      onClick={() => setSelectedDate("")}
+    >
+      Reset
+    </button>
   </div>
-)}
+
+              
+                <div className="custom-table-container">
+                  <table className="custom-table">
+                    <thead>
+  <tr>
+    <th className="custom-th">VEHICLE </th>
+    <th className="custom-th">CUSTOMER  </th>
+    <th className="custom-th">   DATE  </th>
+    <th className="custom-th">AMOUNT</th>
+    <th className="custom-th">DEPOSIT STATUS</th>
+    <th className="custom-th">STATUS </th>
+  </tr>
+</thead>
+                    <tbody>
+                    {reports.bookings
+  .filter(b => {
+    if (!selectedDate) return true;
+
+    const selected = new Date(selectedDate).setHours(0,0,0,0);
+    const start = new Date(b.startDate).setHours(0,0,0,0);
+    const end = new Date(b.endDate).setHours(0,0,0,0);
+
+    return selected >= start && selected <= end;
+  })
+  .map(b => (
+                        <tr key={b._id} className="custom-tr">
+
+  <td className="custom-td custom-td-primary">
+    {b.vehicleId?.name || "Deleted"}
+    <br />
+    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+      ID: {b.vehicleId?.vehicleId || b.vehicleId?._id?.slice(-6)}
+    </span>
+  </td>
+
+  <td className="custom-td">{b.customerId?.name}</td>
+
+  <td className="custom-td">
+    {new Date(b.startDate).toLocaleDateString()} -
+    {new Date(b.endDate).toLocaleDateString()}
+  </td>
+
+  <td className="custom-td">${b.totalAmount}</td>
+
+  <td className="custom-td">
+    {b.depositAmount > 0 ? (
+      <span style={{
+        padding: "4px 8px",
+        borderRadius: "12px",
+        fontSize: "11px",
+        fontWeight: "700",
+        background: b.depositStatus === "released" ? "rgba(16,185,129,0.15)" : 
+                   b.depositStatus === "captured" ? "rgba(239,68,68,0.15)" : 
+                   "rgba(245,158,11,0.15)",
+        color: b.depositStatus === "released" ? "#10b981" : 
+               b.depositStatus === "captured" ? "#ef4444" : 
+               "#f59e0b"
+      }}>
+        {b.depositStatus === "released" ? `Released: $${b.depositAmount}` : 
+         b.depositStatus === "captured" ? `Captured: $${b.depositAmount}` : 
+         `Held: $${b.depositAmount}`}
+      </span>
+    ) : (
+      <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>—</span>
+    )}
+  </td>
+
+  <td className="custom-td">
+    <span className={`badge-base badge-${b.status}`}>
+      {b.status.toUpperCase()}
+    </span>
+  </td>
+
+</tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* PAYMENTS TABLE - Highlighted when coming from Monthly Revenue */}
+              <div 
+                ref={paymentsRef} 
+                className="glass-card" 
+                style={{ 
+                  padding: "25px",
+                  border: activeReportTab === "payments" ? "2px solid var(--success)" : "1px solid var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💰 Invoice Payments Log</h4>
+                {/* ✅ SEARCH BAR FOR TRANSACTION ID */}
+<div style={{ marginBottom: "15px", display: "flex", gap: "10px", alignItems: "center" }}>
+  
+  <input
+    type="text"
+    placeholder="Search Transaction ID..."
+    value={searchTransaction}
+    onChange={(e) => setSearchTransaction(e.target.value)}
+    className="custom-input"
+    style={{ maxWidth: "250px" }}
+  />
+
+  <button
+    className="btn-base btn-secondary"
+    onClick={() => setSearchTransaction("")}
+  >
+    Clear
+  </button>
+
+</div>
+
+                {/* ✅ DATE FILTER FOR PAYMENTS */}
+<div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
+  <span style={{ color: "white", fontWeight: "600" }}>Filter by Date:</span>
+
+  <input
+    type="date"
+    value={paymentDate}
+    onChange={(e) => setPaymentDate(e.target.value)}
+    className="custom-input"
+    style={{ maxWidth: "180px" }}
+  />
+
+  <button
+    className="btn-base btn-secondary"
+    onClick={() => setPaymentDate("")}
+  >
+    Reset
+  </button>
+</div>
+                <div className="custom-table-container">
+                  <table className="custom-table">
+                    <thead>
+                      <tr>
+                        <th className="custom-th">TRANSACTION ID</th>
+                        <th className="custom-th">CUSTOMER</th>
+                        <th className="custom-th">VEHICLE</th>
+                        <th className="custom-th">VEHICLE ID</th>
+                        <th className="custom-th">TYPE</th>
+                        <th className="custom-th">AMOUNT</th>
+                        <th className="custom-th">TIMESTAMP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.payments
+  .filter(p => {
+    // ✅ Date filter
+    const matchDate = paymentDate
+      ? new Date(p.paidAt || p.createdAt).toDateString() ===
+        new Date(paymentDate).toDateString()
+      : true;
+
+    // ✅ Transaction ID search
+    const matchSearch = searchTransaction
+      ? p._id.toLowerCase().includes(searchTransaction.toLowerCase())
+      : true;
+
+    return matchDate && matchSearch;
+  })
+  .map(p => {
+    // Determine transaction type
+    let transactionType = "Payment";
+    if (p.amount < 0) {
+      transactionType = "Refund";
+    } else if (p.status === "cancelled" || p.status === "refunded") {
+      transactionType = "Cancellation";
+    }
+    
+    return (
+<tr key={p._id} className="custom-tr">
+
+  <td className="custom-td" style={{ fontFamily: "monospace" }}>
+    {p._id}
+  </td>
+
+  <td className="custom-td">
+    {p.customerId?.name || "Deleted"}
+  </td>
+
+  {/* VEHICLE NAME */}
+  <td className="custom-td">
+    {p.bookingId?.vehicleId?.name || "N/A"}
+  </td>
+
+  {/* VEHICLE ID */}
+  <td className="custom-td">
+    {p.bookingId?.vehicleId?.vehicleId ||
+     p.bookingId?.vehicleId?._id?.slice(-6) ||
+     "N/A"}
+  </td>
+
+  {/* TYPE */}
+  <td className="custom-td">
+    <span style={{
+      padding: "4px 8px",
+      borderRadius: "12px",
+      fontSize: "11px",
+      fontWeight: "700",
+      background: transactionType === "Payment" ? "rgba(16,185,129,0.15)" : 
+                 transactionType === "Refund" ? "rgba(239,68,68,0.15)" : 
+                 "rgba(148,163,184,0.15)",
+      color: transactionType === "Payment" ? "#10b981" : 
+             transactionType === "Refund" ? "#ef4444" : 
+             "#94a3b8"
+    }}>
+      {transactionType}
+    </span>
+  </td>
+
+  {/* AMOUNT */}
+  <td className="custom-td">
+    <span style={{ 
+      color: transactionType === "Refund" ? "#ef4444" : "white",
+      fontWeight: transactionType === "Refund" ? "bold" : "normal"
+    }}>
+      ${Math.abs(p.amount)}
+    </span>
+  </td>
+
+  <td className="custom-td">
+    {new Date(p.paidAt || p.createdAt).toLocaleString()}
+  </td>
+</tr>
+    );
+  })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* VEHICLE FLEET AVAILABILITY - Highlighted when coming from Active Rentals */}
+              <div 
+                ref={vehiclesRef} 
+                className="glass-card" 
+                style={{ 
+                  padding: "25px",
+                  border: activeReportTab === "vehicles" ? "2px solid var(--primary)" : "1px solid var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>🚘 Vehicle Fleet Availability</h4>
+                <div className="custom-table-container">
+                  <table className="custom-table">
+                    <thead>
+  <tr>
+    <th className="custom-th">VEHICLE ID</th>
+    <th className="custom-th">VEHICLE NAME</th>
+    <th className="custom-th">CATEGORY</th>
+    <th className="custom-th">DAILY RATE</th>
+    <th className="custom-th">LOCATION</th>
+    <th className="custom-th">ADDED DATE</th>
+    <th className="custom-th">PHYSICAL STATE</th>
+  </tr>
+</thead>
+                    
+                   <tbody>
+  {reports.vehicles.map(v => (
+    <tr key={v._id} className="custom-tr">
+
+      {/* ✅ VEHICLE ID */}
+      <td className="custom-td" style={{ fontFamily: "monospace" }}>
+        {v.vehicleId || v._id.slice(-6)}
+      </td>
+
+      {/* ✅ NAME */}
+      <td className="custom-td custom-td-primary">
+        {v.name}
+      </td>
+
+      {/* ✅ CATEGORY */}
+      <td className="custom-td">
+        {v.type.toUpperCase()}
+      </td>
+
+      {/* ✅ PRICE */}
+      <td className="custom-td">
+        ${v.pricePerDay}
+      </td>
+
+      {/* ✅ LOCATION */}
+      <td className="custom-td">
+        {v.location}
+      </td>
+
+      {/* ✅ DATE */}
+      <td className="custom-td">
+        {v.createdAt
+          ? new Date(v.createdAt).toLocaleDateString()
+          : "N/A"}
+      </td>
+
+      {/* ✅ STATUS */}
+      <td className="custom-td">
+        <span style={{
+          color: v.isAvailable ? "var(--success)" : "var(--warning)",
+          fontWeight: "bold"
+        }}>
+          ● {v.isAvailable ? "Available In Stock" : "Rented Out"}
+        </span>
+      </td>
+
+    </tr>
+  ))}
+</tbody>
+
+                  </table>
+                </div>
+              </div>
+
+              {/* CUSTOMER FEEDBACK & COMPLAINTS - Highlighted when coming from Satisfaction Rating */}
+              <div 
+                ref={feedbackRef} 
+                className="glass-card" 
+                style={{ 
+                  padding: "25px",
+                  border: activeReportTab === "feedback" ? "2px solid var(--accent)" : "1px solid var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>💬 Customer Feedbacks & Complaints</h4>
+                
+                {/* Complaint Filter for Admin */}
+                <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ color: "white", fontWeight: "600" }}>Filter:</span>
+                  <select
+                    value={complaintFilter}
+                    onChange={(e) => setComplaintFilter(e.target.value)}
+                    className="custom-input"
+                    style={{ maxWidth: "200px" }}
+                  >
+                    <option value="all">All Feedback</option>
+                    <option value="serious">Serious/Escalated Only</option>
+                  </select>
+                </div>
+                
+                <div className="custom-table-container">
+                  <table className="custom-table">
+                    <thead>
+                      <tr>
+                        <th className="custom-th">CUSTOMER</th>
+                        <th className="custom-th">TYPE</th>
+                       <th className="custom-th">RATING</th>
+                       <th className="custom-th">COMMENTS</th>
+                        <th className="custom-th">STAFF REPLY</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.feedback
+  .filter(f => {
+    if (!selectedDate) return true;
+
+    return (
+      new Date(f.createdAt).toDateString() ===
+      new Date(selectedDate).toDateString()
+    );
+  })
+  .filter(f => {
+    if (complaintFilter === "all") return true;
+    // Show only serious/escalated complaints
+    return f.type === "complaint" && (f.category === "Theft/Suspicious" || f.escalated);
+  })
+  .map(f => (
+
+                       <tr key={f._id} className="custom-tr">
+
+  {/* CUSTOMER */}
+  <td className="custom-td">
+    {f.customerId?.name || "Deleted"}
+  </td>
+
+
+  {/* ✅ ✅ PUT YOUR CODE HERE */}
+  <td className="custom-td">
+    {f.bookingId?.vehicleId?.name || "N/A"}
+    <br />
+    <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+      ID: {f.bookingId?.vehicleId?.vehicleId || f.bookingId?.vehicleId?._id?.slice(-6)}
+    </span>
+  </td>
+
+  {/* RATING */}
+  <td className="custom-td">
+    {f.rating ? `${f.rating} ★` : "-"}
+  </td>
+
+  {/* COMMENTS */}
+  <td className="custom-td" style={{ fontStyle: "italic" }}>
+    "{f.comment}"
+  </td>
+
+  {/* STAFF REPLY */}
+  <td className="custom-td">
+    {f.staffReplies && f.staffReplies.length > 0 ? (
+      <div>
+        {f.staffReplies.map(r => (
+          <p key={r._id}>• {r.replyText}</p>
+        ))}
+      </div>
+    ) : f.staffResponse ? (
+      <p>{f.staffResponse}</p>
+    ) : (
+      <em style={{ color: "var(--text-muted)" }}>No response</em>
+    )}
+  </td>
+
+</tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* STAFF ACTION AUDIT LOG */}
+              <div className="glass-card" style={{ padding: "25px" }}>
+                <h4 style={{ margin: "0 0 15px", fontSize: "18px", color: "white" }}>📋 Staff Action Audit Log</h4>
+                <div className="custom-table-container">
+                  <table className="custom-table">
+                    <thead>
+                      <tr>
+                        <th className="custom-th">STAFF NAME</th>
+                        <th className="custom-th">ACTION</th>
+                        <th className="custom-th">BOOKING ID</th>
+                        <th className="custom-th">TIMESTAMP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.auditLog && reports.auditLog.length > 0 ? (
+                        reports.auditLog.map((log, index) => (
+                          <tr key={index} className="custom-tr">
+                            <td className="custom-td">{log.staffName || "Unknown Staff"}</td>
+                            <td className="custom-td">
+                              <span style={{
+                                padding: "4px 8px",
+                                borderRadius: "12px",
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                background: log.action === "Cash Payment Confirmed" ? "rgba(16,185,129,0.15)" : 
+                                           log.action === "Handover Confirmed" ? "rgba(99,102,241,0.15)" : 
+                                           "rgba(148,163,184,0.15)",
+                                color: log.action === "Cash Payment Confirmed" ? "#10b981" : 
+                                       log.action === "Handover Confirmed" ? "#818cf8" : 
+                                       "#94a3b8"
+                              }}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td className="custom-td" style={{ fontFamily: "monospace" }}>{log.bookingId || "N/A"}</td>
+                            <td className="custom-td">{new Date(log.timestamp).toLocaleString()}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>No staff actions recorded yet.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
 
                 {/* PROFILE SETTINGS */}
         {activePage === "profile" && (
@@ -1075,52 +1127,35 @@ const fetchPendingVerifications = async () => {
       </main>
 
       {/* STAFF CREATE MODAL */}
-      {/* REGISTER STAFF / ADMIN MODAL */}
-{showStaffModal && (
-  <div className="custom-modal-overlay" onClick={() => setShowStaffModal(false)}>
-    <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
-      <h3 style={{ fontSize: "20px", fontWeight: "700" }}>Register New Account</h3>
+      {showStaffModal && (
+        <div className="custom-modal-overlay" onClick={() => setShowStaffModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700" }}>👤 Register Staff Account</h3>
 
-      <form onSubmit={handleCreateStaff} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label className="form-label">Name</label>
-          <input type="text" placeholder="e.g. John Doe" value={staffName} onChange={(e) => setStaffName(e.target.value)} className="custom-input" required />
-        </div>
+            <form onSubmit={handleCreateStaff} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Name</label>
+                <input type="text" placeholder="e.g. John Staff" value={staffName} onChange={(e) => setStaffName(e.target.value)} className="custom-input" required />
+              </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label className="form-label">Email Address</label>
-          <input type="email" placeholder="example@quickride.com" value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} className="custom-input" required />
-        </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Email Address</label>
+                <input type="email" placeholder="staff@quickride.com" value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} className="custom-input" required />
+              </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label className="form-label">Password</label>
-          <input type="password" placeholder="••••••••" value={staffPassword} onChange={(e) => setStaffPassword(e.target.value)} className="custom-input" required />
-        </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Password</label>
+                <input type="password" placeholder="••••••••" value={staffPassword} onChange={(e) => setStaffPassword(e.target.value)} className="custom-input" required />
+              </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label className="form-label">Role</label>
-          <select 
-            value={staffRole} 
-            onChange={(e) => setStaffRole(e.target.value)}
-            className="custom-input"
-            required
-          >
-            <option value="admin">Admin</option>
-          </select>
+              <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowStaffModal(false)}>Cancel</button>
+                <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>Register Staff</button>
+              </div>
+            </form>
+          </div>
         </div>
-
-        <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-          <button type="button" className="btn-base btn-secondary" style={{ flex: 1 }} onClick={() => setShowStaffModal(false)}>
-            Cancel
-          </button>
-          <button type="submit" className="btn-base btn-primary" style={{ flex: 2 }}>
-            Register 
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
+      )}
 
       {/* PROMO CREATE MODAL */}
       {showPromoModal && (
@@ -1149,147 +1184,133 @@ const fetchPendingVerifications = async () => {
       )}
 
       {/* ID VERIFICATION MODAL */}
-{showIdVerificationModal && selectedUserForVerification && (
-  <div className="custom-modal-overlay" onClick={() => setShowIdVerificationModal(false)}>
-    <div className="custom-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
-      <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "20px" }}>🪪 ID Verification Review</h3>
-      
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>CUSTOMER NAME</p>
-            <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "white" }}>{selectedUserForVerification.name}</p>
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>EMAIL</p>
-            <p style={{ margin: 0, fontSize: "14px", color: "white" }}>{selectedUserForVerification.email}</p>
-          </div>
-        </div>
+      {showIdVerificationModal && selectedUserForVerification && (
+        <div className="custom-modal-overlay" onClick={() => setShowIdVerificationModal(false)}>
+          <div className="custom-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+            <h3 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "20px" }}>🪪 ID Verification Review</h3>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>CUSTOMER NAME</p>
+                  <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "white" }}>{selectedUserForVerification.name}</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>EMAIL</p>
+                  <p style={{ margin: 0, fontSize: "14px", color: "white" }}>{selectedUserForVerification.email}</p>
+                </div>
+              </div>
 
-        <div style={{ display: "flex", gap: "20px" }}>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>NIC NUMBER</p>
-            <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.nicNumber || "Not provided"}</p>
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>DRIVING LICENSE</p>
-            <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.drivingLicenseNumber || "Not provided"}</p>
-          </div>
-        </div>
+              <div style={{ display: "flex", gap: "20px" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>NIC NUMBER</p>
+                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.nicNumber || "Not provided"}</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>DRIVING LICENSE</p>
+                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.drivingLicenseNumber || "Not provided"}</p>
+                </div>
+              </div>
 
-        {/* FIXED PHOTO SECTION */}
-        <div style={{ display: "flex", gap: "20px" }}>
-          {/* ID Photo */}
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>ID PHOTO</p>
-            <div style={{ 
-              width: "100%", 
-              height: "220px", 
-              background: "rgba(255,255,255,0.05)", 
-              borderRadius: "12px", 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center",
-              border: "1px solid var(--border-color)",
-              overflow: "hidden"
-            }}>
-              {selectedUserForVerification.idPhoto ? (
-                <img 
-                  src={getFullImageUrl(selectedUserForVerification.idPhoto)}
-                  alt="ID Photo" 
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/300x220/1f2937/6b7280?text=ID+Photo+Not+Found";
+              <div style={{ display: "flex", gap: "20px" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>ID PHOTO</p>
+                  <div style={{ 
+                    width: "100%", 
+                    height: "200px", 
+                    background: "rgba(255,255,255,0.05)", 
+                    borderRadius: "8px", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    border: "1px solid var(--border-color)"
+                  }}>
+                    {selectedUserForVerification.idPhoto ? (
+                      <img 
+                        src={`http://localhost:5000${selectedUserForVerification.idPhoto}`} 
+                        alt="ID Photo" 
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No ID photo uploaded</span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>LICENSE PHOTO</p>
+                  <div style={{ 
+                    width: "100%", 
+                    height: "200px", 
+                    background: "rgba(255,255,255,0.05)", 
+                    borderRadius: "8px", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    border: "1px solid var(--border-color)"
+                  }}>
+                    {selectedUserForVerification.licensePhoto ? (
+                      <img 
+                        src={`http://localhost:5000${selectedUserForVerification.licensePhoto}`} 
+                        alt="License Photo" 
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No license photo uploaded</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ 
+                padding: "12px", 
+                background: selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.1)" : 
+                          selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.1)" : 
+                          "rgba(148,163,184,0.1)",
+                borderRadius: "8px",
+                border: "1px solid " + (selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.3)" : 
+                          selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.3)" : 
+                          "rgba(148,163,184,0.3)")
+              }}>
+                <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
+                  Current Status: <span style={{
+                    color: selectedUserForVerification.verificationStatus === "Verified" ? "#10b981" : 
+                           selectedUserForVerification.verificationStatus === "Pending Review" ? "#f59e0b" : 
+                           "#94a3b8"
+                  }}>{selectedUserForVerification.verificationStatus || "Not Verified"}</span>
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button 
+                  className="btn-base btn-secondary" 
+                  style={{ flex: 1 }} 
+                  onClick={() => {
+                    setShowIdVerificationModal(false);
+                    setSelectedUserForVerification(null);
                   }}
-                />
-              ) : (
-                <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No ID photo uploaded</span>
-              )}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn-base btn-danger" 
+                  style={{ flex: 1 }} 
+                  onClick={handleRejectVerification}
+                >
+                  Reject
+                </button>
+                <button 
+                  className="btn-base btn-success" 
+                  style={{ flex: 1 }} 
+                  onClick={handleApproveVerification}
+                >
+                  Approve
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* License Photo */}
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>LICENSE PHOTO</p>
-            <div style={{ 
-              width: "100%", 
-              height: "220px", 
-              background: "rgba(255,255,255,0.05)", 
-              borderRadius: "12px", 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center",
-              border: "1px solid var(--border-color)",
-              overflow: "hidden"
-            }}>
-              {selectedUserForVerification.licensePhoto ? (
-                <img 
-                  src={getFullImageUrl(selectedUserForVerification.licensePhoto)}
-                  alt="License Photo" 
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/300x220/1f2937/6b7280?text=License+Not+Found";
-                  }}
-                />
-              ) : (
-                <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>No license photo uploaded</span>
-              )}
-            </div>
-          </div>
         </div>
+      )}
 
-        {/* Status */}
-        <div style={{ 
-          padding: "12px", 
-          background: selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.1)" : 
-                      selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.1)" : 
-                      "rgba(148,163,184,0.1)",
-          borderRadius: "8px",
-          border: "1px solid " + (selectedUserForVerification.verificationStatus === "Verified" ? "rgba(16,185,129,0.3)" : 
-                    selectedUserForVerification.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.3)" : 
-                    "rgba(148,163,184,0.3)")
-        }}>
-          <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
-            Current Status: <span style={{
-              color: selectedUserForVerification.verificationStatus === "Verified" ? "#10b981" : 
-                     selectedUserForVerification.verificationStatus === "Pending Review" ? "#f59e0b" : 
-                     "#94a3b8"
-            }}>{selectedUserForVerification.verificationStatus || "Not Verified"}</span>
-          </p>
-        </div>
-
-        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-          <button 
-            className="btn-base btn-secondary" 
-            style={{ flex: 1 }} 
-            onClick={() => {
-              setShowIdVerificationModal(false);
-              setSelectedUserForVerification(null);
-            }}
-          >
-            Cancel
-          </button>
-          <button 
-            className="btn-base btn-danger" 
-            style={{ flex: 1 }} 
-            onClick={handleRejectVerification}
-          >
-            Reject
-          </button>
-          <button 
-            className="btn-base btn-success" 
-            style={{ flex: 1 }} 
-            onClick={handleApproveVerification}
-          >
-            Approve
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
     </div>
   );
 }
@@ -1307,7 +1328,7 @@ const DashboardCard = ({ icon, title, value, color, onClick }) => (
     style={{ 
       position: "relative", 
       overflow: "hidden",
-      cursor: "pointer"
+      cursor: "pointer"   // 👈 add this
     }}
   >
     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "4px", background: color }} />
