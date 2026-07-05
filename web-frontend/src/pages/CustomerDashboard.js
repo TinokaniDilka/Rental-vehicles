@@ -37,9 +37,10 @@ export default function CustomerDashboard() {
   const [profilePassword, setProfilePassword] = useState("");
   const [profileNic, setProfileNic] = useState(user.nicNumber || "");
   const [profileDrivingLicense, setProfileDrivingLicense] = useState(user.drivingLicenseNumber || "");
-  const [profileIdPhoto, setProfileIdPhoto] = useState(null);
-  const [profileLicensePhoto, setProfileLicensePhoto] = useState(null);
+  const [profileIdPhotoFile, setProfileIdPhotoFile] = useState(null);
+  const [profileLicensePhotoFile, setProfileLicensePhotoFile] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
   // Booking Modal
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -239,6 +240,11 @@ export default function CustomerDashboard() {
   };
 
   const handleOpenBookingModal = async (vehicle) => {
+    if (user.verificationStatus !== "Verified") {
+      showToast("Please verify your account (upload ID & License photos) before booking.", "error");
+      setShowProfileModal(true);
+      return;
+    }
     setSelectedVehicle(vehicle);
     setBookingStartDate("");
     setBookingEndDate("");
@@ -363,28 +369,70 @@ const handleOpenFeedbackModal = (booking) => {
     }
   };
 
+  const handleIdPhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size > MAX_UPLOAD_SIZE) {
+      showToast("ID Photo must be under 5MB", "error");
+      e.target.value = "";
+      setProfileIdPhotoFile(null);
+      return;
+    }
+    setProfileIdPhotoFile(file || null);
+  };
+
+  const handleLicensePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size > MAX_UPLOAD_SIZE) {
+      showToast("License Photo must be under 5MB", "error");
+      e.target.value = "";
+      setProfileLicensePhotoFile(null);
+      return;
+    }
+    setProfileLicensePhotoFile(file || null);
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
-      const formData = new FormData();
-      formData.append("name", profileName);
-      formData.append("email", profileEmail);
-      if (profilePassword) formData.append("password", profilePassword);
-      formData.append("nicNumber", profileNic);
-      formData.append("drivingLicenseNumber", profileDrivingLicense);
-      if (profileIdPhoto) formData.append("idPhoto", profileIdPhoto);
-      if (profileLicensePhoto) formData.append("licensePhoto", profileLicensePhoto);
-
+      // Step 1: update text profile fields
+      const payload = {
+        name: profileName,
+        email: profileEmail,
+        password: profilePassword,
+        nicNumber: profileNic,
+        drivingLicenseNumber: profileDrivingLicense
+      };
       const res = await axios.put(
         "http://localhost:5000/api/auth/profile",
-        formData,
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } }
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      let updatedUser = res.data.user;
+
+      // Step 2: if ID/License photos were selected, upload them separately as multipart
+      if (profileIdPhotoFile || profileLicensePhotoFile) {
+        const formData = new FormData();
+        if (profileIdPhotoFile) formData.append("idPhoto", profileIdPhotoFile);
+        if (profileLicensePhotoFile) formData.append("licensePhoto", profileLicensePhotoFile);
+
+        const docsRes = await axios.put(
+          "http://localhost:5000/api/auth/profile/upload-docs",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data"
+            }
+          }
+        );
+        updatedUser = docsRes.data.user;
+      }
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
-      setProfileIdPhoto(null);
-      setProfileLicensePhoto(null);
+      setProfileIdPhotoFile(null);
+      setProfileLicensePhotoFile(null);
       setShowProfileModal(false);
     } catch (err) {
       showToast(err.response?.data?.message || "Profile update failed", "error");
@@ -445,7 +493,13 @@ const handleOpenFeedbackModal = (booking) => {
       fetchVehicles();
     } catch (err) {
       console.error("Payment error:", err);
-      showToast(err.response?.data?.message || "Payment failed", "error");
+      if (err.response?.status === 403) {
+        showToast(err.response?.data?.message || "Your account must be verified before booking.", "error");
+        setShowPaymentModal(false);
+        setShowProfileModal(true);
+      } else {
+        showToast(err.response?.data?.message || "Payment failed", "error");
+      }
     }
   };
 
@@ -1099,19 +1153,24 @@ const handleOpenFeedbackModal = (booking) => {
               <div style={{ display: "flex", gap: "10px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
                   <label className="form-label">ID Photo</label>
-                  <input type="file" accept="image/*" onChange={(e) => setProfileIdPhoto(e.target.files[0])} className="custom-input" style={{ padding: "8px" }} />
-                  {user.idPhoto && !profileIdPhoto && (
-                    <img src={`http://localhost:5000${user.idPhoto}`} alt="Current ID" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px", marginTop: "5px" }} />
-                  )}
+                  <input type="file" accept="image/*" onChange={handleIdPhotoChange} className="custom-input" style={{ padding: "8px" }} />
+                  {profileIdPhotoFile ? (
+                    <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Selected: {profileIdPhotoFile.name}</span>
+                  ) : user.idPhoto ? (
+                    <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>✅ Already uploaded</span>
+                  ) : null}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
                   <label className="form-label">License Photo</label>
-                  <input type="file" accept="image/*" onChange={(e) => setProfileLicensePhoto(e.target.files[0])} className="custom-input" style={{ padding: "8px" }} />
-                  {user.licensePhoto && !profileLicensePhoto && (
-                    <img src={`http://localhost:5000${user.licensePhoto}`} alt="Current License" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px", marginTop: "5px" }} />
-                  )}
+                  <input type="file" accept="image/*" onChange={handleLicensePhotoChange} className="custom-input" style={{ padding: "8px" }} />
+                  {profileLicensePhotoFile ? (
+                    <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Selected: {profileLicensePhotoFile.name}</span>
+                  ) : user.licensePhoto ? (
+                    <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>✅ Already uploaded</span>
+                  ) : null}
                 </div>
               </div>
+              <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: 0 }}>Max file size: 5MB per photo. Uploading new documents will reset your status to "Pending Review".</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label className="form-label">New Password (leave blank to keep current)</label>
