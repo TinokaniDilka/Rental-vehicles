@@ -9,11 +9,15 @@ import {
   StatusBar,
   Modal,
   TextInput,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
 import CustomButton from '../components/CustomButton';
+import { updateProfile as updateProfileApi, uploadVerificationDocs } from '../services/authService';
 
 const SETTINGS_ITEMS = [
   { icon: 'person-outline', label: 'Edit Profile', route: 'EditProfile' },
@@ -22,19 +26,55 @@ const SETTINGS_ITEMS = [
 ];
 
 
+const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
+
 export default function ProfileScreen({ navigation }) {
-  const { user, logout } = useContext(AuthContext);
-  
+  const { user, logout, updateUser } = useContext(AuthContext);
+
 const [editModalVisible, setEditModalVisible] = useState(false);
 const [editName, setEditName] = useState(user?.name || '');
 const [editPhone, setEditPhone] = useState(user?.phone || '');
 const [editNic, setEditNic] = useState(user?.nicNumber || '');
 const [editDl, setEditDl] = useState(user?.drivingLicenseNumber || '');
 const [editPassword, setEditPassword] = useState('');
+const [idPhotoAsset, setIdPhotoAsset] = useState(null);
+const [licensePhotoAsset, setLicensePhotoAsset] = useState(null);
+const [saving, setSaving] = useState(false);
+
+const pickImage = async (setter) => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Permission needed', 'Please allow access to your photo library to upload documents.');
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    quality: 0.7,
+    allowsEditing: false,
+  });
+
+  if (result.canceled || !result.assets?.length) return;
+
+  const asset = result.assets[0];
+
+  if (asset.fileSize && asset.fileSize > MAX_UPLOAD_SIZE) {
+    Alert.alert('File too large', 'Please choose an image under 5MB.');
+    return;
+  }
+
+  const filename = asset.uri.split('/').pop();
+  const match = /\.(\w+)$/.exec(filename);
+  const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+  setter({ uri: asset.uri, name: filename, type });
+};
 
 const handleSaveProfile = async () => {
+  setSaving(true);
   try {
-    const updatedUser = {
+    // Step 1: update text profile fields
+    const payload = {
       name: editName,
       phone: editPhone,
       nicNumber: editNic,
@@ -42,14 +82,31 @@ const handleSaveProfile = async () => {
       ...(editPassword ? { password: editPassword } : {}),
     };
 
-    console.log('Updated Data:', updatedUser);
+    const res = await updateProfileApi(payload);
+    let updatedUser = res.data.user || res.data;
+
+    // Step 2: if ID/License photos were picked, upload separately as multipart
+    if (idPhotoAsset || licensePhotoAsset) {
+      const docsRes = await uploadVerificationDocs({
+        idPhoto: idPhotoAsset,
+        licensePhoto: licensePhotoAsset,
+      });
+      updatedUser = docsRes.data.user;
+    }
+
+    await updateUser(updatedUser);
 
     Alert.alert('Success', 'Profile updated successfully');
 
     setEditPassword('');
+    setIdPhotoAsset(null);
+    setLicensePhotoAsset(null);
     setEditModalVisible(false);
   } catch (error) {
-    Alert.alert('Error', 'Failed to update profile');
+    console.error('Profile update error:', error);
+    Alert.alert('Error', error.response?.data?.message || 'Failed to update profile');
+  } finally {
+    setSaving(false);
   }
 };
 
@@ -165,7 +222,11 @@ onPress={() => {
   if (item.label === 'Edit Profile') {
     setEditName(user?.name || '');
     setEditPhone(user?.phone || '');
+    setEditNic(user?.nicNumber || '');
+    setEditDl(user?.drivingLicenseNumber || '');
     setEditPassword('');
+    setIdPhotoAsset(null);
+    setLicensePhotoAsset(null);
     setEditModalVisible(true);
   } else {
     navigation?.navigate(item.route);
@@ -237,16 +298,27 @@ onPress={() => {
         onChangeText={setEditDl}
       />
 
-      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 15 }}>
-        <TouchableOpacity style={styles.photoBtn}>
-           <Ionicons name="camera-outline" size={20} color="#fff" />
-           <Text style={styles.photoBtnText}>ID Photo</Text>
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+        <TouchableOpacity style={styles.photoBtn} onPress={() => pickImage(setIdPhotoAsset)}>
+           {idPhotoAsset ? (
+             <Image source={{ uri: idPhotoAsset.uri }} style={{ width: 20, height: 20, borderRadius: 4, marginRight: 4 }} />
+           ) : (
+             <Ionicons name="camera-outline" size={20} color="#fff" />
+           )}
+           <Text style={styles.photoBtnText}>{idPhotoAsset ? 'ID Selected ✓' : 'ID Photo'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.photoBtn}>
-           <Ionicons name="camera-outline" size={20} color="#fff" />
-           <Text style={styles.photoBtnText}>License</Text>
+        <TouchableOpacity style={styles.photoBtn} onPress={() => pickImage(setLicensePhotoAsset)}>
+           {licensePhotoAsset ? (
+             <Image source={{ uri: licensePhotoAsset.uri }} style={{ width: 20, height: 20, borderRadius: 4, marginRight: 4 }} />
+           ) : (
+             <Ionicons name="camera-outline" size={20} color="#fff" />
+           )}
+           <Text style={styles.photoBtnText}>{licensePhotoAsset ? 'License Selected ✓' : 'License'}</Text>
         </TouchableOpacity>
       </View>
+      <Text style={{ color: '#94a3b8', fontSize: 11, marginBottom: 15 }}>
+        Max 5MB per photo. Uploading new documents resets your status to Pending Review.
+      </Text>
 
       <TextInput
         style={styles.input}
@@ -261,17 +333,24 @@ onPress={() => {
         <TouchableOpacity
   style={styles.cancelBtn}
   onPress={() => {
-    Alert.alert('Cancel');
+    setIdPhotoAsset(null);
+    setLicensePhotoAsset(null);
     setEditModalVisible(false);
   }}
+  disabled={saving}
 >
   <Text style={styles.cancelText}>Cancel</Text>
 </TouchableOpacity>
         <TouchableOpacity
-          style={styles.saveBtn}
+          style={[styles.saveBtn, saving && { opacity: 0.6 }]}
           onPress={handleSaveProfile}
+          disabled={saving}
         >
-          <Text style={styles.saveText}>Save</Text>
+          {saving ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.saveText}>Save</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
