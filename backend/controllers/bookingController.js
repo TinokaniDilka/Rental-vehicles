@@ -2,6 +2,23 @@ const Booking = require("../models/Booking");
 const Vehicle = require("../models/Vehicle");
 const Payment = require("../models/Payment");
 const AuditLog = require("../models/AuditLog");
+const User = require("../models/User");
+
+// Shared helper: only "Verified" users may create bookings
+const requireVerifiedUser = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    return { ok: false, status: 404, message: "User not found" };
+  }
+  if (user.verificationStatus !== "Verified") {
+    return {
+      ok: false,
+      status: 403,
+      message: "Your account must be Verified before you can make a booking. Please upload your ID and license documents in your profile and wait for admin approval."
+    };
+  }
+  return { ok: true, user };
+};
 
 // Create pending booking
 const createBooking = async (req, res) => {
@@ -11,6 +28,12 @@ const createBooking = async (req, res) => {
 
     if (!vehicleId || !startDate || !endDate) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Enforce ID verification before allowing a booking
+    const verificationCheck = await requireVerifiedUser(customerId);
+    if (!verificationCheck.ok) {
+      return res.status(verificationCheck.status).json({ message: verificationCheck.message });
     }
 
     // Check date overlap with already confirmed or ongoing bookings
@@ -282,6 +305,12 @@ const createBookingWithPayment = async (req, res) => {
 
     if (!vehicleId || !startDate || !endDate || !paymentMethod) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Enforce ID verification before allowing a booking
+    const verificationCheck = await requireVerifiedUser(customerId);
+    if (!verificationCheck.ok) {
+      return res.status(verificationCheck.status).json({ message: verificationCheck.message });
     }
 
     // Check date overlap

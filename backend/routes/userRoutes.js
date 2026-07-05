@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const User = require("../models/User");
 const { protect } = require("../middleware/authMiddleware");
 const {
@@ -9,8 +12,39 @@ const {
   toggleUserActive,
   updateProfile,
   updateVerificationStatus,
-  upload
+  uploadVerificationDocs
 } = require("../controllers/userController");
+
+// ===================== ID VERIFICATION FILE UPLOAD CONFIG =====================
+const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
+
+const verificationUploadDir = path.join(__dirname, "..", "uploads", "verification");
+if (!fs.existsSync(verificationUploadDir)) {
+  fs.mkdirSync(verificationUploadDir, { recursive: true });
+}
+
+const verificationStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, verificationUploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || "";
+    const userId = req.user?.id || "unknown";
+    cb(null, `${file.fieldname}-${userId}-${Date.now()}${ext}`);
+  }
+});
+
+const verificationFileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed for ID/License photos"), false);
+  }
+};
+
+const uploadVerificationFiles = multer({
+  storage: verificationStorage,
+  fileFilter: verificationFileFilter,
+  limits: { fileSize: MAX_UPLOAD_SIZE }
+});
 
 // Public routes
 router.post("/login", loginUser);
@@ -65,8 +99,29 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Protected profile route with file upload support
-router.put("/profile", protect, upload.fields([{ name: 'idPhoto', maxCount: 1 }, { name: 'licensePhoto', maxCount: 1 }]), updateProfile);
+// Protected profile route
+router.put("/profile", protect, updateProfile);
+
+// ID Verification document upload (multipart/form-data: idPhoto, licensePhoto)
+router.put("/profile/upload-docs", protect, (req, res, next) => {
+  const handler = uploadVerificationFiles.fields([
+    { name: "idPhoto", maxCount: 1 },
+    { name: "licensePhoto", maxCount: 1 }
+  ]);
+
+  handler(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ message: "File size exceeds the 5MB limit" });
+      }
+      return res.status(400).json({ message: err.message });
+    } else if (err) {
+      return res.status(400).json({ message: err.message || "Upload failed" });
+    }
+    next();
+  });
+}, uploadVerificationDocs);
+
 router.get("/profile", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
