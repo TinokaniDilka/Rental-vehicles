@@ -737,7 +737,7 @@ const handleOpenFeedbackModal = (booking) => {
                     ${activePage.data.pricePerDay} <span style={{ fontSize: "16px", color: "var(--text-secondary)" }}>/ day</span>
                   </h2>
                   <span style={{ fontSize: "13px", color: "var(--warning)", fontWeight: "600", padding: "4px 8px", background: "rgba(245,158,11,0.15)", borderRadius: "6px" }}>
-                    🔒 Deposit Required: LKR {activePage.data.depositAmount || 5000} (refundable)
+                    🔒 Deposit Required:  50%  (refundable)
                   </span>
                 </div>
 
