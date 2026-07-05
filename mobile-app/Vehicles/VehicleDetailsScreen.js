@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,14 +18,31 @@ import Loader from '../components/Loader';
 import { API_BASE_URL } from '../utils/constants';
 import { formatCurrency } from '../utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthContext } from '../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 const IMAGE_HEIGHT = 300;
 
 export default function VehicleDetailsScreen({ route, navigation }) {
   const { vehicleId } = route.params;
+  const { user } = useContext(AuthContext);
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const handleBookNowPress = () => {
+    if (user?.verificationStatus !== 'Verified') {
+      Alert.alert(
+        'Account Not Verified',
+        'Please upload your ID and license documents and wait for admin approval before booking.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Go to Profile', onPress: () => navigation.navigate('Profile') },
+        ]
+      );
+      return;
+    }
+    navigation.navigate('Booking', { vehicle });
+  };
 
   useEffect(() => {
     getVehicleById(vehicleId)
@@ -170,7 +187,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
           <TouchableOpacity
             activeOpacity={0.85}
             style={styles.bookBtnWrapper}
-            onPress={() => navigation.navigate('Booking', { vehicle })}
+            onPress={handleBookNowPress}
           >
             <LinearGradient
               colors={['#6366f1', '#4f46e5']}
