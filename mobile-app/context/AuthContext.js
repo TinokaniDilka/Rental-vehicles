@@ -40,8 +40,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Merge and persist updated user fields (e.g. after profile/doc upload)
+  const updateUser = async (updatedFields) => {
+    setUser((prev) => {
+      const merged = { ...(prev || {}), ...updatedFields };
+      AsyncStorage.setItem('user', JSON.stringify(merged)).catch((e) => console.error(e));
+      return merged;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -399,27 +399,38 @@ const cancelBooking = async (req, res) => {
       return res.status(400).json({ message: "Cannot cancel an ongoing rental" });
     }
 
-    // Calculate refund based on status and timing
+    // Calculate refund based on status.
+    // The 75/25 split (when applicable) is calculated ONLY from the vehicle's
+    // base rental amount (baseCharge) — not driver charges or add-on fees,
+    // since those services were never rendered and are refunded in full.
     let refundPercentage = 0;
+    let staffRetainedPercentage = 0;
+
+    const vehicleAmount = booking.baseCharge || 0;
+    const nonVehicleAmount = Math.max((booking.totalAmount || 0) - vehicleAmount, 0);
+
+    let refundAmount = 0;
+    let staffRetainedAmount = 0;
+
     if (booking.status === "pending" || booking.status === "approved") {
       // Full refund for pending/approved bookings (no payment yet or not started)
       refundPercentage = 100;
+      refundAmount = booking.totalAmount;
+      staffRetainedAmount = 0;
     } else if (booking.status === "confirmed") {
-      // Check if rental starts soon (within 24 hours)
-      const startTime = new Date(booking.startDate);
-      const now = new Date();
-      const hoursUntilStart = (startTime - now) / (1000 * 60 * 60);
+      // Paid, but customer has NOT yet collected the vehicle from staff.
+      // Customer gets 75% of the vehicle rental amount back; the remaining 25%
+      // of the vehicle amount is retained by staff as a cancellation fee.
+      // Driver charges / additional fees are refunded in full.
+      refundPercentage = 75;
+      staffRetainedPercentage = 25;
 
-      if (hoursUntilStart > 24) {
-        // More than 24 hours before start: 80% refund
-        refundPercentage = 80;
-      } else {
-        // Less than 24 hours: 50% refund
-        refundPercentage = 50;
-      }
+      const vehicleRefund = Math.round((vehicleAmount * refundPercentage) / 100);
+      const vehicleRetained = Math.round((vehicleAmount * staffRetainedPercentage) / 100);
+
+      refundAmount = vehicleRefund + nonVehicleAmount;
+      staffRetainedAmount = vehicleRetained;
     }
-
-    const refundAmount = Math.round((booking.totalAmount * refundPercentage) / 100);
 
     // Update booking with cancellation info
     booking.status = "cancelled";
@@ -428,6 +439,7 @@ const cancelBooking = async (req, res) => {
     booking.refundStatus = "processed";
     booking.refundAmount = refundAmount;
     booking.refundedAt = new Date();
+    booking.staffRetainedAmount = staffRetainedAmount;
 
     await booking.save();
 
@@ -442,12 +454,18 @@ const cancelBooking = async (req, res) => {
     await payment.save();
 
     res.json({
-      message: `Booking cancelled successfully ✅. Refund of $${refundAmount} (${refundPercentage}%) will be processed.`,
+      message: staffRetainedAmount > 0
+        ? `Booking cancelled successfully ✅. Refund of $${refundAmount} will be processed (75% of the $${vehicleAmount} vehicle rental amount, plus any driver/other charges in full). $${staffRetainedAmount} is retained as a cancellation fee since the vehicle was not yet collected from staff.`
+        : `Booking cancelled successfully ✅. Refund of $${refundAmount} (${refundPercentage}%) will be processed.`,
       booking,
       refund: {
         amount: refundAmount,
         percentage: refundPercentage,
-        originalAmount: booking.totalAmount
+        originalAmount: booking.totalAmount,
+        vehicleAmount,
+        nonVehicleAmount,
+        staffRetainedAmount,
+        staffRetainedPercentage
       }
     });
   } catch (err) {

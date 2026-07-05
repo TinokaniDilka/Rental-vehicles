@@ -46,7 +46,18 @@ export default function BookingScreen({ route, navigation }) {
       navigation.navigate('Payment', { booking: res.data });
     } catch (err) {
       console.error('Booking error:', err);
-      Alert.alert('Error', err.response?.data?.message || 'Booking failed');
+      if (err.response?.status === 403) {
+        Alert.alert(
+          'Account Not Verified',
+          err.response?.data?.message || 'Please upload your ID and license documents and wait for admin approval before booking.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Go to Profile', onPress: () => navigation.navigate('Profile') },
+          ]
+        );
+      } else {
+        Alert.alert('Error', err.response?.data?.message || 'Booking failed');
+      }
     } finally {
       setLoading(false);
     }
