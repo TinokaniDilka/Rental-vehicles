@@ -542,6 +542,22 @@ const handleOpenFeedbackModal = (booking) => {
     }
   };
 
+  const handleConfirmReturn = async (bookingId) => {
+  if (!window.confirm("Confirm that you've returned the vehicle to the staff?")) return;
+  try {
+    await axios.put(
+      `http://localhost:5000/api/bookings/${bookingId}/customer-return`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    showToast("✅ Return confirmed! Waiting for staff to inspect and finalize.", "success");
+    fetchBookings();
+  } catch (err) {
+    showToast(err.response?.data?.message || "Failed to confirm return", "error");
+  }
+};
+
+
   // Close profile dropdown
   useEffect(() => {
     const handleClickOutside = () => setShowProfileMenu(false);
@@ -891,12 +907,21 @@ const handleOpenFeedbackModal = (booking) => {
                         {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "13.5px" }}>Driver: ${b.driverCharge}</p>}
                         {b.discount > 0 && <p style={{ margin: 0, fontSize: "13.5px", color: "var(--accent)" }}>Discount: -${b.discount}</p>}
                         <h4 style={{ margin: "8px 0 0 0", color: "white", fontSize: "18px", fontWeight: "800" }}>Total: ${b.totalAmount}</h4>
-                      </div>
 
-                      <div style={{ flex: 1, minWidth: "220px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
+                        {b.status === "cancelled" && (
+                          <div style={{ marginTop: "10px", padding: "8px 10px", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "6px" }}>
+                            <p style={{ margin: 0, fontSize: "12px", color: "var(--success)", fontWeight: "700" }}>
+                              💰 Refund: ${b.refundAmount ?? 0} {b.refundPercentage != null && `(${b.refundPercentage}%)`}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+<div style={{ flex: 1, minWidth: "220px", borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>
                         <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)", fontWeight: "700" }}>HANDOVER STATUS</p>
-                        {(!b.handoverStatus || b.handoverStatus === 'pending_pickup') ? (
-                          <div style={{ marginTop: "10px" }}>
+                        {["cancelled", "rejected"].includes(b.status) ? (
+                          <p style={{ margin: "10px 0 0 0", fontSize: "13px", color: "var(--text-muted)" }}>—</p>
+                        ) : (!b.handoverStatus || b.handoverStatus === 'pending_pickup') ? (
+                           <div style={{ marginTop: "10px" }}>
                             <span style={{ fontSize: "13px", color: "var(--warning)" }}>⏳ Pending Pickup</span>
                             <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
                               <button className="btn-base btn-primary" style={{ padding: "6px 10px", fontSize: "12px" }} onClick={() => handleConfirmReceived(b._id)}>Confirm Received</button>
@@ -913,6 +938,13 @@ const handleOpenFeedbackModal = (booking) => {
                                 <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
                                   Overdue by {Math.ceil((new Date() - new Date(b.endDate)) / (1000 * 60 * 60 * 24))} Days
                                 </p>
+                                <button
+                                  className="btn-base btn-danger"
+                                  style={{ padding: "6px 10px", fontSize: "12px", marginTop: "8px" }}
+                                  onClick={() => handleConfirmReturn(b._id)}
+                                >
+                                  ✅ Hand Over Vehicle Now
+                                </button>
                               </>
                             ) : (
                               <>
@@ -920,10 +952,26 @@ const handleOpenFeedbackModal = (booking) => {
                                 <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
                                   Time Remaining: {Math.max(0, Math.ceil((new Date(b.endDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days
                                 </p>
+                                {new Date(b.endDate).toDateString() === new Date().toDateString() && (
+                                  <button
+                                    className="btn-base btn-primary"
+                                    style={{ padding: "6px 10px", fontSize: "12px", marginTop: "8px" }}
+                                    onClick={() => handleConfirmReturn(b._id)}
+                                  >
+                                    ✅ Hand Over Vehicle Today
+                                  </button>
+                                )}
                               </>
                             )}
                           </div>
-                        ) : (b.handoverStatus === 'returned' || b.handoverStatus === 'confirmed_return') ? (
+                        ) : b.handoverStatus === 'returned' ? (
+                          <div style={{ marginTop: "10px" }}>
+                            <span style={{ fontSize: "13px", color: "var(--warning)", fontWeight: "bold" }}>⏳ Awaiting Staff Confirmation</span>
+                            <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
+                              You marked this as returned. Staff will inspect and finalize shortly.
+                            </p>
+                          </div>
+                        ) : (b.handoverStatus === 'confirmed_return') ? (
                           <div style={{ marginTop: "10px" }}>
                             <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>✅ Return Confirmed</span>
                           </div>
