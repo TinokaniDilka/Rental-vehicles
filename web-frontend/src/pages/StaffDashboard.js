@@ -1010,7 +1010,23 @@ const filteredComplaints = complaintCategoryFilter === "all"
       <button className="btn-base btn-success" onClick={() => handleConfirmCash(b._id)}>💵 Confirm Cash Received</button>
     )}
     {b.status === "ongoing" && (
-      <button className="btn-base btn-primary" style={{ background: "var(--primary-gradient)" }} onClick={() => handleOpenReturnModal(b)}>🔧 Inspect Return</button>
+      <>
+        {b.handoverStatus === "returned" && (
+          <span style={{
+            fontSize: "11px", fontWeight: "700", padding: "4px 8px", borderRadius: "12px",
+            background: "rgba(16,185,129,0.15)", color: "#10b981"
+          }}>
+            ✅ Customer Confirmed Return
+          </span>
+        )}
+        <button
+          className="btn-base btn-primary"
+          style={{ background: b.handoverStatus === "returned" ? "var(--success-gradient)" : "var(--primary-gradient)" }}
+          onClick={() => handleOpenReturnModal(b)}
+        >
+          🔧 {b.handoverStatus === "returned" ? "Accept & Inspect Return" : "Inspect Return"}
+        </button>
+      </>
     )}
   </div>
 
@@ -1307,16 +1323,7 @@ const filteredComplaints = complaintCategoryFilter === "all"
                 <input type="date" value={actualReturnDate} onChange={(e) => setActualReturnDate(e.target.value)} className="custom-input" required />
               </div>
 
-              <div style={{ display: "flex", gap: "15px" }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label className="form-label">Return Mileage (km) *</label>
-                  <input type="number" value={returnMileage} onChange={(e) => setReturnMileage(e.target.value)} className="custom-input" required />
-                </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label className="form-label">Fuel Level (%) *</label>
-                  <input type="number" min="0" max="100" value={returnFuelLevel} onChange={(e) => setReturnFuelLevel(e.target.value)} className="custom-input" required />
-                </div>
-              </div>
+              
 
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label className="form-label">Vehicle Return Condition *</label>
