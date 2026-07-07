@@ -11,22 +11,54 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '../utils/helpers';
+import { createBookingWithPayment } from '../services/bookingService';
 
 export default function PaymentScreen({ route, navigation }) {
-  const { booking } = route.params;
+  const { vehicle, startDate, endDate, hasDriver, days, total } = route.params;
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' | 'cash'
 
   const handlePayment = async () => {
     setLoading(true);
-    // Simulate payment — wire to real payment gateway later
-    setTimeout(() => {
+    try {
+      const res = await createBookingWithPayment({
+        vehicleId: vehicle._id,
+        startDate,
+        endDate,
+        hasDriver: hasDriver || false,
+        paymentMethod,
+        amount: total,
+      });
       setLoading(false);
-      Alert.alert(
-        '🎉 Payment Successful',
-        'Your booking has been confirmed! You will receive a confirmation shortly.',
-        [{ text: 'Done', onPress: () => navigation.navigate('Main') }]
-      );
-    }, 1500);
+      if (paymentMethod === 'cash') {
+        Alert.alert(
+          '✅ Booking Confirmed',
+          'Your booking is confirmed. Please pay the amount in cash to staff when you pick up the vehicle.',
+          [{ text: 'Done', onPress: () => navigation.navigate('Main') }]
+        );
+      } else {
+        Alert.alert(
+          '🎉 Payment Successful',
+          'Your booking has been confirmed! You will receive a confirmation shortly.',
+          [{ text: 'Done', onPress: () => navigation.navigate('Main') }]
+        );
+      }
+    } catch (err) {
+      setLoading(false);
+      console.error('Payment error:', err);
+      if (err.response?.status === 403) {
+        Alert.alert(
+          'Account Not Verified',
+          err.response?.data?.message || 'Please upload your ID and license documents and wait for admin approval before booking.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Go to Profile', onPress: () => navigation.navigate('Profile') },
+          ]
+        );
+      } else {
+        Alert.alert('Error', err.response?.data?.message || 'Payment failed. Please try again.');
+      }
+    }
   };
 
   const handlePayLater = () => {
@@ -57,11 +89,11 @@ export default function PaymentScreen({ route, navigation }) {
           >
             <Text style={styles.cardEmoji}>💳</Text>
             <Text style={styles.amountDueLabel}>Amount Due</Text>
-            <Text style={styles.amountValue}>{formatCurrency(booking.totalAmount)}</Text>
+            <Text style={styles.amountValue}>{formatCurrency(total)}</Text>
             <View style={styles.bookingIdPill}>
               <Ionicons name="pricetag-outline" size={12} color="#94a3b8" />
               <Text style={styles.bookingIdText} numberOfLines={1}>
-                {booking._id ? `#${booking._id.slice(-8).toUpperCase()}` : 'N/A'}
+                {days} day{days !== 1 ? 's' : ''} · {vehicle.name}
               </Text>
             </View>
           </LinearGradient>
@@ -73,16 +105,27 @@ export default function PaymentScreen({ route, navigation }) {
         </View>
 
         <View style={styles.glassCard}>
-          {/* Booking ID */}
+          {/* Vehicle */}
           <View style={styles.detailRow}>
             <View style={styles.detailIconWrap}>
-              <Ionicons name="receipt-outline" size={16} color="#6366f1" />
+              <Ionicons name="car-outline" size={16} color="#6366f1" />
             </View>
             <View style={styles.detailTextWrap}>
-              <Text style={styles.detailLabel}>Booking ID</Text>
-              <Text style={styles.detailValue} numberOfLines={1}>
-                {booking._id || 'N/A'}
-              </Text>
+              <Text style={styles.detailLabel}>Vehicle</Text>
+              <Text style={styles.detailValue}>{vehicle.name}</Text>
+            </View>
+          </View>
+
+          <View style={styles.rowDivider} />
+
+          {/* Dates */}
+          <View style={styles.detailRow}>
+            <View style={styles.detailIconWrap}>
+              <Ionicons name="calendar-outline" size={16} color="#6366f1" />
+            </View>
+            <View style={styles.detailTextWrap}>
+              <Text style={styles.detailLabel}>Dates</Text>
+              <Text style={styles.detailValue}>{startDate} → {endDate}</Text>
             </View>
           </View>
 
@@ -96,35 +139,23 @@ export default function PaymentScreen({ route, navigation }) {
             <View style={styles.detailTextWrap}>
               <Text style={styles.detailLabel}>Status</Text>
               <View style={styles.statusPill}>
-                <Text style={styles.statusPillText}>
-                  {booking.status?.toUpperCase() || 'PENDING'}
-                </Text>
+                <Text style={styles.statusPillText}>NOT YET BOOKED</Text>
               </View>
             </View>
           </View>
-
-          {booking.vehicle && (
-            <>
-              <View style={styles.rowDivider} />
-              <View style={styles.detailRow}>
-                <View style={styles.detailIconWrap}>
-                  <Ionicons name="car-outline" size={16} color="#6366f1" />
-                </View>
-                <View style={styles.detailTextWrap}>
-                  <Text style={styles.detailLabel}>Vehicle</Text>
-                  <Text style={styles.detailValue}>
-                    {booking.vehicle?.name || 'N/A'}
-                  </Text>
-                </View>
-              </View>
-            </>
-          )}
         </View>
 
         {/* Payment Method Section */}
         <Text style={styles.sectionLabel}>Payment Method</Text>
 
-        <View style={styles.paymentMethodCard}>
+        <TouchableOpacity
+          style={[
+            styles.paymentMethodCard,
+            paymentMethod === 'card' && styles.paymentMethodCardActive,
+          ]}
+          onPress={() => setPaymentMethod('card')}
+          activeOpacity={0.85}
+        >
           <View style={styles.paymentMethodRow}>
             <View style={styles.cardIconWrap}>
               <Ionicons name="card" size={22} color="#6366f1" />
@@ -133,11 +164,43 @@ export default function PaymentScreen({ route, navigation }) {
               <Text style={styles.paymentMethodTitle}>Credit / Debit Card</Text>
               <Text style={styles.paymentMethodSub}>Secure payment via card</Text>
             </View>
-            <View style={styles.checkCircle}>
-              <Ionicons name="checkmark" size={16} color="#fff" />
+            <View style={[styles.checkCircle, paymentMethod !== 'card' && styles.checkCircleInactive]}>
+              {paymentMethod === 'card' && <Ionicons name="checkmark" size={16} color="#fff" />}
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.paymentMethodCard,
+            paymentMethod === 'cash' && styles.paymentMethodCardActive,
+            { marginBottom: 28 },
+          ]}
+          onPress={() => setPaymentMethod('cash')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.paymentMethodRow}>
+            <View style={styles.cardIconWrap}>
+              <Ionicons name="cash" size={22} color="#10b981" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.paymentMethodTitle}>Cash on Pickup</Text>
+              <Text style={styles.paymentMethodSub}>Pay in cash when you collect the vehicle</Text>
+            </View>
+            <View style={[styles.checkCircle, paymentMethod !== 'cash' && styles.checkCircleInactive]}>
+              {paymentMethod === 'cash' && <Ionicons name="checkmark" size={16} color="#fff" />}
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {paymentMethod === 'cash' && (
+          <View style={styles.cashNotice}>
+            <Ionicons name="information-circle-outline" size={16} color="#f59e0b" />
+            <Text style={styles.cashNoticeText}>
+              Your booking will be confirmed now. Pay {formatCurrency(total)} in cash to staff at pickup.
+            </Text>
+          </View>
+        )}
 
         {/* Pay Now Button */}
         <TouchableOpacity
@@ -156,8 +219,17 @@ export default function PaymentScreen({ route, navigation }) {
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <>
-                <Ionicons name="lock-closed" size={18} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.payBtnText}>Pay Now · {formatCurrency(booking.totalAmount)}</Text>
+                <Ionicons
+                  name={paymentMethod === 'cash' ? 'checkmark-circle-outline' : 'lock-closed'}
+                  size={18}
+                  color="#fff"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.payBtnText}>
+                  {paymentMethod === 'cash'
+                    ? `Confirm Booking · ${formatCurrency(total)}`
+                    : `Pay Now · ${formatCurrency(total)}`}
+                </Text>
               </>
             )}
           </LinearGradient>
@@ -354,9 +426,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(30,41,59,0.85)',
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: 'rgba(99,102,241,0.4)',
+    borderColor: 'rgba(99,102,241,0.15)',
     padding: 18,
-    marginBottom: 28,
+    marginBottom: 12,
+  },
+  paymentMethodCardActive: {
+    borderColor: 'rgba(99,102,241,0.5)',
   },
   paymentMethodRow: {
     flexDirection: 'row',
@@ -388,6 +463,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  checkCircleInactive: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: 'rgba(148,163,184,0.4)',
+  },
+  cashNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: 'rgba(245,158,11,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.25)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 20,
+  },
+  cashNoticeText: {
+    color: '#fbbf24',
+    fontSize: 12,
+    lineHeight: 18,
+    flex: 1,
   },
 
   // Buttons
