@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { createBooking } from '../services/bookingService';
 import CustomButton from '../components/CustomButton';
 import InputField from '../components/InputField';
 import { formatCurrency, calculateDays } from '../utils/helpers';
@@ -21,12 +20,11 @@ export default function BookingScreen({ route, navigation }) {
   const [pickupDate, setPickupDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
   const [rentalTermsAccepted, setRentalTermsAccepted] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const days = pickupDate && returnDate ? calculateDays(pickupDate, returnDate) : 0;
   const total = days * vehicle.pricePerDay;
 
-  const handleBooking = async () => {
+  const handleBooking = () => {
     if (!pickupDate || !returnDate) {
       Alert.alert('Error', 'Please select both pickup and return dates');
       return;
@@ -35,32 +33,16 @@ export default function BookingScreen({ route, navigation }) {
       Alert.alert('Error', 'You must agree to the rental terms and damage policy.');
       return;
     }
-    setLoading(true);
-    try {
-      const res = await createBooking({
-        vehicleId: vehicle._id,
-        startDate: pickupDate,
-        endDate: returnDate,
-        hasDriver: false,
-      });
-      navigation.navigate('Payment', { booking: res.data });
-    } catch (err) {
-      console.error('Booking error:', err);
-      if (err.response?.status === 403) {
-        Alert.alert(
-          'Account Not Verified',
-          err.response?.data?.message || 'Please upload your ID and license documents and wait for admin approval before booking.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Go to Profile', onPress: () => navigation.navigate('Profile') },
-          ]
-        );
-      } else {
-        Alert.alert('Error', err.response?.data?.message || 'Booking failed');
-      }
-    } finally {
-      setLoading(false);
-    }
+    // Booking isn't created yet — pass details to Payment, where the
+    // customer picks Card/Cash and the booking + payment are created together.
+    navigation.navigate('Payment', {
+      vehicle,
+      startDate: pickupDate,
+      endDate: returnDate,
+      hasDriver: false,
+      days,
+      total,
+    });
   };
 
   return (
@@ -179,7 +161,7 @@ export default function BookingScreen({ route, navigation }) {
         <TouchableOpacity
           style={[styles.confirmBtnWrapper, !rentalTermsAccepted && { opacity: 0.5 }]}
           onPress={handleBooking}
-          disabled={loading || !rentalTermsAccepted}
+          disabled={!rentalTermsAccepted}
           activeOpacity={0.85}
         >
           <LinearGradient
@@ -188,14 +170,8 @@ export default function BookingScreen({ route, navigation }) {
             end={{ x: 1, y: 0 }}
             style={styles.confirmBtn}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.confirmBtnText}>Confirm Booking</Text>
-              </>
-            )}
+            <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.confirmBtnText}>Continue to Payment</Text>
           </LinearGradient>
         </TouchableOpacity>
 
