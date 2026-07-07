@@ -149,6 +149,22 @@ const renderItem = ({ item }) => {
           {formatCurrency(item.totalAmount || item.amount)}
         </Text>
       </View>
+
+      {item.status?.toLowerCase() === 'completed' && (
+        <TouchableOpacity
+          style={styles.reviewBtn}
+          onPress={() =>
+            navigation.navigate('LeaveReview', {
+              bookingId: item._id,
+              vehicleName,
+            })
+          }
+          activeOpacity={0.8}
+        >
+          <Ionicons name="star-outline" size={15} color="#f59e0b" />
+          <Text style={styles.reviewBtnText}>Leave a Review</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -379,6 +395,25 @@ const styles = StyleSheet.create({
   },
   viewBtnText: {
     color: '#6366f1',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  // Review Button
+  reviewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.3)',
+  },
+  reviewBtnText: {
+    color: '#f59e0b',
     fontSize: 13,
     fontWeight: '700',
   },
