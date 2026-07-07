@@ -19,6 +19,7 @@ import MyBookingsScreen from '../Booking/MyBookingsScreen';
 import BookingScreen from '../Booking/BookingScreen';
 import PaymentScreen from '../Payment/PaymentScreen';
 import ProfileScreen from '../Profile/ProfileScreen';
+import LeaveReviewScreen from '../Booking/LeaveReviewScreen';
 
 // Staff Screen
 import StaffDashboardScreen from '../Staff/StaffDashboardScreen';
@@ -121,6 +122,11 @@ export default function AppNavigator() {
             <Stack.Screen
               name="Payment"
               component={PaymentScreen}
+              options={{ animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen
+              name="LeaveReview"
+              component={LeaveReviewScreen}
               options={{ animation: 'slide_from_bottom' }}
             />
           </>
