@@ -19,6 +19,7 @@ import { API_BASE_URL } from '../utils/constants';
 import { formatCurrency } from '../utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
+import VehicleReviewsSection from '../components/VehicleReviewsSection';
 
 const { width, height } = Dimensions.get('window');
 const IMAGE_HEIGHT = 300;
@@ -166,6 +167,9 @@ export default function VehicleDetailsScreen({ route, navigation }) {
               ))}
             </View>
           </View>
+
+          {/* Customer Reviews */}
+          <VehicleReviewsSection vehicleId={vehicle._id} />
         </View>
 
         {/* Space for sticky bar */}
