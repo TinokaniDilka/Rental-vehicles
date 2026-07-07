@@ -448,7 +448,7 @@ const fetchPendingVerifications = async () => {
       onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
       onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
     >
-      <h3 style={{ margin: "0 0 10px 0" }}>📅 System Booking Logs</h3>
+      <h3 style={{ margin: "0 0 10px 0" }}>📊 Quick Reports</h3>
       <p style={{ color: "var(--text-secondary)", margin: 0 }}>View all bookings and their current status</p>
     </div>
 
