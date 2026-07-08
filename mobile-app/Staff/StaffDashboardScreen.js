@@ -1089,8 +1089,8 @@ const getGreeting = () => {
 
   // ─── Modal: Add/Edit Vehicle ────────────────────────────────────────────────
 
-  const VehicleModal = () => (
-    <Modal
+const renderVehicleModal = () => (
+      <Modal
       visible={showVehicleModal}
       animationType="slide"
       transparent
@@ -1454,11 +1454,11 @@ const getGreeting = () => {
       </View>
 
       {/* Modals */}
-      <VehicleModal />
-      <ReviewModal />
-      <ReturnModal />
-      <ComplaintModal />
-      <ReplyModal />
+      {renderVehicleModal()}
+{renderReviewModal()}
+{renderReturnModal()}
+{renderComplaintModal()}
+{renderReplyModal()}
     </LinearGradient>
   );
 }
