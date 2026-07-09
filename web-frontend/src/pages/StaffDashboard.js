@@ -53,11 +53,15 @@ const isBookingOverdue = (booking) =>
   booking.status === "ongoing" && new Date(booking.endDate) < new Date();
 
 const getDepositLabel = (booking) => {
-  const amount = booking.depositAmount || booking.vehicleId?.depositAmount || 0;
+  // Only show a deposit pill if this specific booking actually has a deposit
+  // on it — don't fall back to the vehicle's deposit amount, since that
+  // produces a phantom "Deposit Held" pill on bookings that were rejected
+  // or never reached a deposit-charging status.
+  const amount = booking.depositAmount || 0;
   if (amount <= 0) return null;
-  if (booking.depositStatus === "released") return { text: `Deposit Released: $${amount}`, color: "var(--success)" };
-  if (booking.depositStatus === "captured") return { text: `Deposit Captured (Dispute): $${amount}`, color: "var(--danger)" };
-  return { text: `Deposit Held: $${amount}`, color: "var(--warning)" };
+  if (booking.depositStatus === "released") return { text: `Deposit Released: $${amount}`, tone: "success" };
+  if (booking.depositStatus === "captured") return { text: `Deposit Captured (Dispute): $${amount}`, tone: "danger" };
+  return { text: `Deposit Held: $${amount}`, tone: "warning" };
 };
 
 const notifications = {
@@ -947,16 +951,10 @@ const filteredComplaints = complaintCategoryFilter === "all"
 <div key={b._id} className="glass-card" style={{ padding: "20px", display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(180px, 1fr) minmax(180px, auto)", gap: "20px", alignItems: "center" }}>  
   {/* Column 1: Booking Info */}
   <div>
-    <h4 style={{ margin: 0, fontSize: "19px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
+    <h4 style={{ margin: 0, fontSize: "20px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
     <p style={{ margin: "4px 0", fontSize: "14px", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
       👤 <strong>Customer:</strong> {b.customerId?.name} ({b.customerId?.email})
-      <span style={{
-        fontSize: "11px", fontWeight: "700", padding: "2px 8px", borderRadius: "12px",
-        background: isVerified ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
-        color: isVerified ? "#10b981" : "#f59e0b"
-      }}>
-        {isVerified ? "✅ Verified" : "⚠️ Not Verified"}
-      </span>
+      <StatusPill label={isVerified ? "Verified" : "Not Verified"} tone={isVerified ? "success" : "warning"} />
     </p>
     <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "14px" }}>📅 {start} - {end}</p>
     {b.hasDriver && <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--primary)", fontWeight: "600" }}>🚖 Driver Requested {b.driverName ? `| ${b.driverName}` : ""}</p>}
@@ -972,11 +970,27 @@ const filteredComplaints = complaintCategoryFilter === "all"
         {b.discount > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--success)" }}>Discount: -${b.discount}</p>}
         {b.additionalFees > 0 && <p style={{ margin: 0, fontSize: "13px" }}>Extra: ${b.additionalFees}</p>}
         {b.damageCharge > 0 && <p style={{ margin: 0, fontSize: "13px", color: "var(--danger)" }}>Damage: ${b.damageCharge}</p>}
-        {depositInfo && <p style={{ margin: "4px 0 0", fontSize: "13px", color: depositInfo.color, fontWeight: "600" }}>{depositInfo.text}</p>}
+        {depositInfo && (
+          <div style={{ marginTop: "6px" }}>
+            <StatusPill label={depositInfo.text} tone={depositInfo.tone} />
+          </div>
+        )}
         <h4 style={{ margin: "4px 0 0", color: "white" }}>Total: ${b.totalAmount}</h4>
       </>
     ) : (
-      <p style={{ fontStyle: "italic", color: "var(--text-muted)", fontSize: "13px", margin: "4px 0 0" }}>Awaiting review...</p>
+      <div style={{
+        marginTop: "6px",
+        padding: "10px 12px",
+        borderRadius: "10px",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px dashed var(--border-color)",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px"
+      }}>
+        <span style={{ fontSize: "16px" }}>⏳</span>
+        <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "13px" }}>Awaiting staff review — no invoice yet</p>
+      </div>
     )}
   </div>
 
@@ -984,17 +998,12 @@ const filteredComplaints = complaintCategoryFilter === "all"
   <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-end" }}>
     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
       <span className={`badge-base badge-${b.status}`}>{b.status.toUpperCase()}</span>
-      {overdue && (
-        <span style={{ fontSize: "11px", fontWeight: "700", padding: "4px 8px", borderRadius: "12px", background: "rgba(239,68,68,0.2)", color: "#ef4444" }}>OVERDUE</span>
-      )}
+      {overdue && <StatusPill label="Overdue" tone="danger" />}
       {b.paymentMethod === "cash" && (
-        <span style={{
-          fontSize: "11px", fontWeight: "700", padding: "4px 8px", borderRadius: "12px",
-          background: b.cashPaymentConfirmed ? "rgba(16,185,129,0.2)" : "rgba(148,163,184,0.2)",
-          color: b.cashPaymentConfirmed ? "#10b981" : "#94a3b8"
-        }}>
-          {b.cashPaymentConfirmed ? "Cash - Confirmed" : "Cash - Awaiting Confirmation"}
-        </span>
+        <StatusPill
+          label={b.cashPaymentConfirmed ? "Cash - Confirmed" : "Cash - Awaiting Confirmation"}
+          tone={b.cashPaymentConfirmed ? "success" : "neutral"}
+        />
       )}
     </div>
     {b.status === "pending" && (
@@ -1012,12 +1021,7 @@ const filteredComplaints = complaintCategoryFilter === "all"
     {b.status === "ongoing" && (
       <>
         {b.handoverStatus === "returned" && (
-          <span style={{
-            fontSize: "11px", fontWeight: "700", padding: "4px 8px", borderRadius: "12px",
-            background: "rgba(16,185,129,0.15)", color: "#10b981"
-          }}>
-            ✅ Customer Confirmed Return
-          </span>
+          <StatusPill label="Customer Confirmed Return" tone="success" />
         )}
         <button
           className="btn-base btn-primary"
@@ -1094,8 +1098,14 @@ const filteredComplaints = complaintCategoryFilter === "all"
 
   {(feedbackTab === "reviews" ? reviews : filteredComplaints).length === 0 ? (
 
-    <div className="glass-card" style={{ padding: "40px", textAlign: "center" }}>
-      <h3>No {feedbackTab} found</h3>
+    <div className="glass-card" style={{ padding: "50px", textAlign: "center" }}>
+      <span style={{ fontSize: "64px" }}>{feedbackTab === "reviews" ? "⭐" : "✅"}</span>
+      <h3 style={{ margin: "12px 0 4px" }}>No {feedbackTab} found</h3>
+      <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "13.5px" }}>
+        {feedbackTab === "reviews"
+          ? "Customer reviews will show up here once they're submitted."
+          : "Nothing to resolve right now — you're all caught up."}
+      </p>
     </div>
 
   ) : (
@@ -1108,24 +1118,14 @@ const filteredComplaints = complaintCategoryFilter === "all"
                   }}>
                     <div style={{ flex: 2 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px", flexWrap: "wrap" }}>
-                        <span style={{
-                          background: f.type === "complaint" ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
-                          color: f.type === "complaint" ? "var(--danger)" : "var(--warning)",
-                          padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700"
-                        }}>{f.type.toUpperCase()}</span>
+                        <StatusPill label={f.type.toUpperCase()} tone={f.type === "complaint" ? "danger" : "warning"} />
                         {f.type === "complaint" && f.category && (
-                          <span style={{
-                            background: f.category === "Theft/Suspicious" ? "rgba(239,68,68,0.25)" : "rgba(99,102,241,0.15)",
-                            color: f.category === "Theft/Suspicious" ? "#ef4444" : "#818cf8",
-                            padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700"
-                          }}>{f.category}</span>
+                          <StatusPill label={f.category} tone={f.category === "Theft/Suspicious" ? "danger" : "accent"} />
                         )}
-                        {f.escalated && (
-                          <span style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", padding: "4px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700" }}>ESCALATED</span>
-                        )}
+                        {f.escalated && <StatusPill label="Escalated" tone="warning" />}
                         {f.type === "feedback" && <span style={{ color: "#fbbf24" }}>{"★".repeat(f.rating)}</span>}
                       </div>
-                      <p style={{ margin: "5px 0", fontSize: "16px", color: "white", fontStyle: "italic" }}>"{f.comment}"</p>
+                      <p style={{ margin: "5px 0", fontSize: "17px", color: "white", fontWeight: "500" }}>"{f.comment}"</p>
                       <p style={{ fontSize: "12.5px", color: "var(--text-secondary)" }}>
                         From: <strong>{f.customerId?.name}</strong> ({f.customerId?.email}) | Target: {f.bookingId?.vehicleId?.name || "Vehicle"}
                       </p>
@@ -1133,7 +1133,9 @@ const filteredComplaints = complaintCategoryFilter === "all"
 
 <div style={{ borderLeft: "1px solid var(--border-color)", paddingLeft: "20px" }}>                      {f.type === "complaint" ? (
                         <div style={{ marginBottom: "10px" }}>
-                          <p style={{ margin: 0, fontSize: "13.5px" }}>Status: <strong style={{ color: f.complaintStatus === "Resolved" ? "var(--success)" : "var(--warning)" }}>{f.complaintStatus}</strong></p>
+                          <div style={{ marginBottom: "4px" }}>
+                            <StatusPill label={f.complaintStatus} tone={f.complaintStatus === "Resolved" ? "success" : "warning"} />
+                          </div>
                           {f.staffResponse && (
                             <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--text-secondary)" }}><strong>Action comments:</strong> {f.staffResponse}</p>
                           )}
@@ -1455,6 +1457,35 @@ const filteredComplaints = complaintCategoryFilter === "all"
     </div>
   );
 }
+
+// Standardized badge: same pill shape everywhere, color = meaning, filled = active/attention
+const StatusPill = ({ label, tone = "neutral", filled = true }) => {
+  const tones = {
+    success: "#10b981",
+    warning: "#f59e0b",
+    danger: "#ef4444",
+    accent: "#818cf8",
+    neutral: "#94a3b8"
+  };
+  const c = tones[tone] || tones.neutral;
+  return (
+    <span style={{
+      fontSize: "11px",
+      fontWeight: "700",
+      padding: "4px 10px",
+      borderRadius: "999px",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "4px",
+      whiteSpace: "nowrap",
+      color: c,
+      background: filled ? `${c}26` : "transparent",
+      border: filled ? "1px solid transparent" : `1px solid ${c}`
+    }}>
+      {label}
+    </span>
+  );
+};
 
 const NavItem = ({ label, active, onClick }) => (
   <div className={`nav-link-item ${active ? "nav-link-item-active" : ""}`} onClick={onClick}>
