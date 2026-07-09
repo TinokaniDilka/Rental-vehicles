@@ -30,7 +30,7 @@ import * as ImagePicker from 'expo-image-picker';
 // ─── Mini Components ────────────────────────────────────────────────────────
 
 const MetricCard = ({ icon, title, value, color, subtitle }) => (
-  <View style={[styles.metricCard, { borderTopColor: color }]}>
+  <View style={[styles.metricCard, { borderTopColor: color, shadowColor: color }]}>
     <View style={[styles.metricIconCircle, { backgroundColor: color + '25' }]}>
       <Text style={{ fontSize: 22 }}>{icon}</Text>
     </View>
@@ -622,21 +622,27 @@ const getGreeting = () => {
       <View style={styles.glassCard}>
         <Text style={styles.cardTitle}>⚡ Quick Operations</Text>
         <View style={styles.quickActionsRow}>
-          <TouchableOpacity style={styles.quickActionBtn} onPress={() => openVehicleModal(null)}>
-            <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.quickActionGrad}>
-              <Ionicons name="add-circle" size={22} color="white" />
+          <TouchableOpacity style={styles.quickActionBtn} onPress={() => openVehicleModal(null)} activeOpacity={0.85}>
+            <LinearGradient colors={['#6366f1', '#4f46e5']} style={[styles.quickActionGrad, styles.quickActionShadowIndigo]}>
+              <View style={styles.quickActionIconWrap}>
+                <Ionicons name="add-circle" size={20} color="white" />
+              </View>
               <Text style={styles.quickActionLabel}>Add Vehicle</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickActionBtn} onPress={() => setActivePage('bookings')}>
-            <LinearGradient colors={['#0ea5e9', '#0284c7']} style={styles.quickActionGrad}>
-              <Ionicons name="calendar-outline" size={22} color="white" />
+          <TouchableOpacity style={styles.quickActionBtn} onPress={() => setActivePage('bookings')} activeOpacity={0.85}>
+            <LinearGradient colors={['#0ea5e9', '#0284c7']} style={[styles.quickActionGrad, styles.quickActionShadowBlue]}>
+              <View style={styles.quickActionIconWrap}>
+                <Ionicons name="calendar-outline" size={20} color="white" />
+              </View>
               <Text style={styles.quickActionLabel}>Bookings</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickActionBtn} onPress={() => setActivePage('complaints')}>
-            <LinearGradient colors={['#f43f5e', '#e11d48']} style={styles.quickActionGrad}>
-              <Ionicons name="chatbubble-outline" size={22} color="white" />
+          <TouchableOpacity style={styles.quickActionBtn} onPress={() => setActivePage('complaints')} activeOpacity={0.85}>
+            <LinearGradient colors={['#f43f5e', '#e11d48']} style={[styles.quickActionGrad, styles.quickActionShadowRose]}>
+              <View style={styles.quickActionIconWrap}>
+                <Ionicons name="chatbubble-outline" size={20} color="white" />
+              </View>
               <Text style={styles.quickActionLabel}>Reviews</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -1603,10 +1609,20 @@ const renderVehicleModal = () => (
 
       {/* Top Navbar */}
       <View style={styles.topBar}>
-        <View>
-          <Text style={styles.topBarBrand}>🛠️ QuickRide Staff</Text>
-          <Text style={styles.topBarUser}>{user?.name}</Text>
+        <View style={styles.topBarRow}>
+          <LinearGradient colors={['#818cf8', '#6366f1']} style={styles.topBarAvatar}>
+            <Text style={styles.topBarAvatarText}>{(user?.name || 'S').charAt(0).toUpperCase()}</Text>
+          </LinearGradient>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.topBarBrand}>{user?.name || 'Staff Member'}</Text>
+            <Text style={styles.topBarUser}>QuickRide Staff Console</Text>
+          </View>
+          <View style={styles.topBarRolePill}>
+            <Ionicons name="build" size={12} color="#818cf8" />
+            <Text style={styles.topBarRoleText}>STAFF</Text>
+          </View>
         </View>
+        <View style={styles.topBarGlow} />
       </View>
 
       {/* Page Content */}
@@ -1645,12 +1661,30 @@ const renderVehicleModal = () => (
 const styles = StyleSheet.create({
   // Top Bar
   topBar: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.2)',
+    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 18,
   },
-  topBarBrand: { fontSize: 20, fontWeight: '800', color: '#f8fafc' },
+  topBarRow: {
+    flexDirection: 'row', alignItems: 'center',
+  },
+  topBarAvatar: {
+    width: 44, height: 44, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#6366f1', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 5,
+  },
+  topBarAvatarText: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarBrand: { fontSize: 18, fontWeight: '800', color: '#f8fafc', letterSpacing: 0.2 },
   topBarUser: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  topBarRolePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(99,102,241,0.15)',
+    borderWidth: 1, borderColor: 'rgba(99,102,241,0.35)',
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
+  },
+  topBarRoleText: { color: '#818cf8', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
+  topBarGlow: {
+    height: 1, marginTop: 18,
+    backgroundColor: 'rgba(99,102,241,0.35)',
+  },
   logoutBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(239,68,68,0.15)',
@@ -1666,7 +1700,10 @@ const styles = StyleSheet.create({
   },
   tabItem: { flex: 1, alignItems: 'center' },
   tabIconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  tabIconWrapActive: { backgroundColor: 'rgba(99,102,241,0.2)' },
+  tabIconWrapActive: {
+    backgroundColor: 'rgba(99,102,241,0.2)',
+    shadowColor: '#6366f1', shadowOpacity: 0.6, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4,
+  },
   tabLabel: { fontSize: 10, color: '#475569', marginTop: 2 },
   tabLabelActive: { color: '#6366f1', fontWeight: '700' },
 
@@ -1688,7 +1725,10 @@ const styles = StyleSheet.create({
     shadowColor: '#6366f1', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15, shadowRadius: 12, elevation: 6,
   },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#f8fafc', marginBottom: 14 },
+  cardTitle: {
+    fontSize: 15, fontWeight: '800', color: '#f8fafc', marginBottom: 14,
+    letterSpacing: 0.3, textTransform: 'uppercase',
+  },
 
   // Dashboard
   pageContent: { padding: 16, paddingBottom: 100 },
@@ -1710,8 +1750,8 @@ welcomeBanner: {
     borderRadius: 16, padding: 16, borderWidth: 1,
     borderColor: 'rgba(99,102,241,0.2)', borderTopWidth: 3,
     alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 6, elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35, shadowRadius: 10, elevation: 4,
   },
   metricIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   metricValue: { fontSize: 24, fontWeight: '800', color: '#f8fafc' },
@@ -1721,6 +1761,14 @@ welcomeBanner: {
   quickActionsRow: { flexDirection: 'row', gap: 10 },
   quickActionBtn: { flex: 1 },
   quickActionGrad: { borderRadius: 14, padding: 14, alignItems: 'center', gap: 6 },
+  quickActionIconWrap: {
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  quickActionShadowIndigo: { shadowColor: '#6366f1', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  quickActionShadowBlue: { shadowColor: '#0ea5e9', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  quickActionShadowRose: { shadowColor: '#f43f5e', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   quickActionLabel: { color: 'white', fontSize: 12, fontWeight: '600' },
 
   overviewRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.1)' },
