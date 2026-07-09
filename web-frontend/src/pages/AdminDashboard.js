@@ -520,7 +520,7 @@ const fetchPendingVerifications = async () => {
                  </select>
           </div>
 
-<button className="btn-base btn-primary" onClick={() => setShowStaffModal(true)}>➕ Register Admin</button>            </div>
+<button className="btn-base btn-primary" onClick={() => { setStaffName(""); setStaffEmail(""); setStaffPassword(""); setStaffRole("staff"); setShowStaffModal(true); }}>➕ Register Admin</button>            </div>
 
             <div className="custom-table-container">
               <table className="custom-table">
@@ -546,29 +546,20 @@ const fetchPendingVerifications = async () => {
                       <td className="custom-td custom-td-primary">{u.name}</td>
                       <td className="custom-td">{u.email}</td>
                       <td className="custom-td">
-                        <span style={{
-                          padding: "4px 8px",
-                          borderRadius: "12px",
-                          fontSize: "11px",
-                          fontWeight: "700",
-                          background: u.role === "admin" ? "rgba(244,63,94,0.15)" : u.role === "staff" ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.08)",
-                          color: u.role === "admin" ? "var(--accent)" : u.role === "staff" ? "var(--primary)" : "var(--text-secondary)",
-                          border: u.role === "admin" ? "1px solid rgba(244,63,94,0.25)" : u.role === "staff" ? "1px solid rgba(99,102,241,0.25)" : "1px solid rgba(255,255,255,0.1)"
-                        }}>{u.role.toUpperCase()}</span>
+                        <StatusPill
+                          label={u.role.toUpperCase()}
+                          tone={u.role === "admin" ? "danger" : u.role === "staff" ? "accent" : "neutral"}
+                        />
                       </td>
                       <td className="custom-td">
                         {u.role === "customer" ? (
-                          <span style={{
-                            padding: "4px 8px",
-                            borderRadius: "12px",
-                            fontSize: "11px",
-                            fontWeight: "700",
-                            background: u.verificationStatus === "Verified" ? "rgba(16,185,129,0.15)" : u.verificationStatus === "Pending Review" ? "rgba(245,158,11,0.15)" : "rgba(148,163,184,0.15)",
-                            color: u.verificationStatus === "Verified" ? "#10b981" : u.verificationStatus === "Pending Review" ? "#f59e0b" : "#94a3b8",
-                            border: u.verificationStatus === "Verified" ? "1px solid rgba(16,185,129,0.25)" : u.verificationStatus === "Pending Review" ? "1px solid rgba(245,158,11,0.25)" : "1px solid rgba(148,163,184,0.25)"
-                          }}>
-                            {u.verificationStatus || "Not Verified"}
-                          </span>
+                          <StatusPill
+                            label={u.verificationStatus || "Not Verified"}
+                            tone={
+                              u.verificationStatus === "Verified" ? "success" :
+                              u.verificationStatus === "Pending Review" ? "warning" : "neutral"
+                            }
+                          />
                         ) : (
                           <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>—</span>
                         )}
@@ -1110,20 +1101,20 @@ const fetchPendingVerifications = async () => {
     <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
       <h3 style={{ fontSize: "20px", fontWeight: "700" }}>Register New Account</h3>
 
-      <form onSubmit={handleCreateStaff} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
+      <form onSubmit={handleCreateStaff} autoComplete="off" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <label className="form-label">Name</label>
-          <input type="text" placeholder="e.g. John Doe" value={staffName} onChange={(e) => setStaffName(e.target.value)} className="custom-input" required />
+          <input type="text" placeholder="e.g. John Doe" value={staffName} onChange={(e) => setStaffName(e.target.value)} className="custom-input" autoComplete="off" required />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <label className="form-label">Email Address</label>
-          <input type="email" placeholder="example@quickride.com" value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} className="custom-input" required />
+          <input type="email" placeholder="example@quickride.com" value={staffEmail} onChange={(e) => setStaffEmail(e.target.value)} className="custom-input" autoComplete="off" name="new-staff-email" required />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <label className="form-label">Password</label>
-          <input type="password" placeholder="••••••••" value={staffPassword} onChange={(e) => setStaffPassword(e.target.value)} className="custom-input" required />
+          <input type="password" placeholder="••••••••" value={staffPassword} onChange={(e) => setStaffPassword(e.target.value)} className="custom-input" autoComplete="new-password" name="new-staff-password" required />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -1322,6 +1313,34 @@ const fetchPendingVerifications = async () => {
     </div>
   );
 }
+
+// Standardized badge — same pill shape everywhere, color = meaning
+const StatusPill = ({ label, tone = "neutral" }) => {
+  const tones = {
+    success: "#10b981",
+    warning: "#f59e0b",
+    danger: "#f43f5e",
+    accent: "#818cf8",
+    neutral: "#94a3b8"
+  };
+  const c = tones[tone] || tones.neutral;
+  return (
+    <span style={{
+      padding: "4px 10px",
+      borderRadius: "999px",
+      fontSize: "11px",
+      fontWeight: "700",
+      display: "inline-flex",
+      alignItems: "center",
+      whiteSpace: "nowrap",
+      color: c,
+      background: `${c}26`,
+      border: "1px solid transparent"
+    }}>
+      {label}
+    </span>
+  );
+};
 
 const NavItem = ({ label, active, onClick }) => (
   <div className={`nav-link-item ${active ? "nav-link-item-active" : ""}`} onClick={onClick}>
