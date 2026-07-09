@@ -26,15 +26,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { COLORS, SHADOWS, SIZES } from '../utils/theme';
 import { Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 // ─── Mini Components ────────────────────────────────────────────────────────
 
-const MetricCard = ({ icon, title, value, color }) => (
+const MetricCard = ({ icon, title, value, color, subtitle }) => (
   <View style={[styles.metricCard, { borderTopColor: color }]}>
     <View style={[styles.metricIconCircle, { backgroundColor: color + '25' }]}>
       <Text style={{ fontSize: 22 }}>{icon}</Text>
     </View>
     <Text style={styles.metricValue}>{value}</Text>
     <Text style={styles.metricTitle}>{title}</Text>
+    {subtitle ? <Text style={styles.metricSubtitle}>{subtitle}</Text> : null}
   </View>
 );
 
@@ -89,6 +91,8 @@ export default function StaffDashboardScreen({ navigation }) {
   const [stats, setStats] = useState({ active: 0, pending: 0 });
   const [earnings, setEarnings] = useState(0);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [bookingSearch, setBookingSearch] = useState('');
+  const [bookingDateFilter, setBookingDateFilter] = useState('');
   const [token, setToken] = useState('');
 
 
@@ -101,6 +105,9 @@ export default function StaffDashboardScreen({ navigation }) {
   const [vehicleLocation, setVehicleLocation] = useState('');
   const [vehicleDesc, setVehicleDesc] = useState('');
   const [vehicleRequireVerification, setVehicleRequireVerification] = useState(false);
+  const [vehicleIsAvailable, setVehicleIsAvailable] = useState(true);
+  const [vehicleImageUri, setVehicleImageUri] = useState(null);
+  const [vehicleImageChanged, setVehicleImageChanged] = useState(false);
   const [vehicleSaving, setVehicleSaving] = useState(false);
 
   // Review booking modal
@@ -204,6 +211,7 @@ const fetchBookings = async (t) => {
 
   // ── Vehicle CRUD ──
   const openVehicleModal = (vehicle = null) => {
+  console.log('openVehicleModal called, vehicle:', vehicle);
   setEditingVehicle(vehicle);
   setVehicleName(vehicle?.name || '');
   setVehicleType(vehicle?.type || 'car');
@@ -211,8 +219,29 @@ const fetchBookings = async (t) => {
   setVehicleLocation(vehicle?.location || '');
   setVehicleDesc(vehicle?.description || '');
   setVehicleRequireVerification(!!vehicle?.requireVerification);
+  setVehicleIsAvailable(vehicle?.isAvailable !== undefined ? vehicle.isAvailable : true);
+  setVehicleImageUri(vehicle?.image ? `${api.defaults.baseURL}${vehicle.image}` : null);
+  setVehicleImageChanged(false);
 
   setShowVehicleModal(true);
+};
+
+const pickVehicleImage = async () => {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert('Permission needed', 'Please allow photo library access to upload a vehicle photo.');
+    return;
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 0.7,
+    allowsEditing: true,
+    aspect: [4, 3],
+  });
+  if (!result.canceled && result.assets?.[0]?.uri) {
+    setVehicleImageUri(result.assets[0].uri);
+    setVehicleImageChanged(true);
+  }
 };
 
 
@@ -223,20 +252,51 @@ const saveVehicle = async () => {
   }
   setVehicleSaving(true);
   try {
-    const payload = {
-      name: vehicleName, 
-      type: vehicleType,
-      pricePerDay: parseFloat(vehiclePrice),
-      location: vehicleLocation,
-      description: vehicleDesc,
-      requireVerification: vehicleRequireVerification,
-    };
+    let payload;
+    let config = authHeaders();
+
+    if (vehicleImageChanged && vehicleImageUri) {
+      // A new photo was picked — send as multipart/form-data
+      const formData = new FormData();
+      formData.append('name', vehicleName);
+      formData.append('type', vehicleType);
+      formData.append('pricePerDay', parseFloat(vehiclePrice));
+      formData.append('location', vehicleLocation);
+      formData.append('description', vehicleDesc);
+      formData.append('requireVerification', vehicleRequireVerification);
+      formData.append('isAvailable', vehicleIsAvailable);
+      const filename = vehicleImageUri.split('/').pop() || 'vehicle.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const ext = match ? match[1].toLowerCase() : 'jpg';
+      formData.append('image', {
+        uri: vehicleImageUri,
+        name: filename,
+        type: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+      });
+      payload = formData;
+      config = {
+        headers: {
+          ...authHeaders().headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      };
+    } else {
+      payload = {
+        name: vehicleName,
+        type: vehicleType,
+        pricePerDay: parseFloat(vehiclePrice),
+        location: vehicleLocation,
+        description: vehicleDesc,
+        requireVerification: vehicleRequireVerification,
+        isAvailable: vehicleIsAvailable,
+      };
+    }
 
     if (editingVehicle) {
-      await api.put(`/api/vehicles/${editingVehicle._id}`, payload, authHeaders());
+      await api.put(`/api/vehicles/${editingVehicle._id}`, payload, config);
       Alert.alert('Success', 'Vehicle updated successfully ✅');
     } else {
-      await api.post('/api/vehicles', payload, authHeaders());   // ← Fixed
+      await api.post('/api/vehicles', payload, config);   // ← Fixed
       Alert.alert('Success', 'Vehicle added successfully ✅');
     }
     setShowVehicleModal(false);
@@ -477,9 +537,24 @@ const saveComplaintResponse = async () => {
 
 
   // ── Filtered Bookings ──
-  const filteredBookings = filterStatus === 'all'
-    ? bookings
-    : bookings.filter(b => b.status === filterStatus);
+  const filteredBookings = bookings
+    .filter(b => filterStatus === 'all' || b.status === filterStatus)
+    .filter(b => {
+      if (!bookingSearch.trim()) return true;
+      const q = bookingSearch.trim().toLowerCase();
+      return (
+        b.customerId?.name?.toLowerCase().includes(q) ||
+        b.customerId?.email?.toLowerCase().includes(q) ||
+        b.vehicleId?.name?.toLowerCase().includes(q)
+      );
+    })
+    .filter(b => {
+      if (!bookingDateFilter) return true;
+      const filterDate = new Date(bookingDateFilter).toDateString();
+      const start = new Date(b.startDate).toDateString();
+      const end = new Date(b.endDate).toDateString();
+      return filterDate === start || filterDate === end;
+    });
 
   const reviews = feedbacks.filter(f => f.type === 'feedback');
   const complaints = feedbacks.filter(f => f.type === 'complaint');
@@ -539,7 +614,7 @@ const getGreeting = () => {
         <MetricCard icon="⏳" title="PENDING" value={stats.pending} color="#f59e0b" />
         <MetricCard icon="🚗" title="ACTIVE" value={stats.active} color="#6366f1" />
         <MetricCard icon="📂" title="FLEET" value={vehicles.length} color="#0ea5e9" />
-        <MetricCard icon="💰" title="EARNINGS" value={`$${earnings}`} color="#10b981" />
+        <MetricCard icon="💰" title="EARNINGS" value={`$${earnings}`} color="#10b981" subtitle="All Time" />
         <MetricCard icon="✅" title="CONFIRMATIONS" value={getPendingConfirmationsCount(bookings)} color="#8b5cf6" />
       </View>
 
@@ -568,23 +643,62 @@ const getGreeting = () => {
         </View>
       </View>
 
-      {/* Recent Activity placeholder */}
+      {/* Alerts / Notifications */}
       <View style={styles.glassCard}>
-        <Text style={styles.cardTitle}>📊 Status Overview</Text>
-        {[
-          { label: 'Pending Approvals', val: stats.pending, color: '#f59e0b' },
-          { label: 'Active Rentals', val: stats.active, color: '#10b981' },
-          { label: 'Total Fleet', val: vehicles.length, color: '#6366f1' },
-          { label: 'Pending Confirmations', val: getPendingConfirmationsCount(bookings), color: '#8b5cf6' },
-          { label: 'Cash Pending', val: cashPendingCount, color: '#94a3b8' },
-          { label: 'Overdue Returns', val: overdueCount, color: '#ef4444' },
-        ].map((item, i) => (
-          <View key={i} style={styles.overviewRow}>
-            <View style={[styles.overviewDot, { backgroundColor: item.color }]} />
-            <Text style={styles.overviewLabel}>{item.label}</Text>
-            <Text style={[styles.overviewVal, { color: item.color }]}>{item.val}</Text>
-          </View>
-        ))}
+        <Text style={styles.cardTitle}>🔔 Needs Your Attention</Text>
+        {(() => {
+          const alerts = [
+            {
+              key: 'pending',
+              count: stats.pending,
+              icon: '⏳',
+              color: '#f59e0b',
+              message: (n) => `${n} booking${n > 1 ? 's' : ''} awaiting approval`,
+              onPress: () => { setActivePage('bookings'); setFilterStatus('pending'); },
+            },
+            {
+              key: 'confirmations',
+              count: getPendingConfirmationsCount(bookings),
+              icon: '🤝',
+              color: '#8b5cf6',
+              message: (n) => `${n} handover${n > 1 ? 's' : ''} awaiting confirmation`,
+              onPress: () => { setActivePage('bookings'); setFilterStatus('all'); },
+            },
+            {
+              key: 'cash',
+              count: cashPendingCount,
+              icon: '💵',
+              color: '#94a3b8',
+              message: (n) => `${n} cash payment${n > 1 ? 's' : ''} awaiting confirmation`,
+              onPress: () => { setActivePage('bookings'); setFilterStatus('all'); },
+            },
+            {
+              key: 'overdue',
+              count: overdueCount,
+              icon: '🔴',
+              color: '#ef4444',
+              message: (n) => `${n} overdue return${n > 1 ? 's' : ''}`,
+              onPress: () => { setActivePage('bookings'); setFilterStatus('ongoing'); },
+            },
+          ].filter(a => a.count > 0);
+
+          if (alerts.length === 0) {
+            return (
+              <View style={styles.overviewRow}>
+                <View style={[styles.overviewDot, { backgroundColor: '#10b981' }]} />
+                <Text style={styles.overviewLabel}>✅ All caught up — nothing needs attention right now</Text>
+              </View>
+            );
+          }
+
+          return alerts.map((a) => (
+            <TouchableOpacity key={a.key} style={styles.overviewRow} onPress={a.onPress} activeOpacity={0.7}>
+              <View style={[styles.overviewDot, { backgroundColor: a.color }]} />
+              <Text style={styles.overviewLabel}>{a.icon} {a.message(a.count)}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#475569" />
+            </TouchableOpacity>
+          ));
+        })()}
       </View>
 
       {/* Active Rentals with Overdue Tags */}
@@ -671,7 +785,7 @@ const getGreeting = () => {
               </View>
               <View style={[styles.availBadge, { backgroundColor: v.isAvailable ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)' }]}>
                 <Text style={{ color: v.isAvailable ? '#10b981' : '#ef4444', fontSize: 11, fontWeight: '700' }}>
-                  {v.isAvailable ? 'AVAIL' : 'RENTED'}
+                  {v.isAvailable ? 'AVAIL' : 'UNAVAILABLE'}
                 </Text>
               </View>
             </View>
@@ -700,6 +814,41 @@ const getGreeting = () => {
           <Text style={styles.pageSubtitle}>Process approvals, pickups & returns</Text>
         </View>
       </View>
+
+      {/* Search + Date Filter */}
+      <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+        <View style={styles.searchBarWrap}>
+          <Ionicons name="search" size={16} color="#6366f1" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.searchBarInput}
+            placeholder="Search customer name or email..."
+            placeholderTextColor="#475569"
+            value={bookingSearch}
+            onChangeText={setBookingSearch}
+          />
+          {bookingSearch.length > 0 && (
+            <TouchableOpacity onPress={() => setBookingSearch('')}>
+              <Ionicons name="close-circle" size={17} color="#475569" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={[styles.searchBarWrap, { marginTop: 8 }]}>
+          <Ionicons name="calendar-outline" size={16} color="#6366f1" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.searchBarInput}
+            placeholder="Filter by date (YYYY-MM-DD)"
+            placeholderTextColor="#475569"
+            value={bookingDateFilter}
+            onChangeText={setBookingDateFilter}
+          />
+          {bookingDateFilter.length > 0 && (
+            <TouchableOpacity onPress={() => setBookingDateFilter('')}>
+              <Ionicons name="close-circle" size={17} color="#475569" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       {/* Filter chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
         {['all', 'pending', 'confirmed', 'ongoing', 'completed', 'rejected'].map(s => (
@@ -1114,6 +1263,21 @@ const renderVehicleModal = () => (
             contentContainerStyle={{ paddingBottom: 120 }}
             bounces={false}
           >
+            <Text style={styles.inputLabel}>Vehicle Photo</Text>
+            <TouchableOpacity onPress={pickVehicleImage} style={styles.imagePickerBox} activeOpacity={0.8}>
+              {vehicleImageUri ? (
+                <Image source={{ uri: vehicleImageUri }} style={styles.imagePickerPreview} />
+              ) : (
+                <View style={styles.imagePickerPlaceholder}>
+                  <Ionicons name="camera-outline" size={28} color="#6366f1" />
+                  <Text style={styles.imagePickerText}>Tap to add a photo</Text>
+                </View>
+              )}
+              <View style={styles.imagePickerEditBadge}>
+                <Ionicons name="pencil" size={13} color="#fff" />
+              </View>
+            </TouchableOpacity>
+
             <Text style={styles.inputLabel}>Vehicle Name *</Text>
             <TextInput
               style={styles.modalInput}
@@ -1198,6 +1362,19 @@ const renderVehicleModal = () => (
                 value={vehicleRequireVerification}
                 onValueChange={setVehicleRequireVerification}
                 trackColor={{ false: '#334155', true: '#6366f1' }}
+                thumbColor="#f8fafc"
+              />
+            </View>
+
+            <View style={styles.toggleRow}>
+              <View style={{ flex: 1, marginRight: 12 }}>
+                <Text style={styles.inputLabel}>Available for booking</Text>
+                <Text style={styles.toggleHint}>Turn off to temporarily hide this vehicle from customers (e.g. in for service)</Text>
+              </View>
+              <Switch
+                value={vehicleIsAvailable}
+                onValueChange={setVehicleIsAvailable}
+                trackColor={{ false: '#334155', true: '#10b981' }}
                 thumbColor="#f8fafc"
               />
             </View>
@@ -1455,10 +1632,10 @@ const renderVehicleModal = () => (
 
       {/* Modals */}
       {renderVehicleModal()}
-{renderReviewModal()}
-{renderReturnModal()}
-{renderComplaintModal()}
-{renderReplyModal()}
+{ReviewModal()}
+{ReturnModal()}
+{ComplaintModal()}
+{ReplyModal()}
     </LinearGradient>
   );
 }
@@ -1539,6 +1716,7 @@ welcomeBanner: {
   metricIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   metricValue: { fontSize: 24, fontWeight: '800', color: '#f8fafc' },
   metricTitle: { fontSize: 10, fontWeight: '700', color: '#64748b', textTransform: 'uppercase',color: '#cbd5f5', letterSpacing: 0.5, marginTop: 2 },
+  metricSubtitle: { fontSize: 9, fontWeight: '600', color: '#475569', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.3 },
 
   quickActionsRow: { flexDirection: 'row', gap: 10 },
   quickActionBtn: { flex: 1 },
@@ -1634,6 +1812,61 @@ filterChipText: {
   theftComplaintCard: { borderColor: '#ef4444', borderWidth: 2, shadowColor: '#ef4444', shadowOpacity: 0.3, shadowRadius: 8 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, padding: 14, backgroundColor: 'rgba(15,23,42,0.4)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)' },
   toggleHint: { fontSize: 11, color: '#64748b', marginTop: 4 },
+
+  searchBarWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(30,41,59,0.8)',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.25)',
+  },
+  searchBarInput: {
+    flex: 1,
+    color: '#f8fafc',
+    fontSize: 14,
+  },
+
+  imagePickerBox: {
+    width: '100%',
+    height: 160,
+    borderRadius: 16,
+    backgroundColor: 'rgba(15,23,42,0.6)',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.3)',
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  imagePickerPreview: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePickerPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imagePickerText: {
+    color: '#6366f1',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  imagePickerEditBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(99,102,241,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   // Complaints / Feedback
   feedbackHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
