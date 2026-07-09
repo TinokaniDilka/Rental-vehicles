@@ -149,6 +149,10 @@ const reviewBooking = async (req, res) => {
       // Copy deposit from vehicle
       booking.depositAmount = booking.vehicleId.depositAmount || 0;
       booking.depositStatus = booking.depositAmount > 0 ? "held" : "released";
+    } else if (status === "rejected") {
+      // Nothing was ever charged or held for a rejected booking
+      booking.depositAmount = 0;
+      booking.depositStatus = "released";
     }
 
     await booking.save();
@@ -440,6 +444,13 @@ const cancelBooking = async (req, res) => {
     booking.refundAmount = refundAmount;
     booking.refundedAt = new Date();
     booking.staffRetainedAmount = staffRetainedAmount;
+
+    // Release any held deposit — cancellation refund logic above already
+    // accounts for the vehicle charge split, so the deposit itself (a
+    // separate security hold, not a charge) should simply be freed up.
+    if (booking.depositAmount > 0 && booking.depositStatus === "held") {
+      booking.depositStatus = "released";
+    }
 
     await booking.save();
 
