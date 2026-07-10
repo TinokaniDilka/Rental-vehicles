@@ -2,11 +2,17 @@ const User = require("../models/User");
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Please provide email and password" });
     }
+
+    // Emails are stored trimmed + lowercased (see /register and the
+    // schema's `lowercase: true`). The lookup must normalize the same
+    // way, or a login with different casing/whitespace silently fails
+    // to match and returns "Invalid email or password".
+    email = email.trim().toLowerCase();
 
     const user = await User.findOne({ email });
 
