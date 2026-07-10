@@ -21,7 +21,6 @@ import { updateProfile as updateProfileApi, uploadVerificationDocs } from '../se
 
 const SETTINGS_ITEMS = [
   { icon: 'person-outline', label: 'Edit Profile', route: 'EditProfile' },
-  { icon: 'notifications-outline', label: 'Notifications', route: 'Notifications' },
   { icon: 'help-circle-outline', label: 'Help & Support', route: 'Support' },
 ];
 
