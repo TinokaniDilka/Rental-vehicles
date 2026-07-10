@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Alert } from 'react-native';
-
+import StaffTabBar from '../components/StaffTabBar';
 import {
   View,
   Text,
@@ -1635,16 +1635,7 @@ const renderVehicleModal = () => (
       </View>
 
       {/* Bottom Tab Bar */}
-      <View style={styles.bottomBar}>
-        {tabs.map(tab => (
-          <TouchableOpacity key={tab.id} style={styles.tabItem} onPress={() => setActivePage(tab.id)}>
-            <View style={[styles.tabIconWrap, activePage === tab.id && styles.tabIconWrapActive]}>
-              <Ionicons name={tab.icon} size={22} color={activePage === tab.id ? '#6366f1' : '#475569'} />
-            </View>
-            <Text style={[styles.tabLabel, activePage === tab.id && styles.tabLabelActive]}>{tab.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <StaffTabBar activeTab={activePage} onTabPress={setActivePage} />
 
       {/* Modals */}
       {renderVehicleModal()}
