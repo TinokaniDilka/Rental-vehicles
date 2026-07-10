@@ -48,13 +48,33 @@ const createBooking = async (req, res) => {
       return res.status(400).json({ message: "Vehicle is already booked for these dates." });
     }
 
+    // Look up vehicle so we can show the customer an estimated total
+    // even before staff approval — previously this was left at 0 until
+    // reviewBooking ran, which showed "LKR 0" on pending bookings.
+    const vehicle = await Vehicle.findById(vehicleId);
+    if (!vehicle) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+    const baseCharge = (vehicle.pricePerDay || 0) * days;
+    const driverCharge = hasDriver ? 50 * days : 0;
+    const totalAmount = baseCharge + driverCharge;
+
     const booking = new Booking({
       vehicleId,
       customerId,
       startDate,
       endDate,
       hasDriver,
-      status: "pending"
+      status: "pending",
+      baseCharge,
+      driverCharge,
+      totalAmount,
+      depositAmount: vehicle.depositAmount || 0
     });
 
     await booking.save();
