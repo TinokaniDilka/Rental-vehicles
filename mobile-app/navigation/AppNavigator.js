@@ -2,9 +2,6 @@ import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { View, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../context/AuthContext';
 
 // Auth Screens
@@ -20,9 +17,13 @@ import BookingScreen from '../Booking/BookingScreen';
 import PaymentScreen from '../Payment/PaymentScreen';
 import ProfileScreen from '../Profile/ProfileScreen';
 import LeaveReviewScreen from '../Booking/LeaveReviewScreen';
+import AlertsScreen from '../Alerts/AlertsScreen';
 
 // Staff Screen
 import StaffDashboardScreen from '../Staff/StaffDashboardScreen';
+
+// New floating tab bar (Home / Bookings / [FAB: Vehicles] / Alerts / Profile)
+import CustomTabBar from '../components/CustomTabBar';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,48 +32,16 @@ const Tab = createBottomTabNavigator();
 
 const CustomerTabs = () => (
   <Tab.Navigator
-    screenOptions={({ route }) => ({
+    screenOptions={{
       headerShown: false,
-      tabBarStyle: {
-        backgroundColor: 'rgba(15,23,42,0.97)',
-        borderTopColor: 'rgba(99,102,241,0.2)',
-        borderTopWidth: 1,
-        height: 70,
-        paddingBottom: 12,
-        paddingTop: 6,
-        position: 'absolute',
-        elevation: 0,
-        shadowOpacity: 0,
-      },
-      tabBarActiveTintColor: '#6366f1',
-      tabBarInactiveTintColor: '#475569',
-      tabBarLabelStyle: {
-        fontSize: 11,
-        fontWeight: '700',
-        marginTop: 2,
-      },
-      tabBarIcon: ({ color, focused }) => {
-        const icons = {
-          Home: focused ? 'home' : 'home-outline',
-          Vehicles: focused ? 'car' : 'car-outline',
-          Bookings: focused ? 'calendar' : 'calendar-outline',
-          Profile: focused ? 'person' : 'person-outline',
-        };
-        return (
-          <View style={[
-            styles.tabIconContainer,
-            focused && styles.tabIconContainerActive,
-          ]}>
-            <Ionicons name={icons[route.name]} size={21} color={color} />
-          </View>
-        );
-      },
-    })}
+    }}
+    tabBar={(props) => <CustomTabBar {...props} />}
   >
-    <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-    <Tab.Screen name="Vehicles" component={VehicleListScreen} options={{ tabBarLabel: 'Vehicles' }} />
-    <Tab.Screen name="Bookings" component={MyBookingsScreen} options={{ tabBarLabel: 'Bookings' }} />
-    <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+    <Tab.Screen name="Home" component={HomeScreen} />
+    <Tab.Screen name="Bookings" component={MyBookingsScreen} />
+    <Tab.Screen name="Vehicles" component={VehicleListScreen} />
+    <Tab.Screen name="Alerts" component={AlertsScreen} />
+    <Tab.Screen name="Profile" component={ProfileScreen} />
   </Tab.Navigator>
 );
 
@@ -135,16 +104,3 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  tabIconContainer: {
-    width: 38,
-    height: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabIconContainerActive: {
-    backgroundColor: 'rgba(99,102,241,0.18)',
-  },
-});

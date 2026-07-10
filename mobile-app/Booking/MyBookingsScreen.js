@@ -62,20 +62,20 @@ export default function MyBookingsScreen({ navigation }) {
   };
 
 const renderItem = ({ item }) => {
-  console.log("Full Item:", JSON.stringify(item, null, 2));
   const badge = getStatusBadgeStyle(item.status);
-  
 
-   let vehicleName = 'Vehicle';
+  // Backend populates the vehicle relation as `vehicleId` (see
+  // getCustomerBookings in bookingController.js), not `vehicle`.
+  // Reading item.vehicle here always missed and fell back to 'Vehicle'.
+  let vehicleName = 'Vehicle';
 
-  if (item.vehicle) {
-    vehicleName = 
-      item.vehicle.name || 
-      item.vehicle.model || 
-      item.vehicle.brand || 
-      item.vehicle.make || 
-      item.vehicle.vehicleName || 
-      item.vehicle.title || 
+  if (item.vehicleId && typeof item.vehicleId === 'object') {
+    vehicleName =
+      item.vehicleId.name ||
+      item.vehicleId.model ||
+      item.vehicleId.brand ||
+      item.vehicleId.make ||
+      item.vehicleId.title ||
       'Vehicle';
   } else if (item.vehicleName || item.name) {
     vehicleName = item.vehicleName || item.name;
@@ -325,18 +325,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
 
-    bookingId: {
+  bookingId: {
     fontSize: 13,
     fontWeight: '600',
     color: '#64748b',
     marginBottom: 2,
     letterSpacing: 0.5,
-  },
-
-  vehicleName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#f8fafc',
   },
 
   // Dates
@@ -372,9 +366,9 @@ const styles = StyleSheet.create({
   },
 
   // Bottom Row
-   cardBottomRow: {
+  cardBottomRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',   // Changed from space-between
+    justifyContent: 'flex-start',
     alignItems: 'center',
     marginTop: 4,
   },
