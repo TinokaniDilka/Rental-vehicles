@@ -49,8 +49,28 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // Pull the latest user record from the server (e.g. verificationStatus
+  // after admin approves ID/license on web). AsyncStorage only reflects
+  // whatever was true at login time, so anything changed server-side
+  // afterward (like admin approval) is invisible until this is called.
+  const refreshUser = async () => {
+    try {
+      const res = await api.get('/api/auth/profile');
+      const freshUser = res.data;
+      setUser((prev) => {
+        const merged = { ...(prev || {}), ...freshUser };
+        AsyncStorage.setItem('user', JSON.stringify(merged)).catch((e) => console.error(e));
+        return merged;
+      });
+      return freshUser;
+    } catch (e) {
+      console.error('refreshUser failed:', e);
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, updateUser }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
