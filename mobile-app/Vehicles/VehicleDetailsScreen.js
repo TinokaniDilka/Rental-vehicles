@@ -12,6 +12,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 import { getVehicleById } from '../services/vehicleService';
 import CustomButton from '../components/CustomButton';
 import Loader from '../components/Loader';
@@ -26,15 +27,30 @@ const IMAGE_HEIGHT = 300;
 
 export default function VehicleDetailsScreen({ route, navigation }) {
   const { vehicleId } = route.params;
-  const { user } = useContext(AuthContext);
+  const { user, refreshUser } = useContext(AuthContext);
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const handleBookNowPress = () => {
-    if (user?.verificationStatus !== 'Verified') {
+  // AuthContext's `user` only reflects whatever was true at login. If admin
+  // approves ID/license on web while the customer is still logged in on
+  // mobile, this pulls the current status so "Book Now" isn't stuck behind
+  // a stale "Pending Review" value.
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshUser();
+    }, [])
+  );
+
+  const handleBookNowPress = async () => {
+    const freshUser = await refreshUser();
+    const status = (freshUser || user)?.verificationStatus;
+
+    if (status !== 'Verified') {
       Alert.alert(
         'Account Not Verified',
-        'Please upload your ID and license documents and wait for admin approval before booking.',
+        status === 'Pending Review'
+          ? "Your ID and license are still under review by our team. You'll be able to book once approved."
+          : 'Please upload your ID and license documents and wait for admin approval before booking.',
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Go to Profile', onPress: () => navigation.navigate('Profile') },
