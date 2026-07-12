@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { getMyBookings, updateHandoverStatus } from '../services/bookingService';
 import Loader from '../components/Loader';
 import { formatDate, formatCurrency, getStatusColor } from '../utils/helpers';
@@ -21,12 +22,29 @@ export default function MyBookingsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
 
-  useEffect(() => {
-    getMyBookings()
-      .then(res => setBookings(res.data))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+  // useFocusEffect instead of a plain useEffect(() => {...}, []): a plain
+  // effect only fires once on first mount, so after creating/cancelling a
+  // booking or leaving a review and navigating back here, the list would
+  // still show the old data. useFocusEffect re-fetches every time this
+  // screen comes back into view (same pattern as AuthContext.refreshUser()).
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      getMyBookings()
+        .then(res => {
+          if (isActive) setBookings(res.data);
+        })
+        .catch(err => console.error(err))
+        .finally(() => {
+          if (isActive) setLoading(false);
+        });
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   if (loading) return <Loader message="Loading bookings..." />;
 
@@ -56,6 +74,27 @@ export default function MyBookingsScreen({ navigation }) {
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to confirm receipt');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Second half of the two-step return handover (web equivalent: setting
+  // handoverStatus to "returned" surfaces a "Customer Confirmed Return"
+  // badge on the staff dashboard and flips their button to "Accept &
+  // Inspect Return"). Staff still does the actual inspection/finalization
+  // via the /return endpoint — this just signals the customer has handed
+  // the vehicle back.
+  const handleRequestReturn = async (bookingId) => {
+    try {
+      setLoading(true);
+      await updateHandoverStatus(bookingId, { handoverStatus: 'returned' });
+      Alert.alert('Return Requested', 'Staff will inspect the vehicle and finalize your return shortly.');
+      const res = await getMyBookings();
+      setBookings(res.data);
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to request return');
     } finally {
       setLoading(false);
     }
@@ -131,7 +170,16 @@ const renderItem = ({ item }) => {
               {new Date(item.endDate || item.returnDate) < new Date() ? (
                 <>
                   <Text style={{ fontSize: 13, color: '#ef4444', fontWeight: '600', marginBottom: 2 }}>🔴 Return Overdue</Text>
-                  <Text style={{ fontSize: 11, color: '#94a3b8' }}>Overdue by {Math.ceil((new Date() - new Date(item.endDate || item.returnDate)) / (1000 * 60 * 60 * 24))} Days</Text>
+                  <Text style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>Overdue by {Math.ceil((new Date() - new Date(item.endDate || item.returnDate)) / (1000 * 60 * 60 * 24))} Days</Text>
+                  {/* Only shown once the rental end date has passed — during
+                      an active rental period, the customer can't trigger
+                      return yet. */}
+                  <TouchableOpacity
+                    style={{ backgroundColor: 'rgba(245,158,11,0.15)', borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, alignSelf: 'flex-start' }}
+                    onPress={() => handleRequestReturn(item._id)}
+                  >
+                    <Text style={{ color: '#f59e0b', fontSize: 12, fontWeight: '700' }}>Return Vehicle</Text>
+                  </TouchableOpacity>
                 </>
               ) : (
                 <>
@@ -140,7 +188,9 @@ const renderItem = ({ item }) => {
                 </>
               )}
             </View>
-          ) : (item.handoverStatus === 'returned' || item.handoverStatus === 'confirmed_return') ? (
+          ) : item.handoverStatus === 'returned' ? (
+            <Text style={{ fontSize: 13, color: '#f59e0b', fontWeight: '600' }}>⏳ Return Requested — Awaiting Staff Inspection</Text>
+          ) : item.handoverStatus === 'confirmed_return' ? (
             <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>✅ Return Confirmed</Text>
           ) : null}
         </View>
