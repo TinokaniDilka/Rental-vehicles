@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity,
   StatusBar, Dimensions, TextInput, ImageBackground, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext } from '../context/AuthContext';
@@ -17,22 +18,36 @@ export default function HomeScreen({ navigation }) {
 const [showLocationModal, setShowLocationModal] = useState(false);
 const [ongoingBooking, setOngoingBooking] = useState(null);
 
-useEffect(() => {
-  fetchOngoingBooking();
-}, []);
+// useFocusEffect instead of useEffect(() => {...}, []): a plain effect only
+// runs once on first mount, so after making a new booking or a booking's
+// status changing (e.g. handover, cancellation) and returning to Home, the
+// ongoing-booking card would still show stale data. This re-fetches every
+// time Home comes back into focus, same pattern as MyBookingsScreen.
+useFocusEffect(
+  useCallback(() => {
+    let isActive = true;
 
-const fetchOngoingBooking = async () => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    const res = await api.get('/api/bookings/customer', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const ongoing = res.data.find(b => b.status === 'ongoing');
-    setOngoingBooking(ongoing || null);
-  } catch (err) {
-    console.error('Failed to fetch ongoing booking:', err.message);
-  }
-};
+    const fetchOngoingBooking = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const res = await api.get('/api/bookings/customer', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!isActive) return;
+        const ongoing = res.data.find(b => b.status === 'ongoing');
+        setOngoingBooking(ongoing || null);
+      } catch (err) {
+        console.error('Failed to fetch ongoing booking:', err.message);
+      }
+    };
+
+    fetchOngoingBooking();
+
+    return () => {
+      isActive = false;
+    };
+  }, [])
+);
 
   return (
     <View style={styles.root}>
