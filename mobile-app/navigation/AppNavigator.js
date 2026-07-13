@@ -16,7 +16,7 @@ import MyBookingsScreen from '../Booking/MyBookingsScreen';
 import BookingScreen from '../Booking/BookingScreen';
 import PaymentScreen from '../Payment/PaymentScreen';
 import ProfileScreen from '../Profile/ProfileScreen';
-import LeaveReviewScreen from '../Booking/LeaveReviewScreen';
+import EditProfileScreen from '../Profile/EditProfileScreen';import LeaveReviewScreen from '../Booking/LeaveReviewScreen';
 import AlertsScreen from '../Alerts/AlertsScreen';
 
 // Staff Screen
@@ -50,6 +50,11 @@ const CustomerTabs = () => (
 const StaffNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="StaffDashboard" component={StaffDashboardScreen} />
+    <Stack.Screen
+      name="EditProfile"
+      component={EditProfileScreen}
+      options={{ animation: 'slide_from_right' }}
+    />
   </Stack.Navigator>
 );
 
@@ -97,6 +102,11 @@ export default function AppNavigator() {
               name="LeaveReview"
               component={LeaveReviewScreen}
               options={{ animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{ animation: 'slide_from_right' }}
             />
           </>
         )}
