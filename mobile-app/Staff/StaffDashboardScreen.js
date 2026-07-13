@@ -926,6 +926,16 @@ const getGreeting = () => {
                 </Text>
               </View>
             )}
+            {/* Customer-initiated return signal (mirrors web StaffDashboard.js
+                line ~1023) — set via updateHandoverStatus({handoverStatus:'returned'})
+                on the customer's MyBookingsScreen "Return Vehicle" button. */}
+            {b.handoverStatus === 'returned' && (
+              <View style={[styles.cashBadge, { backgroundColor: 'rgba(16,185,129,0.2)' }]}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#10b981' }}>
+                  ✅ Customer Confirmed Return
+                </Text>
+              </View>
+            )}
             <View style={styles.bookingActionsCol}>
               {b.status === 'pending' && (
                 <TouchableOpacity onPress={() => openReviewModal(b)}>
@@ -957,8 +967,13 @@ const getGreeting = () => {
               )}
               {b.status === 'ongoing' && (
                 <TouchableOpacity onPress={() => openReturnModal(b)}>
-                  <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.bookingActionBtn}>
-                    <Text style={styles.bookingActionText}>🔧 Inspect Return</Text>
+                  <LinearGradient
+                    colors={b.handoverStatus === 'returned' ? ['#10b981', '#059669'] : ['#f59e0b', '#d97706']}
+                    style={styles.bookingActionBtn}
+                  >
+                    <Text style={styles.bookingActionText}>
+                      🔧 {b.handoverStatus === 'returned' ? 'Accept & Inspect Return' : 'Inspect Return'}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               )}
@@ -1040,8 +1055,27 @@ const getGreeting = () => {
         </View>
 
         {/* Info Card */}
-        <Text style={profileStyles.sectionLabel}>Account Info</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={profileStyles.sectionLabel}>Account Info</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7} style={{ padding: 4 }}>
+            <Ionicons name="pencil" size={16} color="#6366f1" />
+          </TouchableOpacity>
+        </View>
         <View style={profileStyles.glassCard}>
+          <View style={profileStyles.infoRow}>
+            <View style={profileStyles.infoIconWrap}>
+              <Ionicons name="person-outline" size={16} color="#6366f1" />
+            </View>
+            <View style={profileStyles.infoTextWrap}>
+              <Text style={profileStyles.infoLabel}>Name</Text>
+              <Text style={profileStyles.infoValue} numberOfLines={1}>
+                {user?.name || '—'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={profileStyles.rowDivider} />
+
           <View style={profileStyles.infoRow}>
             <View style={profileStyles.infoIconWrap}>
               <Ionicons name="mail-outline" size={16} color="#6366f1" />
