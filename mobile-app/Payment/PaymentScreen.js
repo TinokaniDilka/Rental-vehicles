@@ -12,6 +12,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '../utils/helpers';
 import { createBookingWithPayment } from '../services/bookingService';
+import { CardField, useStripe, useConfirmPayment } from '@stripe/stripe-react-native';
+
 
 export default function PaymentScreen({ route, navigation }) {
   const { vehicle, startDate, endDate, hasDriver, days, total } = route.params;
