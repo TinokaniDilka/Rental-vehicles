@@ -33,6 +33,7 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const promoRoutes = require("./routes/promoRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/auth", userRoutes);
@@ -40,6 +41,7 @@ app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/promos", promoRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // ✅ MongoDB connect
 mongoose.connect(process.env.MONGO_URI, {

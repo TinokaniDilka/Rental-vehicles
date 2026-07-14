@@ -324,7 +324,7 @@ const returnBooking = async (req, res) => {
 // Create booking + payment in one step (Customer payment-first flow)
 const createBookingWithPayment = async (req, res) => {
   try {
-    const { vehicleId, startDate, endDate, hasDriver, paymentMethod, amount, promoCode, pickupTime, dropoffTime } = req.body;
+    const { vehicleId, startDate, endDate, hasDriver, paymentMethod, amount, promoCode, pickupTime, dropoffTime, stripePaymentIntentId } = req.body;
     const customerId = req.user.id;
 
     if (!vehicleId || !startDate || !endDate || !paymentMethod) {
@@ -375,7 +375,8 @@ const createBookingWithPayment = async (req, res) => {
       depositAmount: vehicle.depositAmount || 0,
       depositStatus: vehicle.depositAmount > 0 ? "held" : "released",
       cashPaymentConfirmed: paymentMethod !== "cash",
-      rentalAgreementSigned: req.body.rentalAgreementSigned || false
+      rentalAgreementSigned: req.body.rentalAgreementSigned || false,
+      stripePaymentIntentId: stripePaymentIntentId || null
     });
     await booking.save();
 
@@ -385,7 +386,8 @@ const createBookingWithPayment = async (req, res) => {
       customerId,
       amount: totalAmount,
       paymentMethod,
-      status: "completed"
+      status: "completed",
+      stripePaymentIntentId: stripePaymentIntentId || null
     });
     await payment.save();
 
