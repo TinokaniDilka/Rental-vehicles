@@ -42,7 +42,7 @@ const bookingSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ["credit_card", "debit_card", "bank_transfer", "cash", ""],
+    enum: ["credit_card", "debit_card", "bank_transfer", "cash", "card", ""],
     default: ""
   },
   // Dynamic financial fields
@@ -92,7 +92,8 @@ const bookingSchema = new mongoose.Schema({
   customerHandoverConfirmed: { type: Boolean, default: false },
   staffHandoverConfirmed: { type: Boolean, default: false },
   customerReturnConfirmed: { type: Boolean, default: false },
-  staffReturnConfirmed: { type: Boolean, default: false }
+  staffReturnConfirmed: { type: Boolean, default: false },
+  stripePaymentIntentId: { type: String, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Booking", bookingSchema);

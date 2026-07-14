@@ -17,7 +17,7 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ["credit_card", "debit_card", "bank_transfer", "cash"],
+    enum: ["credit_card", "debit_card", "bank_transfer", "cash", "card"],
     required: true
   },
   status: {
@@ -28,6 +28,10 @@ const paymentSchema = new mongoose.Schema({
   paidAt: {
     type: Date,
     default: Date.now
+  },
+  stripePaymentIntentId: {
+    type: String,
+    default: null
   }
 }, { timestamps: true });
 
