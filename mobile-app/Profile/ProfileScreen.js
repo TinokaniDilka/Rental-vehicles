@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -7,107 +7,18 @@ import {
   Alert,
   TouchableOpacity,
   StatusBar,
-  Modal,
-  TextInput,
-  ActivityIndicator,
-  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
-import CustomButton from '../components/CustomButton';
-import { updateProfile as updateProfileApi, uploadVerificationDocs } from '../services/authService';
 
 const SETTINGS_ITEMS = [
   { icon: 'person-outline', label: 'Edit Profile', route: 'EditProfile' },
   { icon: 'help-circle-outline', label: 'Help & Support', route: 'Support' },
 ];
 
-
-const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
-
 export default function ProfileScreen({ navigation }) {
-  const { user, logout, updateUser } = useContext(AuthContext);
-
-const [editModalVisible, setEditModalVisible] = useState(false);
-const [editName, setEditName] = useState(user?.name || '');
-const [editPhone, setEditPhone] = useState(user?.phone || '');
-const [editNic, setEditNic] = useState(user?.nicNumber || '');
-const [editDl, setEditDl] = useState(user?.drivingLicenseNumber || '');
-const [editPassword, setEditPassword] = useState('');
-const [idPhotoAsset, setIdPhotoAsset] = useState(null);
-const [licensePhotoAsset, setLicensePhotoAsset] = useState(null);
-const [saving, setSaving] = useState(false);
-
-const pickImage = async (setter) => {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert('Permission needed', 'Please allow access to your photo library to upload documents.');
-    return;
-  }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    quality: 0.7,
-    allowsEditing: false,
-  });
-
-  if (result.canceled || !result.assets?.length) return;
-
-  const asset = result.assets[0];
-
-  if (asset.fileSize && asset.fileSize > MAX_UPLOAD_SIZE) {
-    Alert.alert('File too large', 'Please choose an image under 5MB.');
-    return;
-  }
-
-  const filename = asset.uri.split('/').pop();
-  const match = /\.(\w+)$/.exec(filename);
-  const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-  setter({ uri: asset.uri, name: filename, type });
-};
-
-const handleSaveProfile = async () => {
-  setSaving(true);
-  try {
-    // Step 1: update text profile fields
-    const payload = {
-      name: editName,
-      phone: editPhone,
-      nicNumber: editNic,
-      drivingLicenseNumber: editDl,
-      ...(editPassword ? { password: editPassword } : {}),
-    };
-
-    const res = await updateProfileApi(payload);
-    let updatedUser = res.data.user || res.data;
-
-    // Step 2: if ID/License photos were picked, upload separately as multipart
-    if (idPhotoAsset || licensePhotoAsset) {
-      const docsRes = await uploadVerificationDocs({
-        idPhoto: idPhotoAsset,
-        licensePhoto: licensePhotoAsset,
-      });
-      updatedUser = docsRes.data.user;
-    }
-
-    await updateUser(updatedUser);
-
-    Alert.alert('Success', 'Profile updated successfully');
-
-    setEditPassword('');
-    setIdPhotoAsset(null);
-    setLicensePhotoAsset(null);
-    setEditModalVisible(false);
-  } catch (error) {
-    console.error('Profile update error:', error);
-    Alert.alert('Error', error.response?.data?.message || 'Failed to update profile');
-  } finally {
-    setSaving(false);
-  }
-};
+  const { user, logout } = useContext(AuthContext);
 
   const handleLogout = () => {
     Alert.alert(
@@ -121,10 +32,6 @@ const handleSaveProfile = async () => {
   };
 
   const avatarLetter = user?.name ? user.name.charAt(0).toUpperCase() : '?';
-
-  const memberSince = user?.createdAt
-    ? new Date(user.createdAt).getFullYear()
-    : '2024';
 
   return (
     <LinearGradient colors={['#0f172a', '#1e1b4b']} style={styles.gradientBg}>
@@ -178,9 +85,6 @@ const handleSaveProfile = async () => {
           </View>
         </View>
 
-        
-        
-
         {/* Info Card */}
         <Text style={styles.sectionLabel}>Account Info</Text>
         <View style={styles.glassCard}>
@@ -208,7 +112,6 @@ const handleSaveProfile = async () => {
             </View>
           </View>
         </View>
-        
 
         {/* Settings Section */}
         <Text style={styles.sectionLabel}>Settings</Text>
@@ -217,20 +120,8 @@ const handleSaveProfile = async () => {
             <React.Fragment key={item.label}>
               <TouchableOpacity
                 style={styles.settingsRow}
-onPress={() => {
-  if (item.label === 'Edit Profile') {
-    setEditName(user?.name || '');
-    setEditPhone(user?.phone || '');
-    setEditNic(user?.nicNumber || '');
-    setEditDl(user?.drivingLicenseNumber || '');
-    setEditPassword('');
-    setIdPhotoAsset(null);
-    setLicensePhotoAsset(null);
-    setEditModalVisible(true);
-  } else {
-    navigation?.navigate(item.route);
-  }
-}}               activeOpacity={0.7}
+                onPress={() => navigation?.navigate(item.route)}
+                activeOpacity={0.7}
               >
                 <View style={styles.settingsIconWrap}>
                   <Ionicons name={item.icon} size={18} color="#6366f1" />
@@ -254,107 +145,6 @@ onPress={() => {
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
-        <Modal
-  visible={editModalVisible}
-  transparent
-  animationType="slide"
-  onRequestClose={() => setEditModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContainer}>
-      <Text style={styles.modalTitle}>Edit Profile</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        placeholderTextColor="#94a3b8"
-        value={editName}
-        onChangeText={setEditName}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Phone Number"
-        placeholderTextColor="#94a3b8"
-        keyboardType="phone-pad"
-        value={editPhone}
-        onChangeText={setEditPhone}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="NIC Number"
-        placeholderTextColor="#94a3b8"
-        value={editNic}
-        onChangeText={setEditNic}
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Driving License"
-        placeholderTextColor="#94a3b8"
-        value={editDl}
-        onChangeText={setEditDl}
-      />
-
-      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
-        <TouchableOpacity style={styles.photoBtn} onPress={() => pickImage(setIdPhotoAsset)}>
-           {idPhotoAsset ? (
-             <Image source={{ uri: idPhotoAsset.uri }} style={{ width: 20, height: 20, borderRadius: 4, marginRight: 4 }} />
-           ) : (
-             <Ionicons name="camera-outline" size={20} color="#fff" />
-           )}
-           <Text style={styles.photoBtnText}>{idPhotoAsset ? 'ID Selected ✓' : 'ID Photo'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.photoBtn} onPress={() => pickImage(setLicensePhotoAsset)}>
-           {licensePhotoAsset ? (
-             <Image source={{ uri: licensePhotoAsset.uri }} style={{ width: 20, height: 20, borderRadius: 4, marginRight: 4 }} />
-           ) : (
-             <Ionicons name="camera-outline" size={20} color="#fff" />
-           )}
-           <Text style={styles.photoBtnText}>{licensePhotoAsset ? 'License Selected ✓' : 'License'}</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={{ color: '#94a3b8', fontSize: 11, marginBottom: 15 }}>
-        Max 5MB per photo. Uploading new documents resets your status to Pending Review.
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="New Password"
-        placeholderTextColor="#94a3b8"
-        secureTextEntry
-        value={editPassword}
-        onChangeText={setEditPassword}
-      />
-
-      <View style={styles.modalButtons}>
-        <TouchableOpacity
-  style={styles.cancelBtn}
-  onPress={() => {
-    setIdPhotoAsset(null);
-    setLicensePhotoAsset(null);
-    setEditModalVisible(false);
-  }}
-  disabled={saving}
->
-  <Text style={styles.cancelText}>Cancel</Text>
-</TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.saveBtn, saving && { opacity: 0.6 }]}
-          onPress={handleSaveProfile}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Text style={styles.saveText}>Save</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
       </ScrollView>
     </LinearGradient>
   );
@@ -462,53 +252,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 
-  // Stats Row
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 28,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'rgba(30,41,59,0.85)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
-    paddingVertical: 16,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-  },
-  statCardMiddle: {
-    borderColor: 'rgba(99,102,241,0.35)',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#6366f1',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#94a3b8',
-    fontWeight: '600',
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statActiveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#10b981',
-    marginBottom: 6,
-  },
-  statActiveText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#10b981',
-    marginTop: 2,
-  },
-
   // Section Label
   sectionLabel: {
     fontSize: 12,
@@ -570,91 +313,6 @@ const styles = StyleSheet.create({
     color: '#f8fafc',
     fontWeight: '600',
   },
-
-  modalOverlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0,0,0,0.7)',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
-modalContainer: {
-  width: '90%',
-  backgroundColor: '#1e293b',
-  borderRadius: 20,
-  padding: 20,
-  borderWidth: 1,
-  borderColor: 'rgba(99,102,241,0.3)',
-},
-
-modalTitle: {
-  color: '#fff',
-  fontSize: 22,
-  fontWeight: '700',
-  textAlign: 'center',
-  marginBottom: 20,
-},
-
-input: {
-  height: 50,
-  borderRadius: 12,
-  backgroundColor: 'rgba(255,255,255,0.05)',
-  borderWidth: 1,
-  borderColor: 'rgba(99,102,241,0.3)',
-  color: '#fff',
-  paddingHorizontal: 15,
-  marginBottom: 15,
-},
-
-modalButtons: {
-  flexDirection: 'row',
-  marginTop: 10,
-},
-
-cancelBtn: {
-  flex: 1,
-  backgroundColor: '#334155',
-  padding: 14,
-  borderRadius: 12,
-  alignItems: 'center',
-  marginRight: 8,
-},
-
-saveBtn: {
-  flex: 1,
-  backgroundColor: '#6366f1',
-  padding: 14,
-  borderRadius: 12,
-  alignItems: 'center',
-  marginLeft: 8,
-},
-
-cancelText: {
-  color: '#fff',
-  fontWeight: '600',
-},
-
-saveText: {
-  color: '#fff',
-  fontWeight: '700',
-},
-photoBtn: {
-  flex: 1,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: 'rgba(255,255,255,0.05)',
-  borderWidth: 1,
-  borderColor: 'rgba(99,102,241,0.3)',
-  borderRadius: 12,
-  padding: 10,
-  gap: 5
-},
-photoBtnText: {
-  color: '#fff',
-  fontSize: 12,
-  fontWeight: '600'
-},
 
   // Settings Rows
   settingsRow: {
