@@ -7,20 +7,30 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '../utils/helpers';
 import { createBookingWithPayment } from '../services/bookingService';
-import { CardField, useStripe, useConfirmPayment } from '@stripe/stripe-react-native';
 
 
 export default function PaymentScreen({ route, navigation }) {
   const { vehicle, startDate, endDate, hasDriver, days, total } = route.params;
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' | 'cash'
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
 
   const handlePayment = async () => {
+    if (paymentMethod === 'card') {
+      if (!cardNumber || !cardExpiry || !cardCvc) {
+        Alert.alert('Incomplete Card Details', 'Please complete all card details.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const res = await createBookingWithPayment({
@@ -194,6 +204,58 @@ export default function PaymentScreen({ route, navigation }) {
             </View>
           </View>
         </TouchableOpacity>
+
+        {paymentMethod === 'card' && (
+          <View style={styles.cardInputContainer}>
+            <Text style={styles.cardInputLabel}>Card Details</Text>
+            
+            <View style={styles.inputRow}>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.inputLabel}>Card Number</Text>
+                <TextInput
+                  style={styles.cardInput}
+                  placeholder="4242 4242 4242 4242"
+                  placeholderTextColor="#64748b"
+                  value={cardNumber}
+                  onChangeText={setCardNumber}
+                  keyboardType="numeric"
+                  maxLength={19}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputRow}>
+              <View style={[styles.inputWrapper, { flex: 1 }]}>
+                <Text style={styles.inputLabel}>Expiry (MM/YY)</Text>
+                <TextInput
+                  style={styles.cardInput}
+                  placeholder="12/34"
+                  placeholderTextColor="#64748b"
+                  value={cardExpiry}
+                  onChangeText={setCardExpiry}
+                  keyboardType="numeric"
+                  maxLength={5}
+                />
+              </View>
+              <View style={[styles.inputWrapper, { flex: 1, marginLeft: 12 }]}>
+                <Text style={styles.inputLabel}>CVC</Text>
+                <TextInput
+                  style={styles.cardInput}
+                  placeholder="123"
+                  placeholderTextColor="#64748b"
+                  value={cardCvc}
+                  onChangeText={setCardCvc}
+                  keyboardType="numeric"
+                  maxLength={4}
+                />
+              </View>
+            </View>
+
+            <Text style={styles.cardHint}>
+              Test card: 4242 4242 4242 4242 | Exp: 12/34 | CVC: 123
+            </Text>
+          </View>
+        )}
 
         {paymentMethod === 'cash' && (
           <View style={styles.cashNotice}>
@@ -487,6 +549,47 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     flex: 1,
+  },
+
+  // Card Input
+  cardInputContainer: {
+    marginBottom: 20,
+  },
+  cardInputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#94a3b8',
+    marginBottom: 10,
+    marginLeft: 2,
+  },
+  inputRow: {
+    marginBottom: 12,
+  },
+  inputWrapper: {
+    marginBottom: 8,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94a3b8',
+    marginBottom: 6,
+    marginLeft: 2,
+  },
+  cardInput: {
+    backgroundColor: 'rgba(30,41,59,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.3)',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 15,
+    color: '#f8fafc',
+  },
+  cardHint: {
+    fontSize: 11,
+    color: '#64748b',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 8,
   },
 
   // Buttons
