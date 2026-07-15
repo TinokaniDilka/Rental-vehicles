@@ -765,7 +765,12 @@ const filteredComplaints = complaintCategoryFilter === "all"
               <button className="btn-base btn-primary" onClick={() => handleOpenVehicleModal(null)}>➕ Add Vehicle</button>
             </div>
 
-            <div className="dashboard-grid">
+            <div
+             className="dashboard-grid"
+            style={{
+              display: "grid",gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",gap: "20px",alignItems: "start"
+           }}
+        >
               {vehicles.length === 0 ? (
                 <div className="glass-card" style={{ gridColumn: "1/-1", padding: "50px", textAlign: "center" }}>
                   <span style={{ fontSize: "50px" }}>🚗</span>
@@ -775,10 +780,10 @@ const filteredComplaints = complaintCategoryFilter === "all"
               ) : (
                 vehicles.map(v => (
                   <div key={v._id} className="glass-card" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                    <div style={{ position: "relative", height: "160px", background: "#1e293b" }}>
-                      {v.image ? (
-                        <img src={`http://localhost:5000${v.image}`} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
+                    <div style={{ position: "relative", height: "160px", width: "100%", background: "#1e293b" }}>
+  {v.image ? (
+    <img src={`http://localhost:5000${v.image}`} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+  ) : (
                         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px" }}>🚗</div>
                       )}
                       <span style={{
