@@ -433,7 +433,16 @@ const fetchPendingVerifications = async () => {
       <div style={{ fontSize: "70px", opacity: 0.8, filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.3))" }}>📊</div>
     </div>
 
-  
+    {/* Overview Metric Cards */}
+    <div className="dashboard-grid" style={{ marginTop: "35px" }}>
+      <DashboardCard icon="🚘" title="TOTAL VEHICLES" value={stats.totalVehicles} color="var(--primary)" onClick={() => { setActiveReportTab("vehicles"); setActivePage("reports"); }} />
+      <DashboardCard icon="🚗" title="ACTIVE RENTALS" value={stats.activeRentals} color="var(--secondary)" onClick={() => { setActiveReportTab("bookings"); setActivePage("reports"); }} />
+      <DashboardCard icon="👥" title="TOTAL CUSTOMERS" value={stats.totalCustomers} color="var(--accent)" onClick={() => setActivePage("users")} />
+      <DashboardCard icon="⏳" title="PENDING BOOKINGS" value={stats.pendingBookings} color="var(--warning)" onClick={() => { setActiveReportTab("bookings"); setActivePage("reports"); }} />
+      <DashboardCard icon="✅" title="COMPLETED RENTALS" value={stats.completedRentals} color="var(--success)" onClick={() => { setActiveReportTab("bookings"); setActivePage("reports"); }} />
+      <DashboardCard icon="💰" title="MONTHLY REVENUE" value={`$${stats.monthlyRevenue}`} color="var(--success)" onClick={() => { setActiveReportTab("payments"); setActivePage("reports"); }} />
+      <DashboardCard icon="⭐" title="CUSTOMER SATISFACTION" value={`${stats.customerSatisfaction} / 5`} color="var(--accent)" onClick={() => { setActiveReportTab("feedback"); setActivePage("reports"); }} />
+    </div>
 
     {/* Report Cards - Clickable */}
 <div style={{ marginTop: "50px" }}>
@@ -520,7 +529,7 @@ const fetchPendingVerifications = async () => {
                  </select>
           </div>
 
-<button className="btn-base btn-primary" onClick={() => { setStaffName(""); setStaffEmail(""); setStaffPassword(""); setStaffRole("staff"); setShowStaffModal(true); }}>➕ Register Admin</button>            </div>
+<button className="btn-base btn-primary" onClick={() => { setStaffName(""); setStaffEmail(""); setStaffPassword(""); setStaffRole("staff"); setShowStaffModal(true); }}>➕ Register Staff / Admin</button>            </div>
 
             <div className="custom-table-container">
               <table className="custom-table">
@@ -840,9 +849,25 @@ const fetchPendingVerifications = async () => {
                   return matchDate && matchSearch;
                 })
                 .map(p => {
-                  let transactionType = "Payment";
-                  if (p.amount < 0) transactionType = "Refund";
-                  else if (p.status === "cancelled" || p.status === "refunded") transactionType = "Cancellation";
+                  // Prefer the explicit `type` field (set on all new records).
+                  // Older records that predate this field fall back to the
+                  // old sign/status-based guess so nothing breaks.
+                  const typeLabels = {
+                    charge: { label: "Payment", color: "#10b981", bg: "rgba(16,185,129,0.15)" },
+                    refund: { label: "Refund", color: "#ef4444", bg: "rgba(239,68,68,0.15)" },
+                    deposit_release: { label: "Deposit Released", color: "#818cf8", bg: "rgba(99,102,241,0.15)" },
+                    deposit_capture: { label: "Deposit Captured", color: "#f59e0b", bg: "rgba(245,158,11,0.15)" },
+                    additional_charge: { label: "Additional Charge", color: "#f59e0b", bg: "rgba(245,158,11,0.15)" }
+                  };
+
+                  let typeInfo = typeLabels[p.type];
+                  if (!typeInfo) {
+                    if (p.amount < 0) typeInfo = typeLabels.refund;
+                    else if (p.status === "cancelled" || p.status === "refunded") typeInfo = { label: "Cancellation", color: "#94a3b8", bg: "rgba(148,163,184,0.15)" };
+                    else typeInfo = typeLabels.charge;
+                  }
+
+                  const isNegativeMoney = typeInfo.label === "Refund";
 
                   return (
                     <tr key={p._id} className="custom-tr">
@@ -855,18 +880,16 @@ const fetchPendingVerifications = async () => {
                       <td className="custom-td">
                         <span style={{
                           padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "700",
-                          background: transactionType === "Payment" ? "rgba(16,185,129,0.15)" :
-                                      transactionType === "Refund" ? "rgba(239,68,68,0.15)" : "rgba(148,163,184,0.15)",
-                          color: transactionType === "Payment" ? "#10b981" :
-                                 transactionType === "Refund" ? "#ef4444" : "#94a3b8"
+                          background: typeInfo.bg,
+                          color: typeInfo.color
                         }}>
-                          {transactionType}
+                          {typeInfo.label}
                         </span>
                       </td>
                       <td className="custom-td">
                         <span style={{
-                          color: transactionType === "Refund" ? "#ef4444" : "white",
-                          fontWeight: transactionType === "Refund" ? "bold" : "normal"
+                          color: isNegativeMoney ? "#ef4444" : "white",
+                          fontWeight: isNegativeMoney ? "bold" : "normal"
                         }}>
                           ${Math.abs(p.amount)}
                         </span>
@@ -1000,33 +1023,58 @@ const fetchPendingVerifications = async () => {
               <tr>
                 <th className="custom-th">STAFF NAME</th>
                 <th className="custom-th">ACTION</th>
-                <th className="custom-th">BOOKING ID</th>
+                <th className="custom-th">DETAILS</th>
+                <th className="custom-th">REFERENCE</th>
                 <th className="custom-th">TIMESTAMP</th>
               </tr>
             </thead>
             <tbody>
               {reports.auditLog && reports.auditLog.length > 0 ? (
-                reports.auditLog.map((log, index) => (
-                  <tr key={index} className="custom-tr">
-                    <td className="custom-td">{log.staffName || "Unknown Staff"}</td>
-                    <td className="custom-td">
-                      <span style={{
-                        padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "700",
-                        background: log.action === "Cash Payment Confirmed" ? "rgba(16,185,129,0.15)" :
-                                    log.action === "Handover Confirmed" ? "rgba(99,102,241,0.15)" : "rgba(148,163,184,0.15)",
-                        color: log.action === "Cash Payment Confirmed" ? "#10b981" :
-                               log.action === "Handover Confirmed" ? "#818cf8" : "#94a3b8"
-                      }}>
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="custom-td" style={{ fontFamily: "monospace" }}>{log.bookingId || "N/A"}</td>
-                    <td className="custom-td">{new Date(log.timestamp).toLocaleString()}</td>
-                  </tr>
-                ))
+                reports.auditLog.map((log, index) => {
+                  // Green = positive/approving actions, red = negative/removal
+                  // actions, amber = money-sensitive actions, purple = neutral
+                  // confirmations/updates.
+                  const positive = ["Booking Approved", "Handover Confirmed", "Cash Payment Confirmed", "Return Confirmed", "Vehicle Added", "Staff Registered", "Admin Registered", "User Activated", "ID Verification Approved", "Promo Code Created", "Promo Code Activated", "Deposit Released"];
+                  const negative = ["Booking Rejected", "Booking Cancelled", "Vehicle Deleted", "User Deactivated", "User Deleted", "ID Verification Rejected", "Promo Code Deactivated"];
+                  const warning = ["Deposit Captured"];
+
+                  let tone = { bg: "rgba(99,102,241,0.15)", color: "#818cf8" }; // neutral default
+                  if (positive.includes(log.action)) tone = { bg: "rgba(16,185,129,0.15)", color: "#10b981" };
+                  else if (negative.includes(log.action)) tone = { bg: "rgba(239,68,68,0.15)", color: "#ef4444" };
+                  else if (warning.includes(log.action)) tone = { bg: "rgba(245,158,11,0.15)", color: "#f59e0b" };
+
+                  const reference = log.bookingId || log.targetId || "N/A";
+                  const referenceLabel = log.bookingId
+                    ? `Booking: ${String(log.bookingId).slice(-6)}`
+                    : log.targetId
+                      ? `${log.targetType || "Item"}: ${String(log.targetId).slice(-6)}`
+                      : "N/A";
+
+                  return (
+                    <tr key={index} className="custom-tr">
+                      <td className="custom-td">{log.staffName || "Unknown Staff"}</td>
+                      <td className="custom-td">
+                        <span style={{
+                          padding: "4px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: "700",
+                          background: tone.bg,
+                          color: tone.color
+                        }}>
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="custom-td" style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+                        {log.details || "—"}
+                      </td>
+                      <td className="custom-td" style={{ fontFamily: "monospace", fontSize: "12px" }} title={reference !== "N/A" ? String(reference) : undefined}>
+                        {referenceLabel}
+                      </td>
+                      <td className="custom-td">{new Date(log.timestamp).toLocaleString()}</td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
                     No staff actions recorded yet.
                   </td>
                 </tr>
@@ -1125,6 +1173,7 @@ const fetchPendingVerifications = async () => {
             className="custom-input"
             required
           >
+            <option value="staff">Staff</option>
             <option value="admin">Admin</option>
           </select>
         </div>
