@@ -3,6 +3,7 @@ const Vehicle = require("../models/Vehicle");
 const Payment = require("../models/Payment");
 const AuditLog = require("../models/AuditLog");
 const User = require("../models/User");
+const { logAudit } = require("../utils/auditLogger");
 
 // Shared helper: only "Verified" users may create bookings
 const requireVerifiedUser = async (userId) => {
@@ -176,6 +177,14 @@ const reviewBooking = async (req, res) => {
     }
 
     await booking.save();
+
+    await logAudit({
+      actor: req.user,
+      action: status === "approved" ? "Booking Approved" : "Booking Rejected",
+      bookingId: booking._id,
+      details: booking.vehicleId?.name || undefined
+    });
+
     res.json({ message: `Booking status updated to ${status} ✅`, booking });
   } catch (err) {
     console.error(err);
@@ -208,7 +217,8 @@ const payBooking = async (req, res) => {
       customerId: req.user.id,
       amount: booking.totalAmount,
       paymentMethod,
-      status: "completed"
+      status: "completed",
+      type: "charge"
     });
     await payment.save();
 
@@ -302,11 +312,14 @@ const returnBooking = async (req, res) => {
     booking.staffReturnConfirmed = true;
 
     // Update deposit status on return
+    let depositOutcome = null; // "captured" | "released" | null
     if (booking.depositAmount > 0) {
       if (booking.damageCharge > 0 || returnCondition === "Damaged") {
         booking.depositStatus = "captured";
+        depositOutcome = "captured";
       } else {
         booking.depositStatus = "released";
+        depositOutcome = "released";
       }
     }
 
@@ -314,6 +327,54 @@ const returnBooking = async (req, res) => {
 
     // Mark vehicle as physically available again
     await Vehicle.findByIdAndUpdate(booking.vehicleId, { isAvailable: true });
+
+    // Record the deposit capture/release as its own transaction, same
+    // reasoning as cancelBooking — the Bookings report shows a deposit
+    // status pill, but that money movement should also be visible as a
+    // line item in the Payments log.
+    if (depositOutcome === "captured") {
+      await new Payment({
+        bookingId: booking._id,
+        customerId: booking.customerId,
+        amount: booking.depositAmount,
+        paymentMethod: booking.paymentMethod,
+        status: "completed",
+        type: "deposit_capture"
+      }).save();
+    } else if (depositOutcome === "released") {
+      await new Payment({
+        bookingId: booking._id,
+        customerId: booking.customerId,
+        amount: booking.depositAmount,
+        paymentMethod: booking.paymentMethod,
+        status: "completed",
+        type: "deposit_release"
+      }).save();
+    }
+
+    // Damage/late fees are new charges discovered at return time — they
+    // were never part of the original payment, so give them their own
+    // Payments log entry instead of only silently folding into totalAmount.
+    const extraCharge = (booking.damageCharge || 0) + (booking.lateReturnCharge || 0);
+    if (extraCharge > 0) {
+      await new Payment({
+        bookingId: booking._id,
+        customerId: booking.customerId,
+        amount: extraCharge,
+        paymentMethod: booking.paymentMethod,
+        status: "completed",
+        type: "additional_charge"
+      }).save();
+    }
+
+    await logAudit({
+      actor: req.user,
+      action: "Return Confirmed",
+      bookingId: booking._id,
+      details: depositOutcome === "captured"
+        ? `Deposit captured: $${booking.depositAmount}`
+        : undefined
+    });
 
     res.json({ message: "Vehicle return finalized successfully ✅", booking });
   } catch (err) {
@@ -387,6 +448,7 @@ const createBookingWithPayment = async (req, res) => {
       amount: totalAmount,
       paymentMethod,
       status: "completed",
+      type: "charge",
       stripePaymentIntentId: stripePaymentIntentId || null
     });
     await payment.save();
@@ -470,7 +532,8 @@ const cancelBooking = async (req, res) => {
     // Release any held deposit — cancellation refund logic above already
     // accounts for the vehicle charge split, so the deposit itself (a
     // separate security hold, not a charge) should simply be freed up.
-    if (booking.depositAmount > 0 && booking.depositStatus === "held") {
+    const depositWasHeld = booking.depositAmount > 0 && booking.depositStatus === "held";
+    if (depositWasHeld) {
       booking.depositStatus = "released";
     }
 
@@ -482,9 +545,38 @@ const cancelBooking = async (req, res) => {
       customerId,
       amount: -refundAmount, // Negative to indicate refund
       paymentMethod: booking.paymentMethod,
-      status: "completed"
+      status: "completed",
+      type: "refund"
     });
     await payment.save();
+
+    // Record the deposit release as its own transaction so the Payments
+    // log shows exactly where that "Deposit Released: $X" figure (visible
+    // in the Bookings report) actually came from, instead of only living
+    // as a status flag on the booking.
+    if (depositWasHeld) {
+      const depositPayment = new Payment({
+        bookingId: booking._id,
+        customerId,
+        amount: booking.depositAmount,
+        paymentMethod: booking.paymentMethod,
+        status: "completed",
+        type: "deposit_release"
+      });
+      await depositPayment.save();
+    }
+
+    // Only staff/admin-initiated cancellations go in the audit log — a
+    // customer cancelling their own booking is normal self-service, not
+    // a staff action that needs oversight.
+    if (req.user.role === "admin" || req.user.role === "staff") {
+      await logAudit({
+        actor: req.user,
+        action: "Booking Cancelled",
+        bookingId: booking._id,
+        details: `Refund: $${refundAmount}`
+      });
+    }
 
     res.json({
       message: staffRetainedAmount > 0

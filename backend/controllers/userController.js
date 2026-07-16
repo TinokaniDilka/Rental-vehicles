@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { logAudit } = require("../utils/auditLogger");
 
 const loginUser = async (req, res) => {
   try {
@@ -72,10 +73,15 @@ const getAllUsers = async (req, res) => {
 
 const registerStaff = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     if (!email || !password || !name) {
       return res.status(400).json({ message: "Name, email, and password are required" });
     }
+
+    // Only "staff" and "admin" can be created through this admin-only
+    // endpoint. Anything else (or missing) safely defaults to "staff"
+    // rather than silently ignoring what was actually requested.
+    const finalRole = ["staff", "admin"].includes(role) ? role : "staff";
 
     const trimmedEmail = email.trim().toLowerCase();
     const existing = await User.findOne({ email: trimmedEmail });
@@ -87,14 +93,25 @@ const registerStaff = async (req, res) => {
       name,
       email: trimmedEmail,
       password,
-      role: "staff",
+      role: finalRole,
       isActive: true
     });
     await newStaff.save();
 
-    res.status(201).json({ message: "Staff account created successfully ✅", user: newStaff });
+    await logAudit({
+      actor: req.user,
+      action: finalRole === "admin" ? "Admin Registered" : "Staff Registered",
+      targetType: "User",
+      targetId: newStaff._id,
+      details: `${newStaff.name} (${newStaff.email})`
+    });
+
+    res.status(201).json({
+      message: `${finalRole.charAt(0).toUpperCase() + finalRole.slice(1)} account created successfully ✅`,
+      user: newStaff
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error registering staff", error: err.message });
+    res.status(500).json({ message: "Error registering account", error: err.message });
   }
 };
 
@@ -113,6 +130,14 @@ const toggleUserActive = async (req, res) => {
 
     user.isActive = !user.isActive;
     await user.save();
+
+    await logAudit({
+      actor: req.user,
+      action: user.isActive ? "User Activated" : "User Deactivated",
+      targetType: "User",
+      targetId: user._id,
+      details: `${user.name} (${user.email})`
+    });
 
     res.json({ message: `User active status toggled to ${user.isActive} ✅`, user });
   } catch (err) {
@@ -219,9 +244,59 @@ const updateVerificationStatus = async (req, res) => {
     user.verificationStatus = verificationStatus;
     await user.save();
 
+    // Only log an explicit approve/reject decision — "Pending Review" is
+    // an intermediate state set by the customer's own upload, not an
+    // admin action worth an audit entry.
+    if (verificationStatus === "Verified" || verificationStatus === "Not Verified") {
+      await logAudit({
+        actor: req.user,
+        action: verificationStatus === "Verified" ? "ID Verification Approved" : "ID Verification Rejected",
+        targetType: "User",
+        targetId: user._id,
+        details: `${user.name} (${user.email})`
+      });
+    }
+
     res.json({ message: `Verification status updated to ${verificationStatus} ✅`, user });
   } catch (err) {
     res.status(500).json({ message: "Error updating verification status", error: err.message });
+  }
+};
+
+// Permanently delete a user. Only allowed for accounts that are already
+// deactivated — this is a safety rail so an admin can't accidentally
+// wipe out an active account in one click. Self-deletion is blocked too.
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user._id.toString() === req.user.id.toString()) {
+      return res.status(400).json({ message: "You cannot delete your own account" });
+    }
+
+    if (user.isActive) {
+      return res.status(400).json({ message: "Deactivate this user before deleting them" });
+    }
+
+    const { name, email } = user;
+    await User.findByIdAndDelete(id);
+
+    await logAudit({
+      actor: req.user,
+      action: "User Deleted",
+      targetType: "User",
+      targetId: id,
+      details: `${name} (${email})`
+    });
+
+    res.json({ message: "User deleted successfully ✅" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting user", error: err.message });
   }
 };
 
@@ -232,5 +307,6 @@ module.exports = {
   toggleUserActive,
   updateProfile,
   uploadVerificationDocs,
-  updateVerificationStatus
+  updateVerificationStatus,
+  deleteUser
 };
