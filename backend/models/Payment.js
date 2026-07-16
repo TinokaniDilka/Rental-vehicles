@@ -25,6 +25,14 @@ const paymentSchema = new mongoose.Schema({
     enum: ["pending", "completed"],
     default: "completed"
   },
+  // Explicit transaction type. Optional/undefined on older records — the
+  // frontend falls back to inferring from amount sign for those. New
+  // records should always set this so the Payments log is unambiguous.
+  type: {
+    type: String,
+    enum: ["charge", "refund", "deposit_release", "deposit_capture", "additional_charge"],
+    default: undefined
+  },
   paidAt: {
     type: Date,
     default: Date.now

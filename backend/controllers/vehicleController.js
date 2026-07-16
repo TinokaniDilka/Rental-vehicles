@@ -3,6 +3,7 @@ const Vehicle = require("../models/Vehicle");
 const multer = require("multer");
 const fs = require('fs');
 const path = require('path');
+const { logAudit } = require("../utils/auditLogger");
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -42,6 +43,14 @@ const createVehicle = async (req, res) => {
 
     const vehicle = new Vehicle(vehicleData);
     await vehicle.save();
+
+    await logAudit({
+      actor: req.user,
+      action: "Vehicle Added",
+      targetType: "Vehicle",
+      targetId: vehicle._id,
+      details: vehicle.name
+    });
 
     res.status(201).json({ message: "Vehicle added successfully ✅", vehicle });
   } catch (err) {
@@ -85,6 +94,14 @@ const updateVehicle = async (req, res) => {
 
     if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
 
+    await logAudit({
+      actor: req.user,
+      action: "Vehicle Updated",
+      targetType: "Vehicle",
+      targetId: vehicle._id,
+      details: vehicle.name
+    });
+
     res.json({ message: "Vehicle updated ✅", vehicle });
   } catch (err) {
     res.status(500).json({ message: "Error updating vehicle" });
@@ -127,6 +144,14 @@ const deleteVehicle = async (req, res) => {
     if (!deletedVehicle) {
       return res.status(404).json({ message: "Vehicle not found or unauthorized to delete" });
     }
+
+    await logAudit({
+      actor: req.user,
+      action: "Vehicle Deleted",
+      targetType: "Vehicle",
+      targetId: deletedVehicle._id,
+      details: deletedVehicle.name
+    });
 
     res.json({ message: "Vehicle deleted successfully ✅" });
   } catch (err) {
