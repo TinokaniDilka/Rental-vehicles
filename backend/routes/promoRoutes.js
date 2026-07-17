@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
 const Promo = require("../models/Promo");
+const { logAudit } = require("../utils/auditLogger");
 
 // Validate a promo code (Customer Checkout)
 router.get("/validate/:code", protect, async (req, res) => {
@@ -24,6 +25,7 @@ router.get("/validate/:code", protect, async (req, res) => {
     res.status(500).json({ message: "Error validating promo code" });
   }
 });
+
 
 // Admin-only: Get all promos
 router.get("/", protect, async (req, res) => {
@@ -63,6 +65,14 @@ router.post("/", protect, async (req, res) => {
     });
     await promo.save();
 
+    await logAudit({
+      actor: req.user,
+      action: "Promo Code Created",
+      targetType: "Promo",
+      targetId: promo._id,
+      details: `${promo.code} (${promo.discountPercent}% off)`
+    });
+
     res.status(201).json({ message: "Promo code created successfully ✅", promo });
   } catch (err) {
     res.status(500).json({ message: "Error creating promo code" });
@@ -83,6 +93,14 @@ router.put("/:id/toggle", protect, async (req, res) => {
 
     promo.isActive = !promo.isActive;
     await promo.save();
+
+    await logAudit({
+      actor: req.user,
+      action: promo.isActive ? "Promo Code Activated" : "Promo Code Deactivated",
+      targetType: "Promo",
+      targetId: promo._id,
+      details: promo.code
+    });
 
     res.json({ message: `Promo code status toggled to ${promo.isActive} ✅`, promo });
   } catch (err) {

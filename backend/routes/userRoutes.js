@@ -12,7 +12,8 @@ const {
   toggleUserActive,
   updateProfile,
   updateVerificationStatus,
-  uploadVerificationDocs
+  uploadVerificationDocs,
+  deleteUser
 } = require("../controllers/userController");
 
 // ===================== ID VERIFICATION FILE UPLOAD CONFIG =====================
@@ -160,17 +161,11 @@ router.put("/users/:id/verify", protect, async (req, res, next) => {
   next();
 }, updateVerificationStatus);
 
-// ===================== TEMPORARY CLEANUP ROUTE =====================
-router.delete("/cleanup-renters", async (req, res) => {
-  try {
-    const result = await User.deleteMany({ role: "renter" });
-    res.json({ 
-      success: true,
-      message: "✅ All renter accounts removed successfully!",
-      deletedCount: result.deletedCount 
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Cleanup failed", error: err.message });
+router.delete("/users/:id", protect, async (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Access denied. Admin only." });
   }
-});
+  next();
+}, deleteUser);
+
 module.exports = router;
