@@ -5,6 +5,11 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import BookingsReport from "./pages/reports/BookingsReport";
+import PaymentsReport from "./pages/reports/PaymentsReport";
+import VehicleFleetReport from "./pages/reports/VehicleFleetReport";
+import FeedbackReport from "./pages/reports/FeedbackReport";
+import AuditLogReport from "./pages/reports/AuditLogReport";
 
 function HomeRedirect() {
   const userString = localStorage.getItem("user");
@@ -24,44 +29,20 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Dynamic Home Redirect */}
         <Route path="/" element={<HomeRedirect />} />
-
-        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected Customer Dashboard */}
-        <Route
-          path="/customer"
-          element={
-            <ProtectedRoute role="customer">
-              <CustomerDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/customer" element={<ProtectedRoute role="customer"><CustomerDashboard /></ProtectedRoute>} />
+        <Route path="/staff" element={<ProtectedRoute role="staff"><StaffDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
 
-        {/* Protected Staff Dashboard */}
-        <Route
-          path="/staff"
-          element={
-            <ProtectedRoute role="staff">
-              <StaffDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/admin/reports/bookings" element={<ProtectedRoute role="admin"><BookingsReport /></ProtectedRoute>} />
+        <Route path="/admin/reports/payments" element={<ProtectedRoute role="admin"><PaymentsReport /></ProtectedRoute>} />
+        <Route path="/admin/reports/vehicle-fleet" element={<ProtectedRoute role="admin"><VehicleFleetReport /></ProtectedRoute>} />
+        <Route path="/admin/reports/feedback" element={<ProtectedRoute role="admin"><FeedbackReport /></ProtectedRoute>} />
+        <Route path="/admin/reports/audit-log" element={<ProtectedRoute role="admin"><AuditLogReport /></ProtectedRoute>} />
 
-        {/* Protected Admin Dashboard */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Catch All Redirect */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
