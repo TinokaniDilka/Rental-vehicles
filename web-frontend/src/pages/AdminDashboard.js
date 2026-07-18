@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -48,8 +48,11 @@ export default function AdminDashboard() {
   const [selectedUserForVerification, setSelectedUserForVerification] = useState(null);
 
   const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Tracks whether the admin has manually touched the Users List filter,
+  // so we only auto-jump to "Pending Verification" the first time a queue appears.
+  const hasManuallyFiltered = useRef(false);
 
   // Promo Code Form
   const [showPromoModal, setShowPromoModal] = useState(false);
@@ -244,6 +247,7 @@ export default function AdminDashboard() {
       setShowIdVerificationModal(false);
       setSelectedUserForVerification(null);
       fetchUsers();
+      fetchPendingVerifications();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to approve verification");
     }
@@ -261,6 +265,7 @@ export default function AdminDashboard() {
       setShowIdVerificationModal(false);
       setSelectedUserForVerification(null);
       fetchUsers();
+      fetchPendingVerifications();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to reject verification");
     }
@@ -292,6 +297,20 @@ export default function AdminDashboard() {
     alert("Monthly PDF report generation isn't wired up to the backend yet — let's build that endpoint next.");
   };
 
+  // Navigating to Users List: auto-select "Pending Verification" only the first
+  // time there's a queue and the admin hasn't manually picked a filter yet.
+  const handleUsersNavClick = () => {
+    setActivePage("users");
+    if (unreadCount > 0 && !hasManuallyFiltered.current) {
+      setUserFilter("pending");
+    }
+  };
+
+  const handleUserFilterChange = (value) => {
+    hasManuallyFiltered.current = true;
+    setUserFilter(value);
+  };
+
   // Derived stats with safe fallbacks in case the backend hasn't added these fields yet
   const totalBookingsDisplay = stats.totalBookings ?? reports.bookings.length;
   const availableVehiclesDisplay =
@@ -316,25 +335,13 @@ export default function AdminDashboard() {
 
           <div className="nav-links-wrap">
             <NavItem label="Overview" active={activePage === "dashboard"} onClick={() => setActivePage("dashboard")} />
-            <NavItem label="Users List" active={activePage === "users"} onClick={() => setActivePage("users")} />
+            <NavItem
+              label="Users List"
+              active={activePage === "users"}
+              badge={unreadCount}
+              onClick={handleUsersNavClick}
+            />
             <NavItem label="Promo Codes" active={activePage === "promos"} onClick={() => setActivePage("promos")} />
-          </div>
-
-          {/* Notification Bell — wired to real pending-verification data */}
-          <div
-            style={{ position: "relative", marginRight: "20px", cursor: "pointer", fontSize: "26px" }}
-            onClick={() => setShowNotifications(!showNotifications)}
-          >
-            🛎️
-            {unreadCount > 0 && (
-              <span style={{
-                position: "absolute", top: "-8px", right: "-8px", backgroundColor: "#ef4444",
-                color: "white", fontSize: "12px", fontWeight: "bold", borderRadius: "50%",
-                padding: "3px 7px", lineHeight: "1"
-              }}>
-                {unreadCount}
-              </span>
-            )}
           </div>
 
           <div style={{ position: "relative" }}>
@@ -391,6 +398,26 @@ export default function AdminDashboard() {
               </div>
               <div style={{ fontSize: "36px", opacity: 0.8 }}>📊</div>
             </div>
+
+            {unreadCount > 0 && (
+              <div
+                className="glass-card"
+                style={{
+                  marginTop: "20px", padding: "14px 20px", display: "flex", alignItems: "center",
+                  justifyContent: "space-between", gap: "16px", cursor: "pointer",
+                  border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)"
+                }}
+                onClick={handleUsersNavClick}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <span style={{ fontSize: "20px" }}>🪪</span>
+                  <span style={{ fontSize: "14px", color: "white" }}>
+                    <strong>{unreadCount}</strong> customer{unreadCount > 1 ? "s" : ""} waiting for ID verification
+                  </span>
+                </div>
+                <span style={{ fontSize: "13px", color: "#f59e0b", fontWeight: "700" }}>Review now →</span>
+              </div>
+            )}
 
             {/* Overview Metric Cards */}
             <div className="dashboard-grid" style={{ marginTop: "25px" }}>
@@ -522,11 +549,12 @@ export default function AdminDashboard() {
               <div style={{ marginTop: "10px", marginBottom: "15px" }}>
                 <select
                   value={userFilter}
-                  onChange={(e) => setUserFilter(e.target.value)}
+                  onChange={(e) => handleUserFilterChange(e.target.value)}
                   className="custom-input"
-                  style={{ maxWidth: "200px" }}
+                  style={{ maxWidth: "220px" }}
                 >
                   <option value="all">All Users</option>
+                  <option value="pending">Pending Verification {unreadCount > 0 ? `(${unreadCount})` : ""}</option>
                   <option value="staff">Staff</option>
                   <option value="customer">Customers</option>
                   <option value="admin">Admins</option>
@@ -548,9 +576,8 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users
-                    .filter(u => userFilter === "all" ? true : u.role === userFilter)
-                    .map(u => (
+                  {(userFilter === "pending" ? notifications : users.filter(u => userFilter === "all" ? true : u.role === userFilter))
+  .map(u => (
                       <tr key={u._id} className="custom-tr">
                         <td className="custom-td custom-td-primary">{u.name}</td>
                         <td className="custom-td">{u.email}</td>
@@ -895,9 +922,28 @@ const StatusPill = ({ label, tone = "neutral" }) => {
   );
 };
 
-const NavItem = ({ label, active, onClick }) => (
-  <div className={`nav-link-item ${active ? "nav-link-item-active" : ""}`} onClick={onClick}>
+const NavItem = ({ label, active, onClick, badge }) => (
+  <div className={`nav-link-item ${active ? "nav-link-item-active" : ""}`} onClick={onClick} style={{ position: "relative" }}>
     {label}
+    {badge > 0 && (
+      <span style={{
+        marginLeft: "6px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: "18px",
+        height: "18px",
+        padding: "0 5px",
+        borderRadius: "999px",
+        background: "#ef4444",
+        color: "white",
+        fontSize: "10px",
+        fontWeight: "700",
+        verticalAlign: "middle"
+      }}>
+        {badge}
+      </span>
+    )}
   </div>
 );
 
