@@ -64,7 +64,17 @@ const loginUser = async (req, res) => {
 // Admin User Management methods
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const filter = {};
+
+    if (req.query.verificationStatus) {
+      // Only customers ever carry a verificationStatus, so scope the
+      // query to that role as a safety net even if stray data exists
+      // on a staff/admin record.
+      filter.role = "customer";
+      filter.verificationStatus = req.query.verificationStatus;
+    }
+
+    const users = await User.find(filter).select("-password");
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: "Error fetching users" });
