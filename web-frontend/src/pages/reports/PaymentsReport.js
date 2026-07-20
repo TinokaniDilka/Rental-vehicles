@@ -81,6 +81,8 @@ export default function PaymentsReport() {
               <th className="custom-th">CUSTOMER</th>
               <th className="custom-th">VEHICLE</th>
               <th className="custom-th">VEHICLE ID</th>
+              <th className="custom-th">OWNER</th>
+              <th className="custom-th">COMMISSION</th>
               <th className="custom-th">TYPE</th>
               <th className="custom-th">AMOUNT</th>
               <th className="custom-th">TIMESTAMP</th>
@@ -103,6 +105,8 @@ export default function PaymentsReport() {
                   <td className="custom-td" style={{ fontFamily: "monospace", fontSize: "12px" }}>
                     {p.bookingId?.vehicleId?.vehicleId || p.bookingId?.vehicleId?._id?.slice(-6) || "N/A"}
                   </td>
+                  <td className="custom-td">{p.bookingId?.vehicleId?.owner?.name || "N/A"}</td>
+                  <td className="custom-td">{p.platformCommission != null ? `$${p.platformCommission.toFixed(2)}` : "$0.00"}</td>
                   <td className="custom-td">
                     <span style={{ padding: "4px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: "700", background: typeInfo.bg, color: typeInfo.color }}>
                       {typeInfo.label}

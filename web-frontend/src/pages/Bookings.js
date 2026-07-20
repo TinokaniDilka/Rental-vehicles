@@ -72,11 +72,10 @@ export default function Bookings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           vehicleId: id,
-          renterId: vehicle.owner?._id,        // Owner of the vehicle
           customerId: user._id,
           startDate,
           endDate,
-          status: "pending" // 
+          status: "pending"
         })
       });
 
@@ -84,7 +83,7 @@ export default function Bookings() {
 
       if (!bookingRes.ok) throw new Error(bookingData.message || "Booking failed");
 
-      // ✅ Send Notification to Renter (Vehicle Owner)
+      // ✅ Send Notification to Vehicle Owner
       await fetch("http://localhost:5000/api/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
