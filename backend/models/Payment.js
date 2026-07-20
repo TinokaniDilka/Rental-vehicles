@@ -28,6 +28,9 @@ const paymentSchema = new mongoose.Schema({
   // Explicit transaction type. Optional/undefined on older records — the
   // frontend falls back to inferring from amount sign for those. New
   // records should always set this so the Payments log is unambiguous.
+  // Commission fields – split of total payment between platform and staff
+  platformCommission: { type: Number, default: 0 },
+  ownerEarnings: { type: Number, default: 0 },
   type: {
     type: String,
     enum: ["charge", "refund", "deposit_release", "deposit_capture", "additional_charge"],
