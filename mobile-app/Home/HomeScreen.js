@@ -201,7 +201,7 @@ useFocusEffect(
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0f172a' },
+  root: { flex: 1, backgroundColor: '#050711' },
 
   header: {
     flexDirection: 'row',
@@ -210,70 +210,86 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
 
-  smallText: { color: '#94a3b8', fontSize: 13 },
-  title: { color: '#fff', fontSize: 24, fontWeight: '700' },
+  smallText: { color: '#cbd5e1', fontSize: 13, fontWeight: '500' },
+  title: { color: '#f1f5f9', fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
 
   iconBtn: {
-    backgroundColor: 'rgba(99,102,241,0.3)',
-    padding: 10,
-    borderRadius: 12,
+    backgroundColor: 'rgba(124, 58, 237, 0.25)',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 58, 237, 0.3)',
   },
 
   hero: {
     margin: 20,
-    padding: 20,
-    borderRadius: 20,
+    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 58, 237, 0.3)',
   },
 
-  available: { color: '#c7d2fe', fontSize: 12, marginBottom: 10 },
-  heroTitle: { color: '#fff', fontSize: 26 },
-  heroTitleBold: { color: '#fff', fontSize: 28, fontWeight: '800' },
-  heroSub: { color: '#c7d2fe', marginVertical: 10 },
+  available: { color: '#a78bfa', fontSize: 13, marginBottom: 12, fontWeight: '600', letterSpacing: 0.5 },
+  heroTitle: { color: '#f1f5f9', fontSize: 28, fontWeight: '700' },
+  heroTitleBold: { color: '#f1f5f9', fontSize: 30, fontWeight: '900', letterSpacing: -1 },
+  heroSub: { color: '#a78bfa', marginVertical: 12, fontSize: 15, lineHeight: 22 },
 
-  heroButtons: { flexDirection: 'row', marginTop: 10 },
+  heroButtons: { flexDirection: 'row', marginTop: 16, gap: 12 },
 
   primaryBtn: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 10,
-    marginRight: 10,
+    backgroundColor: '#7c3aed',
+    padding: 14,
+    borderRadius: 14,
+    marginRight: 0,
+    shadowColor: '#7c3aed',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
-  primaryText: { color: '#4f46e5', fontWeight: '700' },
+  primaryText: { color: '#fff', fontWeight: '800', fontSize: 15, letterSpacing: 0.5 },
 
   secondaryBtn: {
-    borderWidth: 1,
-    borderColor: '#c7d2fe',
-    padding: 10,
-    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#a78bfa',
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
   },
-  secondaryText: { color: '#fff' },
+  secondaryText: { color: '#f1f5f9', fontWeight: '700', fontSize: 15 },
 
   searchBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(30,41,59,0.8)',
+    backgroundColor: 'rgba(10, 15, 30, 0.9)',
     marginHorizontal: 20,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 16,
+    padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(124, 58, 237, 0.2)',
   },
 
   locationBox: {
-    backgroundColor: 'rgba(30,41,59,0.8)',
+    backgroundColor: 'rgba(10, 15, 30, 0.9)',
     margin: 20,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.2)',
   },
 
-  locationText: { color: '#fff', marginLeft: 5 },
-  changeText: { color: '#38bdf8' },
+  locationText: { color: '#f1f5f9', marginLeft: 8, fontSize: 15, fontWeight: '600' },
+  changeText: { color: '#22d3ee', fontSize: 14, fontWeight: '700' },
 
   sectionTitle: {
-    color: '#fff',
+    color: '#f1f5f9',
     marginHorizontal: 20,
-    marginTop: 10,
-    fontWeight: '600',
+    marginTop: 16,
+    fontWeight: '800',
+    fontSize: 20,
+    letterSpacing: -0.5,
   },
 
   grid: {
@@ -285,35 +301,45 @@ const styles = StyleSheet.create({
 
   card: {
     width: (width - 60) / 2,
-    backgroundColor: 'rgba(30,41,59,0.8)',
-    borderRadius: 16,
-    padding: 15,
-    marginBottom: 15,
+    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(124, 58, 237, 0.15)',
+    shadowColor: '#7c3aed',
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
 
   iconCircle: {
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 12,
   },
 
-  cardText: { color: '#cbd5f5' },
+  cardText: { color: '#f1f5f9', fontSize: 14, fontWeight: '600' },
 
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 20,
+    alignItems: 'center',
   },
 
-  seeAll: { color: '#6366f1' },
+  seeAll: { color: '#a78bfa', fontSize: 14, fontWeight: '700' },
 
   vehicleCard: {
     width: 180,
     height: 120,
-    backgroundColor: '#1e293b',
+    backgroundColor: 'rgba(10, 15, 30, 0.9)',
     marginLeft: 20,
-    borderRadius: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 58, 237, 0.2)',
     padding: 10,
   },
 
@@ -324,65 +350,66 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
-heroCard: {
-  height: 200,
-  borderRadius: 20,
-  overflow: 'hidden',
-  marginBottom: 20,
-},
 
-overlay: {
-  flex: 1,
-  padding: 20,
-  backgroundColor: 'rgba(0,0,0,0.4)',
-  justifyContent: 'center',
-},
+  heroCard: {
+    height: 200,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
 
-smallText: {
-  color: '#ddd',
-  marginBottom: 10,
-},
+  overlay: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+  },
 
-title: {
-  fontSize: 26,
-  fontWeight: '700',
-  color: '#fff',
-},
+  heroSmallText: {
+    color: '#ddd',
+    marginBottom: 10,
+  },
 
-subtitle: {
-  color: '#ddd',
-  marginVertical: 10,
-},
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#fff',
+  },
 
-buttonsRow: {
-  flexDirection: 'row',
-  marginTop: 10,
-},
+  heroSubtitle: {
+    color: '#ddd',
+    marginVertical: 10,
+  },
 
-primaryBtn: {
-  backgroundColor: '#fff',
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  borderRadius: 10,
-  marginRight: 10,
-},
+  heroButtonsRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
 
-primaryText: {
-  color: '#000',
-  fontWeight: '600',
-},
+  heroPrimaryBtn: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginRight: 10,
+  },
 
-outlineBtn: {
-  borderWidth: 1,
-  borderColor: '#fff',
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  borderRadius: 10,
-},
+  heroPrimaryText: {
+    color: '#000',
+    fontWeight: '600',
+  },
 
-outlineText: {
-  color: '#fff',
-},
+  heroOutlineBtn: {
+    borderWidth: 1,
+    borderColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+
+  heroOutlineText: {
+    color: '#fff',
+  },
 
   badgeBlue: {
     backgroundColor: '#0ea5e9',
