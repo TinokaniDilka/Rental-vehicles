@@ -71,7 +71,11 @@ router.get("/reports", protect, async (req, res) => {
     const payments = await Payment.find()
       .populate({
         path: "bookingId",
-        populate: { path: "vehicleId", select: "name" }
+        populate: {
+          path: "vehicleId",
+          select: "name owner",
+          populate: { path: "owner", select: "name email" }
+        }
       })
       .populate("customerId", "name email")
       .sort({ createdAt: -1 });
