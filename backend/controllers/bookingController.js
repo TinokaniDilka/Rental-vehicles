@@ -4,6 +4,7 @@ const Payment = require("../models/Payment");
 const AuditLog = require("../models/AuditLog");
 const User = require("../models/User");
 const { logAudit } = require("../utils/auditLogger");
+const { getIO } = require("../socket");
 
 // Shared helper: only "Verified" users may create bookings
 const requireVerifiedUser = async (userId) => {
@@ -177,6 +178,9 @@ const reviewBooking = async (req, res) => {
     }
 
     await booking.save();
+    // Emit real‑time update after review
+    const io = getIO();
+    io.emit('booking:update', booking);
 
     await logAudit({
       actor: req.user,
@@ -212,15 +216,23 @@ const payBooking = async (req, res) => {
     }
 
     // Save payment log
+    const commissionRate = parseFloat(process.env.COMMISSION_RATE) || 0.15;
+    const platformCommission = Math.round(booking.totalAmount * commissionRate);
+    const ownerEarnings = booking.totalAmount - platformCommission;
     const payment = new Payment({
       bookingId: booking._id,
       customerId: req.user.id,
       amount: booking.totalAmount,
       paymentMethod,
       status: "completed",
-      type: "charge"
+      type: "charge",
+      platformCommission,
+      ownerEarnings
     });
     await payment.save();
+    // Emit real‑time update
+    const io = getIO();
+    io.emit('booking:update', booking);
 
     if (paymentMethod) {
       booking.paymentMethod = paymentMethod;
@@ -233,6 +245,7 @@ const payBooking = async (req, res) => {
 
     res.json({ message: "Payment confirmed successfully! Booking active ✅", booking });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error processing payment", error: err.message });
   }
 };
@@ -442,6 +455,9 @@ const createBookingWithPayment = async (req, res) => {
     await booking.save();
 
     // Save payment record
+    const commissionRate = parseFloat(process.env.COMMISSION_RATE) || 0.15;
+    const platformCommission = Math.round(totalAmount * commissionRate);
+    const ownerEarnings = totalAmount - platformCommission;
     const payment = new Payment({
       bookingId: booking._id,
       customerId,
@@ -449,9 +465,14 @@ const createBookingWithPayment = async (req, res) => {
       paymentMethod,
       status: "completed",
       type: "charge",
-      stripePaymentIntentId: stripePaymentIntentId || null
+      stripePaymentIntentId: stripePaymentIntentId || null,
+      platformCommission,
+      ownerEarnings
     });
     await payment.save();
+    // Emit real‑time update
+    const io = getIO();
+    io.emit('booking:update', booking);
 
     res.status(201).json({ message: "Booking confirmed and payment completed ✅", booking });
   } catch (err) {

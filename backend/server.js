@@ -47,10 +47,17 @@ app.use("/api/payments", paymentRoutes);
 mongoose.connect(process.env.MONGO_URI, {
   dbName: "vehicle_rental", // ✅ FORCE correct DB
 })
-  .then(() => console.log("MongoDB Atlas Connected ✅"))
-  .catch(err => console.log(err));
+  .then(() => {
+    console.log("MongoDB Atlas Connected ✅");
 
-// ✅ START SERVER
-app.listen(5000, '0.0.0.0', () => {
-  console.log("Server running on http://0.0.0.0:5000 ✅");
-});
+    const http = require('http');
+    const server = http.createServer(app);
+    const { init } = require('./socket');
+    init(server);
+
+    // ✅ START SERVER
+    server.listen(5000, '0.0.0.0', () => console.log('Server running on http://0.0.0.0:5000 ✅'));
+    // Load overdue job scheduler
+    require('./tasks/scheduleOverdue');
+  })
+  .catch(err => console.log(err));
