@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     height: 180,
-    backgroundColor: '#cbd5e1',
+    backgroundColor: '#FFF0E0',
   },
   image: {
     width: '100%',
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: COLORS.primary,
-    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+    backgroundColor: 'rgba(255, 140, 66, 0.08)',
     paddingVertical: 2,
     paddingHorizontal: 8,
     borderRadius: 8,

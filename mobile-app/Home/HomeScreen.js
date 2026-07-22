@@ -51,10 +51,10 @@ useFocusEffect(
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
       <LinearGradient
-        colors={['#0f172a', '#1e1b4b', '#0f172a']}
+        colors={['#ffffff', '#fff5eb', '#ffffff']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -67,7 +67,7 @@ useFocusEffect(
           </View>
 
           <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={20} color="#c7d2fe" />
+            <Ionicons name="notifications-outline" size={20} color="#FF8C42" />
           </TouchableOpacity>
         </View>
 
@@ -106,13 +106,13 @@ useFocusEffect(
 
         {/* SEARCH */}
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#6366f1" />
+          <Ionicons name="search" size={18} color="#FF8C42" />
           <TextInput
             placeholder="Search by car or location"
-            placeholderTextColor="#64748b"
-            style={{ flex: 1, marginHorizontal: 10, color: '#fff' }}
+            placeholderTextColor="#888888"
+            style={{ flex: 1, marginHorizontal: 10, color: '#1a1a1a' }}
           />
-          <Ionicons name="options-outline" size={18} color="#64748b" />
+          <Ionicons name="options-outline" size={18} color="#888888" />
         </View>
 
       
@@ -144,49 +144,49 @@ useFocusEffect(
     marginHorizontal: 20,
      marginTop: 20,
     marginBottom: 60,
-    backgroundColor: 'rgba(16,185,129,0.1)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.3)',
     padding: 16,
   }}>
     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
       <View style={{
-        backgroundColor: 'rgba(16,185,129,0.2)',
+        backgroundColor: 'rgba(255, 140, 66, 0.2)',
         borderRadius: 8,
         paddingHorizontal: 10,
         paddingVertical: 4,
       }}>
-        <Text style={{ color: '#10b981', fontWeight: '800', fontSize: 11 }}>🚗 ONGOING</Text>
+        <Text style={{ color: '#FF8C42', fontWeight: '800', fontSize: 11 }}>🚗 ONGOING</Text>
       </View>
     </View>
 
-    <Text style={{ color: '#f8fafc', fontSize: 17, fontWeight: '800', marginBottom: 4 }}>
+    <Text style={{ color: '#1a1a1a', fontSize: 17, fontWeight: '800', marginBottom: 4 }}>
       {ongoingBooking.vehicleId?.name || 'Vehicle'}
     </Text>
 
     <View style={{ flexDirection: 'row', gap: 16, marginBottom: 10 }}>
-      <Text style={{ color: '#94a3b8', fontSize: 13 }}>
+      <Text style={{ color: '#4a4a4a', fontSize: 13 }}>
         📅 {new Date(ongoingBooking.startDate).toLocaleDateString()} → {new Date(ongoingBooking.endDate).toLocaleDateString()}
       </Text>
     </View>
 
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={{ color: '#10b981', fontSize: 20, fontWeight: '800' }}>
+      <Text style={{ color: '#FF8C42', fontSize: 20, fontWeight: '800' }}>
         LKR {ongoingBooking.totalAmount?.toLocaleString()}
       </Text>
       <TouchableOpacity
         onPress={() => navigation.navigate('Bookings')}
         style={{
-          backgroundColor: 'rgba(16,185,129,0.2)',
+          backgroundColor: 'rgba(255, 140, 66, 0.2)',
           borderRadius: 10,
           paddingHorizontal: 14,
           paddingVertical: 8,
           borderWidth: 1,
-          borderColor: 'rgba(16,185,129,0.4)',
+          borderColor: 'rgba(255, 140, 66, 0.4)',
         }}
       >
-        <Text style={{ color: '#10b981', fontWeight: '700', fontSize: 13 }}>View Details →</Text>
+        <Text style={{ color: '#FF8C42', fontWeight: '700', fontSize: 13 }}>View Details →</Text>
       </TouchableOpacity>
     </View>
   </View>
@@ -201,7 +201,7 @@ useFocusEffect(
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#050711' },
+  root: { flex: 1, backgroundColor: '#ffffff' },
 
   header: {
     flexDirection: 'row',
@@ -210,15 +210,15 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
 
-  smallText: { color: '#cbd5e1', fontSize: 13, fontWeight: '500' },
-  title: { color: '#f1f5f9', fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
+  smallText: { color: '#4a4a4a', fontSize: 13, fontWeight: '500' },
+  title: { color: '#1a1a1a', fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
 
   iconBtn: {
-    backgroundColor: 'rgba(124, 58, 237, 0.25)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.3)',
   },
 
   hero: {
@@ -226,23 +226,23 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.3)',
   },
 
-  available: { color: '#a78bfa', fontSize: 13, marginBottom: 12, fontWeight: '600', letterSpacing: 0.5 },
-  heroTitle: { color: '#f1f5f9', fontSize: 28, fontWeight: '700' },
-  heroTitleBold: { color: '#f1f5f9', fontSize: 30, fontWeight: '900', letterSpacing: -1 },
-  heroSub: { color: '#a78bfa', marginVertical: 12, fontSize: 15, lineHeight: 22 },
+  available: { color: '#FF8C42', fontSize: 13, marginBottom: 12, fontWeight: '600', letterSpacing: 0.5 },
+  heroTitle: { color: '#1a1a1a', fontSize: 28, fontWeight: '700' },
+  heroTitleBold: { color: '#1a1a1a', fontSize: 30, fontWeight: '900', letterSpacing: -1 },
+  heroSub: { color: '#FF8C42', marginVertical: 12, fontSize: 15, lineHeight: 22 },
 
   heroButtons: { flexDirection: 'row', marginTop: 16, gap: 12 },
 
   primaryBtn: {
-    backgroundColor: '#7c3aed',
+    backgroundColor: '#FF8C42',
     padding: 14,
     borderRadius: 14,
     marginRight: 0,
-    shadowColor: '#7c3aed',
-    shadowOpacity: 0.4,
+    shadowColor: '#FF8C42',
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 8,
@@ -251,40 +251,40 @@ const styles = StyleSheet.create({
 
   secondaryBtn: {
     borderWidth: 1.5,
-    borderColor: '#a78bfa',
+    borderColor: '#FF8C42',
     padding: 14,
     borderRadius: 14,
-    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
   },
-  secondaryText: { color: '#f1f5f9', fontWeight: '700', fontSize: 15 },
+  secondaryText: { color: '#1a1a1a', fontWeight: '700', fontSize: 15 },
 
   searchBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     marginHorizontal: 20,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.2)',
   },
 
   locationBox: {
-    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     margin: 20,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.2)',
   },
 
-  locationText: { color: '#f1f5f9', marginLeft: 8, fontSize: 15, fontWeight: '600' },
-  changeText: { color: '#22d3ee', fontSize: 14, fontWeight: '700' },
+  locationText: { color: '#1a1a1a', marginLeft: 8, fontSize: 15, fontWeight: '600' },
+  changeText: { color: '#FF8C42', fontSize: 14, fontWeight: '700' },
 
   sectionTitle: {
-    color: '#f1f5f9',
+    color: '#1a1a1a',
     marginHorizontal: 20,
     marginTop: 16,
     fontWeight: '800',
@@ -301,15 +301,15 @@ const styles = StyleSheet.create({
 
   card: {
     width: (width - 60) / 2,
-    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 18,
     marginBottom: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.15)',
-    shadowColor: '#7c3aed',
-    shadowOpacity: 0.15,
+    borderColor: 'rgba(255, 140, 66, 0.15)',
+    shadowColor: '#FF8C42',
+    shadowOpacity: 0.1,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },
     elevation: 6,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  cardText: { color: '#f1f5f9', fontSize: 14, fontWeight: '600' },
+  cardText: { color: '#1a1a1a', fontSize: 14, fontWeight: '600' },
 
   sectionRow: {
     flexDirection: 'row',
@@ -330,21 +330,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  seeAll: { color: '#a78bfa', fontSize: 14, fontWeight: '700' },
+  seeAll: { color: '#FF8C42', fontSize: 14, fontWeight: '700' },
 
   vehicleCard: {
     width: 180,
     height: 120,
-    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     marginLeft: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.2)',
     padding: 10,
   },
 
   badge: {
-    backgroundColor: '#ec4899',
+    backgroundColor: '#FF8C42',
     color: '#fff',
     padding: 4,
     borderRadius: 6,
@@ -412,12 +412,12 @@ const styles = StyleSheet.create({
   },
 
   badgeBlue: {
-    backgroundColor: '#0ea5e9',
+    backgroundColor: '#FF8C42',
     color: '#fff',
     padding: 4,
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
 
-  vehicleText: { color: '#fff', marginTop: 20 },
+  vehicleText: { color: '#1a1a1a', marginTop: 20 },
 });

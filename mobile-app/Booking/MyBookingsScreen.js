@@ -59,9 +59,9 @@ export default function MyBookingsScreen({ navigation }) {
     const s = status?.toLowerCase();
     if (s === 'active') return { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)', text: '#10b981' };
     if (s === 'pending') return { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)', text: '#f59e0b' };
-    if (s === 'completed') return { bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.4)', text: '#818cf8' };
+    if (s === 'completed') return { bg: 'rgba(255, 140, 66, 0.15)', border: 'rgba(255, 140, 66, 0.04)', text: '#FFA366' };
     if (s === 'cancelled') return { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', text: '#ef4444' };
-    return { bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', text: '#94a3b8' };
+    return { bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', text: '#888888' };
   };
 
   const handleConfirmReceived = async (bookingId) => {
@@ -143,11 +143,11 @@ const renderItem = ({ item }) => {
       </View>
 
       <View style={styles.datesRow}>
-        <Ionicons name="calendar-outline" size={16} color="#6366f1" />
+        <Ionicons name="calendar-outline" size={16} color="#FF8C42" />
         <Text style={styles.dateText}>
           {formatDate(item.pickupDate || item.startDate) || '—'}
         </Text>
-        <Ionicons name="arrow-forward" size={14} color="#475569" style={{ marginHorizontal: 8 }} />
+        <Ionicons name="arrow-forward" size={14} color="#4a4a4a" style={{ marginHorizontal: 8 }} />
         <Text style={styles.dateText}>
           {formatDate(item.returnDate || item.endDate) || '—'}
         </Text>
@@ -157,12 +157,12 @@ const renderItem = ({ item }) => {
 
       <View style={styles.cardBottomRow}>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '600', marginBottom: 4, letterSpacing: 0.5 }}>HANDOVER STATUS</Text>
+          <Text style={{ fontSize: 11, color: '#4a4a4a', fontWeight: '600', marginBottom: 4, letterSpacing: 0.5 }}>HANDOVER STATUS</Text>
           {(!item.handoverStatus || item.handoverStatus === 'pending_pickup') ? (
             <View>
               <Text style={{ fontSize: 13, color: '#f59e0b', fontWeight: '600', marginBottom: 6 }}>⏳ Pending Pickup</Text>
-              <TouchableOpacity style={{ backgroundColor: 'rgba(99,102,241,0.15)', borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, alignSelf: 'flex-start' }} onPress={() => handleConfirmReceived(item._id)}>
-                <Text style={{ color: '#818cf8', fontSize: 12, fontWeight: '700' }}>Confirm Received</Text>
+              <TouchableOpacity style={{ backgroundColor: 'rgba(255,140,66,0.15)', borderWidth: 1, borderColor: 'rgba(255,140,66,0.3)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, alignSelf: 'flex-start' }} onPress={() => handleConfirmReceived(item._id)}>
+                <Text style={{ color: '#FF8C42', fontSize: 12, fontWeight: '700' }}>Confirm Received</Text>
               </TouchableOpacity>
             </View>
           ) : item.handoverStatus === 'rented' ? (
@@ -170,7 +170,7 @@ const renderItem = ({ item }) => {
               {new Date(item.endDate || item.returnDate) < new Date() ? (
                 <>
                   <Text style={{ fontSize: 13, color: '#ef4444', fontWeight: '600', marginBottom: 2 }}>🔴 Return Overdue</Text>
-                  <Text style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>Overdue by {Math.ceil((new Date() - new Date(item.endDate || item.returnDate)) / (1000 * 60 * 60 * 24))} Days</Text>
+                  <Text style={{ fontSize: 11, color: '#4a4a4a', marginBottom: 6 }}>Overdue by {Math.ceil((new Date() - new Date(item.endDate || item.returnDate)) / (1000 * 60 * 60 * 24))} Days</Text>
                   {/* Only shown once the rental end date has passed — during
                       an active rental period, the customer can't trigger
                       return yet. */}
@@ -184,14 +184,14 @@ const renderItem = ({ item }) => {
               ) : (
                 <>
                   <Text style={{ fontSize: 13, color: '#10b981', fontWeight: '600', marginBottom: 2 }}>🚗 Currently Rented</Text>
-                  <Text style={{ fontSize: 11, color: '#94a3b8' }}>Time Remaining: {Math.max(0, Math.ceil((new Date(item.endDate || item.returnDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days</Text>
+                  <Text style={{ fontSize: 11, color: '#4a4a4a' }}>Time Remaining: {Math.max(0, Math.ceil((new Date(item.endDate || item.returnDate) - new Date()) / (1000 * 60 * 60 * 24)))} Days</Text>
                 </>
               )}
             </View>
           ) : item.handoverStatus === 'returned' ? (
             <Text style={{ fontSize: 13, color: '#f59e0b', fontWeight: '600' }}>⏳ Return Requested — Awaiting Staff Inspection</Text>
           ) : item.handoverStatus === 'confirmed_return' ? (
-            <Text style={{ fontSize: 13, color: '#94a3b8', fontWeight: '600' }}>✅ Return Confirmed</Text>
+            <Text style={{ fontSize: 13, color: '#4a4a4a', fontWeight: '600' }}>✅ Return Confirmed</Text>
           ) : null}
         </View>
 
@@ -221,7 +221,7 @@ const renderItem = ({ item }) => {
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconWrap}>
-        <Ionicons name="calendar-outline" size={48} color="#475569" />
+        <Ionicons name="calendar-outline" size={48} color="#4a4a4a" />
       </View>
       <Text style={styles.emptyTitle}>No Bookings Yet</Text>
       <Text style={styles.emptySubtitle}>
@@ -231,8 +231,8 @@ const renderItem = ({ item }) => {
   );
 
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b']} style={styles.gradientBg}>
-      <StatusBar barStyle="light-content" />
+    <LinearGradient colors={['#ffffff', '#fff5eb', '#ffffff']} style={styles.gradientBg}>
+      <StatusBar barStyle="dark-content" />
 
       {/* Page Header */}
       <View style={styles.pageHeader}>
@@ -292,12 +292,12 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: 0.2,
   },
   pageSubtitle: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     marginTop: 4,
   },
 
@@ -318,10 +318,10 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#475569',
+    color: '#4a4a4a',
   },
   tabTextActive: {
-    color: '#6366f1',
+    color: '#FF8C42',
     fontWeight: '700',
   },
   tabUnderline: {
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2.5,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF8C42',
     borderRadius: 2,
   },
 
@@ -342,12 +342,12 @@ const styles = StyleSheet.create({
 
   // Booking Card
   bookingCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255,140,66,0.25)',
     padding: 18,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.08,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   vehicleName: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
   },
   statusBadge: {
     borderRadius: 8,
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   bookingId: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#64748b',
+    color: '#4a4a4a',
     marginBottom: 2,
     letterSpacing: 0.5,
   },
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   dateText: {
-    color: '#94a3b8',
+    color: '#4a4a4a',
     fontSize: 13,
     fontWeight: '500',
     marginLeft: 6,
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   locationText: {
-    color: '#94a3b8',
+    color: '#4a4a4a',
     fontSize: 13,
     fontWeight: '500',
     marginLeft: 6,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
 
   cardDivider: {
     height: 1,
-    backgroundColor: 'rgba(99,102,241,0.12)',
+    backgroundColor: 'rgba(255,140,66,0.12)',
     marginVertical: 12,
   },
 
@@ -425,20 +425,20 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#6366f1',
+    color: '#FF8C42',
   },
   viewBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.4)',
+    borderColor: 'rgba(255,140,66,0.4)',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 7,
     gap: 4,
   },
   viewBtnText: {
-    color: '#6366f1',
+    color: '#FF8C42',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -472,9 +472,9 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255,140,66,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
@@ -482,12 +482,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     textAlign: 'center',
     lineHeight: 21,
   },
