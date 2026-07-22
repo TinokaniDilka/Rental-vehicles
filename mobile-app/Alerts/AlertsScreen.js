@@ -8,10 +8,10 @@ import { Ionicons } from '@expo/vector-icons';
 // return reminders, admin approvals, etc.) whenever that's ready.
 export default function AlertsScreen() {
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b']} style={styles.container}>
+    <LinearGradient colors={['#ffffff', '#fff5eb']} style={styles.container}>
       <View style={styles.content}>
         <View style={styles.iconWrap}>
-          <Ionicons name="notifications-outline" size={40} color="#818cf8" />
+          <Ionicons name="notifications-outline" size={40} color="#FFA366" />
         </View>
         <Text style={styles.title}>Alerts</Text>
         <Text style={styles.subtitle}>
@@ -36,9 +36,9 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
@@ -46,12 +46,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#888888',
     textAlign: 'center',
     lineHeight: 21,
   },

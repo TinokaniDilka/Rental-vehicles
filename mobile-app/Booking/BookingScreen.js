@@ -46,7 +46,7 @@ export default function BookingScreen({ route, navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b']} style={styles.gradientBg}>
+    <LinearGradient colors={['#ffffff', '#fff5eb']} style={styles.gradientBg}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -55,7 +55,7 @@ export default function BookingScreen({ route, navigation }) {
         {/* Header Row */}
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={22} color="#f8fafc" />
+            <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Book Vehicle</Text>
           <View style={styles.headerSpacer} />
@@ -77,7 +77,7 @@ export default function BookingScreen({ route, navigation }) {
           </View>
           <View style={styles.divider} />
           <View style={styles.vehicleMetaRow}>
-            <Ionicons name="car-outline" size={15} color="#94a3b8" />
+            <Ionicons name="car-outline" size={15} color="#888888" />
             <Text style={styles.vehicleMetaText}>
               {vehicle.brand || 'Premium'} · {vehicle.seats ? `${vehicle.seats} seats` : 'Available now'}
             </Text>
@@ -90,13 +90,13 @@ export default function BookingScreen({ route, navigation }) {
         {/* Pickup Date */}
         <View style={styles.glassCard}>
           <View style={styles.fieldLabelRow}>
-            <Ionicons name="calendar-outline" size={16} color="#6366f1" />
+            <Ionicons name="calendar-outline" size={16} color="#FF8C42" />
             <Text style={styles.fieldLabel}>Pickup Date</Text>
           </View>
           <TextInput
             style={styles.darkInput}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor="#475569"
+            placeholderTextColor="#4a4a4a"
             value={pickupDate}
             onChangeText={setPickupDate}
           />
@@ -105,13 +105,13 @@ export default function BookingScreen({ route, navigation }) {
         {/* Return Date */}
         <View style={styles.glassCard}>
           <View style={styles.fieldLabelRow}>
-            <Ionicons name="calendar" size={16} color="#6366f1" />
+            <Ionicons name="calendar" size={16} color="#FF8C42" />
             <Text style={styles.fieldLabel}>Return Date</Text>
           </View>
           <TextInput
             style={styles.darkInput}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor="#475569"
+            placeholderTextColor="#4a4a4a"
             value={returnDate}
             onChangeText={setReturnDate}
           />
@@ -121,7 +121,7 @@ export default function BookingScreen({ route, navigation }) {
         {days > 0 && (
           <View style={styles.summaryCard}>
             <LinearGradient
-              colors={['rgba(99,102,241,0.18)', 'rgba(99,102,241,0.06)']}
+              colors={['rgba(255, 140, 66, 0.18)', 'rgba(255, 140, 66, 0.06)']}
               style={styles.summaryGradient}
             >
               <Text style={styles.summaryTitle}>Price Summary</Text>
@@ -148,11 +148,11 @@ export default function BookingScreen({ route, navigation }) {
 
         {/* Terms Checkbox */}
         <TouchableOpacity 
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, paddingHorizontal: 12, paddingVertical: 14, backgroundColor: 'rgba(99,102,241,0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)' }}
+          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, paddingHorizontal: 12, paddingVertical: 14, backgroundColor: 'rgba(255, 140, 66, 0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255, 140, 66, 0.25)' }}
           onPress={() => setRentalTermsAccepted(!rentalTermsAccepted)}
         >
-          <Ionicons name={rentalTermsAccepted ? "checkbox" : "square-outline"} size={22} color="#6366f1" />
-          <Text style={{ color: '#f8fafc', marginLeft: 10, fontSize: 13, flex: 1, fontWeight: '500' }}>
+          <Ionicons name={rentalTermsAccepted ? "checkbox" : "square-outline"} size={22} color="#FF8C42" />
+          <Text style={{ color: '#1a1a1a', marginLeft: 10, fontSize: 13, flex: 1, fontWeight: '500' }}>
             I agree to the rental terms and damage policy
           </Text>
         </TouchableOpacity>
@@ -165,7 +165,7 @@ export default function BookingScreen({ route, navigation }) {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#6366f1', '#4f46e5']}
+            colors={['#FF8C42', '#E6732A']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.confirmBtn}
@@ -213,9 +213,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: 0.3,
   },
   headerSpacer: {
@@ -233,13 +233,13 @@ const styles = StyleSheet.create({
 
   // Glass Card
   glassCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     padding: 18,
     marginBottom: 14,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -252,31 +252,31 @@ const styles = StyleSheet.create({
   vehicleName: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     marginBottom: 6,
   },
   vehiclePrice: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#6366f1',
+    color: '#FF8C42',
   },
   perDay: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#94a3b8',
+    color: '#888888',
   },
   typeBadge: {
-    backgroundColor: 'rgba(99,102,241,0.2)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.35)',
+    borderColor: 'rgba(255, 140, 66, 0.35)',
     marginLeft: 12,
     marginTop: 2,
   },
   typeBadgeText: {
-    color: '#818cf8',
+    color: '#FFA366',
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -289,13 +289,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   vehicleMetaText: {
-    color: '#94a3b8',
+    color: '#888888',
     fontSize: 13,
     marginLeft: 4,
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     marginVertical: 12,
   },
 
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 12,
@@ -320,19 +320,19 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: '#888888',
     marginLeft: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   darkInput: {
-    backgroundColor: 'rgba(15,23,42,0.6)',
+    backgroundColor: 'rgba(255, 245, 235, 0.8)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     paddingHorizontal: 16,
     paddingVertical: 13,
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontSize: 16,
     fontWeight: '500',
   },
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     overflow: 'hidden',
     marginBottom: 24,
     marginTop: 6,
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 14,
@@ -364,21 +364,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   summaryLabel: {
-    color: '#94a3b8',
+    color: '#888888',
     fontSize: 15,
   },
   summaryValue: {
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontSize: 15,
     fontWeight: '600',
   },
   summaryTotalLabel: {
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontSize: 17,
     fontWeight: '700',
   },
   summaryTotal: {
-    color: '#6366f1',
+    color: '#FF8C42',
     fontSize: 24,
     fontWeight: '800',
   },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 14,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.4,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -412,10 +412,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
   },
   cancelBtnText: {
-    color: '#94a3b8',
+    color: '#888888',
     fontSize: 16,
     fontWeight: '600',
   },
