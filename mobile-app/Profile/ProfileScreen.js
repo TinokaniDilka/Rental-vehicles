@@ -34,8 +34,8 @@ export default function ProfileScreen({ navigation }) {
   const avatarLetter = user?.name ? user.name.charAt(0).toUpperCase() : '?';
 
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b']} style={styles.gradientBg}>
-      <StatusBar barStyle="light-content" />
+    <LinearGradient colors={['#ffffff', '#fff5eb']} style={styles.gradientBg}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -45,14 +45,14 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.pageHeader}>
           <Text style={styles.pageTitle}>Profile</Text>
           <TouchableOpacity style={styles.settingsIconBtn} activeOpacity={0.75}>
-            <Ionicons name="settings-outline" size={20} color="#94a3b8" />
+            <Ionicons name="settings-outline" size={20} color="#888888" />
           </TouchableOpacity>
         </View>
 
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <LinearGradient
-            colors={['#6366f1', '#4f46e5']}
+            colors={['#FF8C42', '#E6732A']}
             style={styles.avatarCircle}
           >
             {user?.name ? (
@@ -70,7 +70,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* Role Badge */}
           <View style={styles.roleBadge}>
-            <Ionicons name="shield-checkmark" size={12} color="#818cf8" />
+            <Ionicons name="shield-checkmark" size={12} color="#FFA366" />
             <Text style={styles.roleBadgeText}>
               {user?.role?.toUpperCase() || 'USER'}
             </Text>
@@ -90,7 +90,7 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.glassCard}>
           <View style={styles.infoRow}>
             <View style={styles.infoIconWrap}>
-              <Ionicons name="mail-outline" size={16} color="#6366f1" />
+              <Ionicons name="mail-outline" size={16} color="#FF8C42" />
             </View>
             <View style={styles.infoTextWrap}>
               <Text style={styles.infoLabel}>Email</Text>
@@ -104,7 +104,7 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIconWrap}>
-              <Ionicons name="shield-checkmark-outline" size={16} color="#6366f1" />
+              <Ionicons name="shield-checkmark-outline" size={16} color="#FF8C42" />
             </View>
             <View style={styles.infoTextWrap}>
               <Text style={styles.infoLabel}>Role</Text>
@@ -124,10 +124,10 @@ export default function ProfileScreen({ navigation }) {
                 activeOpacity={0.7}
               >
                 <View style={styles.settingsIconWrap}>
-                  <Ionicons name={item.icon} size={18} color="#6366f1" />
+                  <Ionicons name={item.icon} size={18} color="#FF8C42" />
                 </View>
                 <Text style={styles.settingsLabel}>{item.label}</Text>
-                <Ionicons name="chevron-forward" size={16} color="#475569" />
+                <Ionicons name="chevron-forward" size={16} color="#4a4a4a" />
               </TouchableOpacity>
               {index < SETTINGS_ITEMS.length - 1 && <View style={styles.rowDivider} />}
             </React.Fragment>
@@ -173,16 +173,16 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: 0.2,
   },
   settingsIconBtn: {
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.5,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
@@ -216,36 +216,36 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#10b981',
     borderWidth: 2.5,
-    borderColor: '#0f172a',
+    borderColor: '#ffffff',
     top: 66,
     right: '37%',
   },
   userName: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     marginTop: 14,
     letterSpacing: 0.2,
   },
   userEmail: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#888888',
     marginTop: 4,
   },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 5,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
   },
   roleBadgeText: {
-    color: '#818cf8',
+    color: '#FFA366',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 12,
@@ -265,13 +265,13 @@ const styles = StyleSheet.create({
 
   // Glass Card
   glassCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     padding: 18,
     marginBottom: 24,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.07,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     height: 1,
-    backgroundColor: 'rgba(99,102,241,0.1)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
     marginVertical: 10,
   },
 
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(99,102,241,0.12)',
+    backgroundColor: 'rgba(255, 140, 66, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: '#888888',
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 15,
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontWeight: '600',
   },
 
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(99,102,241,0.12)',
+    backgroundColor: 'rgba(255, 140, 66, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: '#f8fafc',
+    color: '#1a1a1a',
   },
 
   // Logout Button

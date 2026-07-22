@@ -70,9 +70,9 @@ export default function RegisterScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      {/* Dark gradient background */}
+      {/* Light gradient background */}
       <LinearGradient
-        colors={['#1e1b4b', '#0f172a']}
+        colors={['#ffffff', '#fff5eb', '#ffffff']}
         style={StyleSheet.absoluteFillObject}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
@@ -97,7 +97,7 @@ export default function RegisterScreen({ navigation }) {
           {/* Glowing logo badge */}
           <View style={styles.logoBadgeWrapper}>
             <LinearGradient
-              colors={['rgba(99,102,241,0.35)', 'rgba(244,63,94,0.2)']}
+              colors={['rgba(255, 140, 66, 0.35)', 'rgba(255, 107, 0, 0.2)']}
               style={styles.logoBadge}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -123,7 +123,7 @@ export default function RegisterScreen({ navigation }) {
         >
           {/* Top gradient accent line */}
           <LinearGradient
-            colors={['#f43f5e', '#6366f1', '#0ea5e9']}
+            colors={['#FF8C42', '#FF6B00']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.cardAccentLine}
@@ -203,7 +203,7 @@ export default function RegisterScreen({ navigation }) {
                 <Ionicons
                   name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={18}
-                  color="#475569"
+                  color="#4a4a4a"
                 />
               </TouchableOpacity>
             </View>
@@ -211,7 +211,7 @@ export default function RegisterScreen({ navigation }) {
 
           {/* Password strength hint */}
           <Text style={styles.passwordHint}>
-            <Ionicons name="shield-checkmark-outline" size={12} color="#475569" />{' '}
+            <Ionicons name="shield-checkmark-outline" size={12} color="#4a4a4a" />{' '}
             Use at least 8 characters with a mix of letters and numbers
           </Text>
 
@@ -226,13 +226,13 @@ export default function RegisterScreen({ navigation }) {
         flex: 1,
         padding: 14,
         borderRadius: 12,
-        backgroundColor: role === 'customer' ? '#6366f1' : '#1e293b',
+        backgroundColor: role === 'customer' ? '#FF8C42' : '#fff5eb',
         borderWidth: 1,
-        borderColor: '#6366f1',
+        borderColor: '#FF8C42',
         alignItems: 'center',
       }}
     >
-      <Text style={{ color: '#fff', fontWeight: '600' }}>
+      <Text style={{ color: role === 'customer' ? '#fff' : '#1a1a1a', fontWeight: '600' }}>
         Customer
       </Text>
     </TouchableOpacity>
@@ -243,13 +243,13 @@ export default function RegisterScreen({ navigation }) {
         flex: 1,
         padding: 14,
         borderRadius: 12,
-        backgroundColor: role === 'staff' ? '#6366f1' : '#1e293b',
+        backgroundColor: role === 'staff' ? '#FF8C42' : '#fff5eb',
         borderWidth: 1,
-        borderColor: '#6366f1',
+        borderColor: '#FF8C42',
         alignItems: 'center',
       }}
     >
-      <Text style={{ color: '#fff', fontWeight: '600' }}>
+      <Text style={{ color: role === 'staff' ? '#fff' : '#1a1a1a', fontWeight: '600' }}>
         Staff
       </Text>
     </TouchableOpacity>
@@ -264,7 +264,7 @@ export default function RegisterScreen({ navigation }) {
             style={styles.registerBtnWrapper}
           >
             <LinearGradient
-              colors={loading ? ['#334155', '#334155'] : ['#6366f1', '#4f46e5']}
+              colors={loading ? ['#FFA366', '#FFA366'] : ['#FF8C42', '#FF6B00']}
               style={styles.registerBtn}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -325,7 +325,7 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#ffffff',
   },
 
   /* ── Orbs ── */
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: 'rgba(244,63,94,0.12)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
   },
   orbBottomLeft: {
     position: 'absolute',
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(99,102,241,0.13)',
+    backgroundColor: 'rgba(255, 107, 0, 0.08)',
   },
   logoGlow: {
     position: 'absolute',
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: 'rgba(99,102,241,0.08)',
+    backgroundColor: 'rgba(255, 140, 66, 0.08)',
   },
 
   /* ── Scroll ── */
@@ -372,9 +372,9 @@ const styles = StyleSheet.create({
   },
   logoBadgeWrapper: {
     marginBottom: 14,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.55,
+    shadowOpacity: 0.3,
     shadowRadius: 22,
     elevation: 14,
   },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.45)',
+    borderColor: 'rgba(255, 140, 66, 0.3)',
   },
   logoEmoji: {
     fontSize: 42,
@@ -393,32 +393,32 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 38,
     fontWeight: '800',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: -0.8,
     marginBottom: 4,
     // "gradient text" effect simulated with a subtle text shadow
-    textShadowColor: 'rgba(99,102,241,0.6)',
+    textShadowColor: 'rgba(255, 140, 66, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 12,
   },
   brandSubtitle: {
     fontSize: 15,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     fontWeight: '500',
     letterSpacing: 0.3,
   },
 
   /* ── Glass Card ── */
   glassCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     padding: 28,
     overflow: 'hidden',
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -434,13 +434,13 @@ const styles = StyleSheet.create({
   cardHeading: {
     fontSize: 21,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     marginTop: 8,
     marginBottom: 4,
   },
   cardSubheading: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     marginBottom: 24,
     lineHeight: 20,
   },
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6366f1',
+    color: '#FF8C42',
     letterSpacing: 0.8,
     marginBottom: 6,
   },
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   /* Password hint */
   passwordHint: {
     fontSize: 11,
-    color: '#475569',
+    color: '#4a4a4a',
     marginBottom: 20,
     marginTop: -8,
     lineHeight: 16,
@@ -489,9 +489,9 @@ const styles = StyleSheet.create({
   registerBtnWrapper: {
     borderRadius: 14,
     overflow: 'hidden',
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 6,
   },
@@ -518,10 +518,10 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(99,102,241,0.2)',
+    backgroundColor: 'rgba(255, 140, 66, 0.2)',
   },
   dividerText: {
-    color: '#475569',
+    color: '#4a4a4a',
     fontSize: 13,
     marginHorizontal: 12,
     fontWeight: '500',
@@ -536,12 +536,12 @@ const styles = StyleSheet.create({
   },
   signInPrompt: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#4a4a4a',
   },
   signInLink: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#6366f1',
+    color: '#FF8C42',
   },
 
   /* ── Feature Pills ── */
@@ -556,16 +556,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(99,102,241,0.1)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.2)',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   pillText: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     fontWeight: '500',
   },
 });

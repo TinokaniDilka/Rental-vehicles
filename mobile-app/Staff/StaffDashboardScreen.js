@@ -43,10 +43,10 @@ const MetricCard = ({ icon, title, value, color, subtitle }) => (
 const StatusBadge = ({ status }) => {
   const colors = {
     pending: { bg: 'rgba(245,158,11,0.2)', text: '#f59e0b' },
-    confirmed: { bg: 'rgba(99,102,241,0.2)', text: '#818cf8' },
-    approved: { bg: 'rgba(99,102,241,0.2)', text: '#818cf8' },
+    confirmed: { bg: 'rgba(255, 140, 66, 0.02)', text: '#FFA366' },
+    approved: { bg: 'rgba(255, 140, 66, 0.02)', text: '#FFA366' },
     ongoing: { bg: 'rgba(16,185,129,0.2)', text: '#10b981' },
-    completed: { bg: 'rgba(148,163,184,0.2)', text: '#94a3b8' },
+    completed: { bg: 'rgba(148,163,184,0.2)', text: '#888888' },
     rejected: { bg: 'rgba(239,68,68,0.2)', text: '#ef4444' },
   };
   const c = colors[status?.toLowerCase()] || colors.pending;
@@ -612,10 +612,10 @@ const getGreeting = () => {
 {/* Metrics Grid */}
 <View style={styles.metricsGrid}>
         <MetricCard icon="⏳" title="PENDING" value={stats.pending} color="#f59e0b" />
-        <MetricCard icon="🚗" title="ACTIVE" value={stats.active} color="#6366f1" />
-        <MetricCard icon="📂" title="FLEET" value={vehicles.length} color="#0ea5e9" />
+        <MetricCard icon="🚗" title="ACTIVE" value={stats.active} color="#FF8C42" />
+        <MetricCard icon="📂" title="FLEET" value={vehicles.length} color="#FF6B00" />
         <MetricCard icon="💰" title="EARNINGS" value={`$${earnings}`} color="#10b981" subtitle="All Time" />
-        <MetricCard icon="✅" title="CONFIRMATIONS" value={getPendingConfirmationsCount(bookings)} color="#8b5cf6" />
+        <MetricCard icon="✅" title="CONFIRMATIONS" value={getPendingConfirmationsCount(bookings)} color="#FFB84D" />
       </View>
 
       {/* Quick Actions */}
@@ -623,7 +623,7 @@ const getGreeting = () => {
         <Text style={styles.cardTitle}>⚡ Quick Operations</Text>
         <View style={styles.quickActionsRow}>
           <TouchableOpacity style={styles.quickActionBtn} onPress={() => openVehicleModal(null)} activeOpacity={0.85}>
-            <LinearGradient colors={['#6366f1', '#4f46e5']} style={[styles.quickActionGrad, styles.quickActionShadowIndigo]}>
+            <LinearGradient colors={['#FF8C42', '#E6732A']} style={[styles.quickActionGrad, styles.quickActionShadowIndigo]}>
               <View style={styles.quickActionIconWrap}>
                 <Ionicons name="add-circle" size={20} color="white" />
               </View>
@@ -631,7 +631,7 @@ const getGreeting = () => {
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity style={styles.quickActionBtn} onPress={() => setActivePage('bookings')} activeOpacity={0.85}>
-            <LinearGradient colors={['#0ea5e9', '#0284c7']} style={[styles.quickActionGrad, styles.quickActionShadowBlue]}>
+            <LinearGradient colors={['#FF6B00', '#E65C00']} style={[styles.quickActionGrad, styles.quickActionShadowBlue]}>
               <View style={styles.quickActionIconWrap}>
                 <Ionicons name="calendar-outline" size={20} color="white" />
               </View>
@@ -666,7 +666,7 @@ const getGreeting = () => {
               key: 'confirmations',
               count: getPendingConfirmationsCount(bookings),
               icon: '🤝',
-              color: '#8b5cf6',
+              color: '#FFB84D',
               message: (n) => `${n} handover${n > 1 ? 's' : ''} awaiting confirmation`,
               onPress: () => { setActivePage('bookings'); setFilterStatus('all'); },
             },
@@ -674,7 +674,7 @@ const getGreeting = () => {
               key: 'cash',
               count: cashPendingCount,
               icon: '💵',
-              color: '#94a3b8',
+              color: '#888888',
               message: (n) => `${n} cash payment${n > 1 ? 's' : ''} awaiting confirmation`,
               onPress: () => { setActivePage('bookings'); setFilterStatus('all'); },
             },
@@ -701,7 +701,7 @@ const getGreeting = () => {
             <TouchableOpacity key={a.key} style={styles.overviewRow} onPress={a.onPress} activeOpacity={0.7}>
               <View style={[styles.overviewDot, { backgroundColor: a.color }]} />
               <Text style={styles.overviewLabel}>{a.icon} {a.message(a.count)}</Text>
-              <Ionicons name="chevron-forward" size={16} color="#475569" />
+              <Ionicons name="chevron-forward" size={16} color="#4a4a4a" />
             </TouchableOpacity>
           ));
         })()}
@@ -758,7 +758,7 @@ const getGreeting = () => {
           <Text style={styles.pageSubtitle}>Manage your rental inventory</Text>
         </View>
         <TouchableOpacity onPress={() => openVehicleModal(null)}>
-          <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.addBtn}>
+          <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.addBtn}>
             <Ionicons name="add" size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
@@ -797,9 +797,9 @@ const getGreeting = () => {
             </View>
             {v.description ? <Text style={styles.vehicleDesc}>{v.description}</Text> : null}
             <View style={styles.vehicleActions}>
-              <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: 'rgba(99,102,241,0.2)' }]} onPress={() => openVehicleModal(v)}>
-                <Ionicons name="pencil" size={14} color="#6366f1" />
-                <Text style={[styles.actionBtnText, { color: '#6366f1' }]}>Edit</Text>
+              <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: 'rgba(255, 140, 66, 0.1)' }]} onPress={() => openVehicleModal(v)}>
+                <Ionicons name="pencil" size={14} color="#FF8C42" />
+                <Text style={[styles.actionBtnText, { color: '#FF8C42' }]}>Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: 'rgba(239,68,68,0.2)' }]} onPress={() => deleteVehicle(v._id)}>
                 <Ionicons name="trash" size={14} color="#ef4444" />
@@ -824,32 +824,32 @@ const getGreeting = () => {
       {/* Search + Date Filter */}
       <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
         <View style={styles.searchBarWrap}>
-          <Ionicons name="search" size={16} color="#6366f1" style={{ marginRight: 8 }} />
+          <Ionicons name="search" size={16} color="#FF8C42" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchBarInput}
             placeholder="Search customer name or email..."
-            placeholderTextColor="#475569"
+            placeholderTextColor="#4a4a4a"
             value={bookingSearch}
             onChangeText={setBookingSearch}
           />
           {bookingSearch.length > 0 && (
             <TouchableOpacity onPress={() => setBookingSearch('')}>
-              <Ionicons name="close-circle" size={17} color="#475569" />
+              <Ionicons name="close-circle" size={17} color="#4a4a4a" />
             </TouchableOpacity>
           )}
         </View>
         <View style={[styles.searchBarWrap, { marginTop: 8 }]}>
-          <Ionicons name="calendar-outline" size={16} color="#6366f1" style={{ marginRight: 8 }} />
+          <Ionicons name="calendar-outline" size={16} color="#FF8C42" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchBarInput}
             placeholder="Filter by date (YYYY-MM-DD)"
-            placeholderTextColor="#475569"
+            placeholderTextColor="#4a4a4a"
             value={bookingDateFilter}
             onChangeText={setBookingDateFilter}
           />
           {bookingDateFilter.length > 0 && (
             <TouchableOpacity onPress={() => setBookingDateFilter('')}>
-              <Ionicons name="close-circle" size={17} color="#475569" />
+              <Ionicons name="close-circle" size={17} color="#4a4a4a" />
             </TouchableOpacity>
           )}
         </View>
@@ -921,7 +921,7 @@ const getGreeting = () => {
               <View style={[styles.cashBadge, {
                 backgroundColor: b.cashPaymentConfirmed ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.2)'
               }]}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: b.cashPaymentConfirmed ? '#10b981' : '#94a3b8' }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: b.cashPaymentConfirmed ? '#10b981' : '#888888' }}>
                   {b.cashPaymentConfirmed ? 'Cash - Confirmed' : 'Cash - Awaiting Confirmation'}
                 </Text>
               </View>
@@ -939,7 +939,7 @@ const getGreeting = () => {
             <View style={styles.bookingActionsCol}>
               {b.status === 'pending' && (
                 <TouchableOpacity onPress={() => openReviewModal(b)}>
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.bookingActionBtn}>
+                  <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.bookingActionBtn}>
                     <Text style={styles.bookingActionText}>🔍 Review</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -953,7 +953,7 @@ const getGreeting = () => {
               )}
               {['confirmed', 'ongoing'].includes(b.status) && !b.staffHandoverConfirmed && (
                 <TouchableOpacity onPress={() => handleConfirmHandover(b._id)}>
-                  <LinearGradient colors={['rgba(99,102,241,0.4)', 'rgba(79,70,229,0.4)']} style={styles.bookingActionBtn}>
+                  <LinearGradient colors={['rgba(255, 140, 66, 0.04)', 'rgba(79,70,229,0.4)']} style={styles.bookingActionBtn}>
                     <Text style={styles.bookingActionText}>🤝 Confirm Handover</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -1007,14 +1007,14 @@ const getGreeting = () => {
         <View style={profileStyles.pageHeader}>
           <Text style={profileStyles.pageTitle}>Profile</Text>
           <TouchableOpacity style={profileStyles.settingsIconBtn} activeOpacity={0.75}>
-            <Ionicons name="settings-outline" size={20} color="#94a3b8" />
+            <Ionicons name="settings-outline" size={20} color="#888888" />
           </TouchableOpacity>
         </View>
 
         {/* Avatar Section */}
         <View style={profileStyles.avatarSection}>
           <LinearGradient
-            colors={['#6366f1', '#4f46e5']}
+            colors={['#FF8C42', '#E6732A']}
             style={profileStyles.avatarCircle}
           >
             {user?.name ? (
@@ -1030,7 +1030,7 @@ const getGreeting = () => {
           <Text style={profileStyles.userEmail}>{user?.email || 'staff@quickride.com'}</Text>
 
           <View style={profileStyles.roleBadge}>
-            <Ionicons name="shield-checkmark" size={12} color="#818cf8" />
+            <Ionicons name="shield-checkmark" size={12} color="#FFA366" />
             <Text style={profileStyles.roleBadgeText}>
               {user?.role?.toUpperCase() || 'STAFF'}
             </Text>
@@ -1058,13 +1058,13 @@ const getGreeting = () => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={profileStyles.sectionLabel}>Account Info</Text>
           <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7} style={{ padding: 4 }}>
-            <Ionicons name="pencil" size={16} color="#6366f1" />
+            <Ionicons name="pencil" size={16} color="#FF8C42" />
           </TouchableOpacity>
         </View>
         <View style={profileStyles.glassCard}>
           <View style={profileStyles.infoRow}>
             <View style={profileStyles.infoIconWrap}>
-              <Ionicons name="person-outline" size={16} color="#6366f1" />
+              <Ionicons name="person-outline" size={16} color="#FF8C42" />
             </View>
             <View style={profileStyles.infoTextWrap}>
               <Text style={profileStyles.infoLabel}>Name</Text>
@@ -1078,7 +1078,7 @@ const getGreeting = () => {
 
           <View style={profileStyles.infoRow}>
             <View style={profileStyles.infoIconWrap}>
-              <Ionicons name="mail-outline" size={16} color="#6366f1" />
+              <Ionicons name="mail-outline" size={16} color="#FF8C42" />
             </View>
             <View style={profileStyles.infoTextWrap}>
               <Text style={profileStyles.infoLabel}>Email</Text>
@@ -1092,7 +1092,7 @@ const getGreeting = () => {
 
           <View style={profileStyles.infoRow}>
             <View style={profileStyles.infoIconWrap}>
-              <Ionicons name="shield-checkmark-outline" size={16} color="#6366f1" />
+              <Ionicons name="shield-checkmark-outline" size={16} color="#FF8C42" />
             </View>
             <View style={profileStyles.infoTextWrap}>
               <Text style={profileStyles.infoLabel}>Role</Text>
@@ -1112,10 +1112,10 @@ const getGreeting = () => {
                 activeOpacity={0.7}
               >
                 <View style={profileStyles.settingsIconWrap}>
-                  <Ionicons name={item.icon} size={18} color="#6366f1" />
+                  <Ionicons name={item.icon} size={18} color="#FF8C42" />
                 </View>
                 <Text style={profileStyles.settingsLabel}>{item.label}</Text>
-                <Ionicons name="chevron-forward" size={16} color="#475569" />
+                <Ionicons name="chevron-forward" size={16} color="#4a4a4a" />
               </TouchableOpacity>
               {index < SETTINGS_ITEMS.length - 1 && <View style={profileStyles.rowDivider} />}
             </React.Fragment>
@@ -1204,9 +1204,9 @@ const getGreeting = () => {
               </View>
               {f.type === 'complaint' && f.category && (
                 <View style={[styles.typePill, {
-                  backgroundColor: f.category === 'Theft/Suspicious' ? 'rgba(239,68,68,0.3)' : 'rgba(99,102,241,0.2)'
+                  backgroundColor: f.category === 'Theft/Suspicious' ? 'rgba(239,68,68,0.3)' : 'rgba(255, 140, 66, 0.02)'
                 }]}>
-                  <Text style={{ color: f.category === 'Theft/Suspicious' ? '#ef4444' : '#818cf8', fontSize: 10, fontWeight: '700' }}>
+                  <Text style={{ color: f.category === 'Theft/Suspicious' ? '#ef4444' : '#FFA366', fontSize: 10, fontWeight: '700' }}>
                     {f.category}
                   </Text>
                 </View>
@@ -1240,7 +1240,7 @@ const getGreeting = () => {
               {f.type === 'complaint' && (
                 <>
                   <TouchableOpacity style={styles.feedbackActionBtn} onPress={() => openComplaintModal(f)}>
-                    <LinearGradient colors={['rgba(99,102,241,0.3)', 'rgba(79,70,229,0.3)']} style={styles.feedbackActionGrad}>
+                    <LinearGradient colors={['rgba(255, 140, 66, 0.03)', 'rgba(79,70,229,0.3)']} style={styles.feedbackActionGrad}>
                       <Text style={styles.feedbackActionText}>Resolve</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -1309,7 +1309,7 @@ const renderVehicleModal = () => (
                 <Image source={{ uri: vehicleImageUri }} style={styles.imagePickerPreview} />
               ) : (
                 <View style={styles.imagePickerPlaceholder}>
-                  <Ionicons name="camera-outline" size={28} color="#6366f1" />
+                  <Ionicons name="camera-outline" size={28} color="#FF8C42" />
                   <Text style={styles.imagePickerText}>Tap to add a photo</Text>
                 </View>
               )}
@@ -1324,7 +1324,7 @@ const renderVehicleModal = () => (
               value={vehicleName}
               onChangeText={setVehicleName}
               placeholder="e.g. Toyota Corolla"
-              placeholderTextColor="#475569"
+              placeholderTextColor="#4a4a4a"
               autoCorrect={false}
               autoCapitalize="words"
               returnKeyType="next"
@@ -1356,7 +1356,7 @@ const renderVehicleModal = () => (
               value={vehiclePrice}
               onChangeText={setVehiclePrice}
               placeholder="e.g. 45"
-              placeholderTextColor="#475569"
+              placeholderTextColor="#4a4a4a"
               keyboardType="numeric"
               returnKeyType="next"
               blurOnSubmit={false}
@@ -1372,7 +1372,7 @@ const renderVehicleModal = () => (
               value={vehicleLocation}
               onChangeText={setVehicleLocation}
               placeholder="e.g. Colombo"
-              placeholderTextColor="#475569"
+              placeholderTextColor="#4a4a4a"
               returnKeyType="next"
               blurOnSubmit={false}
               enablesReturnKeyAutomatically={true}
@@ -1387,7 +1387,7 @@ const renderVehicleModal = () => (
               value={vehicleDesc}
               onChangeText={setVehicleDesc}
               placeholder="Optional description..."
-              placeholderTextColor="#475569"
+              placeholderTextColor="#4a4a4a"
               multiline
               returnKeyType="done"
               blurOnSubmit={true}
@@ -1401,8 +1401,8 @@ const renderVehicleModal = () => (
               <Switch
                 value={vehicleRequireVerification}
                 onValueChange={setVehicleRequireVerification}
-                trackColor={{ false: '#334155', true: '#6366f1' }}
-                thumbColor="#f8fafc"
+                trackColor={{ false: '#4a4a4a', true: '#FF8C42' }}
+                thumbColor="#1a1a1a"
               />
             </View>
 
@@ -1414,8 +1414,8 @@ const renderVehicleModal = () => (
               <Switch
                 value={vehicleIsAvailable}
                 onValueChange={setVehicleIsAvailable}
-                trackColor={{ false: '#334155', true: '#10b981' }}
-                thumbColor="#f8fafc"
+                trackColor={{ false: '#4a4a4a', true: '#10b981' }}
+                thumbColor="#1a1a1a"
               />
             </View>
 
@@ -1424,7 +1424,7 @@ const renderVehicleModal = () => (
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flex: 2 }} onPress={saveVehicle} disabled={vehicleSaving}>
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
+                <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.primaryBtn}>
                   {vehicleSaving
                     ? <ActivityIndicator color="white" size="small" />
                     : <Text style={styles.primaryBtnText}>Save Vehicle</Text>}
@@ -1452,7 +1452,7 @@ const renderVehicleModal = () => (
             <View style={styles.typeRow}>
               {['approved', 'rejected'].map(s => (
                 <TouchableOpacity key={s} onPress={() => setReviewStatus(s)}
-                  style={[styles.typeChip, reviewStatus === s && { ...styles.typeChipActive, backgroundColor: s === 'rejected' ? '#ef4444' : '#6366f1' }]}>
+                  style={[styles.typeChip, reviewStatus === s && { ...styles.typeChipActive, backgroundColor: s === 'rejected' ? '#ef4444' : '#FF8C42' }]}>
                   <Text style={[styles.typeChipText, reviewStatus === s && { color: 'white' }]}>
                     {s === 'approved' ? '✅ Approve' : '❌ Reject'}
                   </Text>
@@ -1465,13 +1465,13 @@ const renderVehicleModal = () => (
                 {selectedBookingForReview?.hasDriver && (
                   <>
                     <Text style={styles.inputLabel}>Assign Driver Name *</Text>
-                    <TextInput style={styles.modalInput} value={driverName} onChangeText={setDriverName} placeholder="Driver full name" placeholderTextColor="#475569" returnKeyType="next" blurOnSubmit={false} />
+                    <TextInput style={styles.modalInput} value={driverName} onChangeText={setDriverName} placeholder="Driver full name" placeholderTextColor="#4a4a4a" returnKeyType="next" blurOnSubmit={false} />
                   </>
                 )}
                 <Text style={styles.inputLabel}>Discount Amount ($)</Text>
-                <TextInput style={styles.modalInput} value={discount} onChangeText={setDiscount} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
+                <TextInput style={styles.modalInput} value={discount} onChangeText={setDiscount} placeholder="0" placeholderTextColor="#4a4a4a" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
                 <Text style={styles.inputLabel}>Additional Fees ($)</Text>
-                <TextInput style={styles.modalInput} value={additionalFees} onChangeText={setAdditionalFees} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="done" blurOnSubmit={true} />
+                <TextInput style={styles.modalInput} value={additionalFees} onChangeText={setAdditionalFees} placeholder="0" placeholderTextColor="#4a4a4a" keyboardType="numeric" returnKeyType="done" blurOnSubmit={true} />
               </>
             )}
 
@@ -1480,7 +1480,7 @@ const renderVehicleModal = () => (
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flex: 2 }} onPress={saveReview} disabled={reviewSaving}>
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
+                <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.primaryBtn}>
                   {reviewSaving ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.primaryBtnText}>Submit Review</Text>}
                 </LinearGradient>
               </TouchableOpacity>
@@ -1502,13 +1502,13 @@ const renderVehicleModal = () => (
           <Text style={styles.modalSubtitle}>{selectedBookingForReturn?.vehicleId?.name}</Text>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingBottom: 120 }}>
             <Text style={styles.inputLabel}>Actual Return Date</Text>
-            <TextInput style={styles.modalInput} value={actualReturnDate} onChangeText={setActualReturnDate} placeholder="YYYY-MM-DD" placeholderTextColor="#475569" returnKeyType="next" blurOnSubmit={false} />
+            <TextInput style={styles.modalInput} value={actualReturnDate} onChangeText={setActualReturnDate} placeholder="YYYY-MM-DD" placeholderTextColor="#4a4a4a" returnKeyType="next" blurOnSubmit={false} />
 
             <Text style={styles.inputLabel}>Return Mileage (km) *</Text>
-            <TextInput style={styles.modalInput} value={returnMileage} onChangeText={setReturnMileage} placeholder="e.g. 12500" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
+            <TextInput style={styles.modalInput} value={returnMileage} onChangeText={setReturnMileage} placeholder="e.g. 12500" placeholderTextColor="#4a4a4a" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
 
             <Text style={styles.inputLabel}>Fuel Level (%)</Text>
-            <TextInput style={styles.modalInput} value={returnFuelLevel} onChangeText={setReturnFuelLevel} placeholder="100" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
+            <TextInput style={styles.modalInput} value={returnFuelLevel} onChangeText={setReturnFuelLevel} placeholder="100" placeholderTextColor="#4a4a4a" keyboardType="numeric" returnKeyType="next" blurOnSubmit={false} />
 
             <Text style={styles.inputLabel}>Vehicle Condition</Text>
             <View style={styles.typeRow}>
@@ -1523,9 +1523,9 @@ const renderVehicleModal = () => (
             {returnCondition === 'Damaged' && (
               <>
                 <Text style={styles.inputLabel}>Damage Description</Text>
-                <TextInput style={styles.modalInput} value={damages} onChangeText={setDamages} placeholder="Describe the damage..." placeholderTextColor="#475569" returnKeyType="next" blurOnSubmit={false} />
+                <TextInput style={styles.modalInput} value={damages} onChangeText={setDamages} placeholder="Describe the damage..." placeholderTextColor="#4a4a4a" returnKeyType="next" blurOnSubmit={false} />
                 <Text style={styles.inputLabel}>Damage Repair Charge ($)</Text>
-                <TextInput style={styles.modalInput} value={damageCharge} onChangeText={setDamageCharge} placeholder="0" placeholderTextColor="#475569" keyboardType="numeric" returnKeyType="done" blurOnSubmit={true} />
+                <TextInput style={styles.modalInput} value={damageCharge} onChangeText={setDamageCharge} placeholder="0" placeholderTextColor="#4a4a4a" keyboardType="numeric" returnKeyType="done" blurOnSubmit={true} />
               </>
             )}
 
@@ -1534,7 +1534,7 @@ const renderVehicleModal = () => (
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flex: 2 }} onPress={saveReturn} disabled={returnSaving}>
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
+                <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.primaryBtn}>
                   {returnSaving ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.primaryBtnText}>Finalize Return</Text>}
                 </LinearGradient>
               </TouchableOpacity>
@@ -1569,7 +1569,7 @@ const renderVehicleModal = () => (
             <TextInput
               style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
               value={staffResponse} onChangeText={setStaffResponse}
-              placeholder="Type your response..." placeholderTextColor="#475569" multiline
+              placeholder="Type your response..." placeholderTextColor="#4a4a4a" multiline
               returnKeyType="done" blurOnSubmit={true}
             />
 
@@ -1578,7 +1578,7 @@ const renderVehicleModal = () => (
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flex: 2 }} onPress={saveComplaintResponse} disabled={complaintSaving}>
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
+                <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.primaryBtn}>
                   {complaintSaving ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.primaryBtnText}>Submit Response</Text>}
                 </LinearGradient>
               </TouchableOpacity>
@@ -1615,7 +1615,7 @@ const renderVehicleModal = () => (
             <TextInput
               style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
               value={replyText} onChangeText={setReplyText}
-              placeholder="Type your reply..." placeholderTextColor="#475569" multiline
+              placeholder="Type your reply..." placeholderTextColor="#4a4a4a" multiline
               returnKeyType="done" blurOnSubmit={true}
             />
 
@@ -1624,7 +1624,7 @@ const renderVehicleModal = () => (
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ flex: 2 }} onPress={saveReply} disabled={replySaving}>
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.primaryBtn}>
+                <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.primaryBtn}>
                   {replySaving ? <ActivityIndicator color="white" size="small" /> : <Text style={styles.primaryBtnText}>Add Reply</Text>}
                 </LinearGradient>
               </TouchableOpacity>
@@ -1638,13 +1638,13 @@ const renderVehicleModal = () => (
   // ─── Main Render ──────────────────────────────────────────────────────────
 
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b', '#0f172a']} style={{ flex: 1 }}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+    <LinearGradient colors={['#ffffff', '#fff5eb', '#ffffff']} style={{ flex: 1 }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
       {/* Top Navbar */}
       <View style={styles.topBar}>
         <View style={styles.topBarRow}>
-          <LinearGradient colors={['#818cf8', '#6366f1']} style={styles.topBarAvatar}>
+          <LinearGradient colors={['#FFA366', '#FF8C42']} style={styles.topBarAvatar}>
             <Text style={styles.topBarAvatarText}>{(user?.name || 'S').charAt(0).toUpperCase()}</Text>
           </LinearGradient>
           <View style={{ flex: 1, marginLeft: 12 }}>
@@ -1652,7 +1652,7 @@ const renderVehicleModal = () => (
             <Text style={styles.topBarUser}>QuickRide Staff Console</Text>
           </View>
           <View style={styles.topBarRolePill}>
-            <Ionicons name="build" size={12} color="#818cf8" />
+            <Ionicons name="build" size={12} color="#FFA366" />
             <Text style={styles.topBarRoleText}>STAFF</Text>
           </View>
         </View>
@@ -1694,21 +1694,21 @@ const styles = StyleSheet.create({
   topBarAvatar: {
     width: 44, height: 44, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#6366f1', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 5,
+    shadowColor: '#FF8C42', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   topBarAvatarText: { fontSize: 18, fontWeight: '800', color: '#fff' },
-  topBarBrand: { fontSize: 18, fontWeight: '800', color: '#f8fafc', letterSpacing: 0.2 },
-  topBarUser: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  topBarBrand: { fontSize: 18, fontWeight: '800', color: '#1a1a1a', letterSpacing: 0.2 },
+  topBarUser: { fontSize: 12, color: '#4a4a4a', marginTop: 2 },
   topBarRolePill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: 'rgba(99,102,241,0.15)',
-    borderWidth: 1, borderColor: 'rgba(99,102,241,0.35)',
+    backgroundColor: 'rgba(255,140,66,0.15)',
+    borderWidth: 1, borderColor: 'rgba(255,140,66,0.35)',
     borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
   },
-  topBarRoleText: { color: '#818cf8', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
+  topBarRoleText: { color: '#FF8C42', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
   topBarGlow: {
     height: 1, marginTop: 18,
-    backgroundColor: 'rgba(99,102,241,0.35)',
+    backgroundColor: 'rgba(255,140,66,0.35)',
   },
   logoutBtn: {
     width: 40, height: 40, borderRadius: 20,
@@ -1719,39 +1719,39 @@ const styles = StyleSheet.create({
   // Bottom Bar
   bottomBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(15,23,42,0.95)',
-    borderTopWidth: 1, borderTopColor: 'rgba(99,102,241,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderTopWidth: 1, borderTopColor: 'rgba(255,140,66,0.2)',
     paddingBottom: 20, paddingTop: 8,
   },
   tabItem: { flex: 1, alignItems: 'center' },
   tabIconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   tabIconWrapActive: {
-    backgroundColor: 'rgba(99,102,241,0.2)',
-    shadowColor: '#6366f1', shadowOpacity: 0.6, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4,
+    backgroundColor: 'rgba(255,140,66,0.2)',
+    shadowColor: '#FF8C42', shadowOpacity: 0.6, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
-  tabLabel: { fontSize: 10, color: '#475569', marginTop: 2 },
-  tabLabelActive: { color: '#6366f1', fontWeight: '700' },
+  tabLabel: { fontSize: 10, color: '#4a4a4a', marginTop: 2 },
+  tabLabelActive: { color: '#FF8C42', fontWeight: '700' },
 
   // Page Header
   pageHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 16,
   },
-  pageTitle: { fontSize: 22, fontWeight: '800', color: '#f8fafc' },
-  pageSubtitle: { fontSize: 13, color: '#94a3b8', marginTop: 2 },
+  pageTitle: { fontSize: 22, fontWeight: '800', color: '#1a1a1a' },
+  pageSubtitle: { fontSize: 13, color: '#4a4a4a', marginTop: 2 },
   addBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 
   // Glass Card
   glassCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 20, borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255,140,66,0.2)',
     padding: 18, marginBottom: 14,
-    shadowColor: '#6366f1', shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#FF8C42', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15, shadowRadius: 12, elevation: 6,
   },
   cardTitle: {
-    fontSize: 15, fontWeight: '800', color: '#f8fafc', marginBottom: 14,
+    fontSize: 15, fontWeight: '800', color: '#1a1a1a', marginBottom: 14,
     letterSpacing: 0.3, textTransform: 'uppercase',
   },
 
@@ -1767,21 +1767,21 @@ welcomeBanner: {
 },
 
 
-  welcomeTitle: { fontSize: 20, fontWeight: '800', color: 'white', marginBottom: 6 },
-  welcomeSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 18 },
+  welcomeTitle: { fontSize: 20, fontWeight: '800', color: '#1a1a1a', marginBottom: 6 },
+  welcomeSubtitle: { fontSize: 13, color: '#4a4a4a', lineHeight: 18 },
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   metricCard: {
-    width: '47%', backgroundColor: 'rgba(30,41,59,0.85)',
+    width: '47%', backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 16, padding: 16, borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)', borderTopWidth: 3,
+    borderColor: 'rgba(255,140,66,0.2)', borderTopWidth: 3,
     alignItems: 'center',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35, shadowRadius: 10, elevation: 4,
   },
   metricIconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  metricValue: { fontSize: 24, fontWeight: '800', color: '#f8fafc' },
-  metricTitle: { fontSize: 10, fontWeight: '700', color: '#64748b', textTransform: 'uppercase',color: '#cbd5f5', letterSpacing: 0.5, marginTop: 2 },
-  metricSubtitle: { fontSize: 9, fontWeight: '600', color: '#475569', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.3 },
+  metricValue: { fontSize: 24, fontWeight: '800', color: '#1a1a1a' },
+  metricTitle: { fontSize: 10, fontWeight: '700', color: '#4a4a4a', textTransform: 'uppercase',color: '#FF8C42', letterSpacing: 0.5, marginTop: 2 },
+  metricSubtitle: { fontSize: 9, fontWeight: '600', color: '#4a4a4a', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.3 },
 
   quickActionsRow: { flexDirection: 'row', gap: 10 },
   quickActionBtn: { flex: 1 },
@@ -1791,38 +1791,38 @@ welcomeBanner: {
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center', justifyContent: 'center',
   },
-  quickActionShadowIndigo: { shadowColor: '#6366f1', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  quickActionShadowBlue: { shadowColor: '#0ea5e9', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  quickActionShadowRose: { shadowColor: '#f43f5e', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  quickActionShadowIndigo: { shadowColor: '#FF8C42', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  quickActionShadowBlue: { shadowColor: '#FF8C42', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  quickActionShadowRose: { shadowColor: '#FF8C42', shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   quickActionLabel: { color: 'white', fontSize: 12, fontWeight: '600' },
 
-  overviewRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.1)' },
+  overviewRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,140,66,0.1)' },
   overviewDot: { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
 
 overviewLabel: { 
   flex: 1, 
-  color: '#f8fafc',   // ✅ WHITE
+  color: '#1a1a1a',
   fontSize: 14 
 },
   overviewVal: { fontSize: 18, fontWeight: '800' },
 
   sectionHeader: { marginBottom: 14 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#f8fafc' },
-  sectionSubtitle: { fontSize: 13, color: '#94a3b8', marginTop: 2 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1a1a1a' },
+  sectionSubtitle: { fontSize: 13, color: '#4a4a4a', marginTop: 2 },
 
   // Vehicles
   vehicleRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 },
   vehicleIconBox: {
     width: 52, height: 52, borderRadius: 14,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255,140,66,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
-  vehicleName: { fontSize: 16, fontWeight: '700', color: '#f8fafc' },
-  vehicleMeta: { fontSize: 12, color: '#e2e8f0', marginTop: 2 },
-  vehiclePrice: { fontSize: 18, fontWeight: '800', color: '#6366f1', marginTop: 4 },
-  vehicleDay: { fontSize: 12, color: '#94a3b8', fontWeight: '400' },
+  vehicleName: { fontSize: 16, fontWeight: '700', color: '#1a1a1a' },
+  vehicleMeta: { fontSize: 12, color: '#4a4a4a', marginTop: 2 },
+  vehiclePrice: { fontSize: 18, fontWeight: '800', color: '#FF8C42', marginTop: 4 },
+  vehicleDay: { fontSize: 12, color: '#4a4a4a', fontWeight: '400' },
   availBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  vehicleDesc: { fontSize: 13, color: '#64748b', marginBottom: 12, lineHeight: 18 },
+  vehicleDesc: { fontSize: 13, color: '#4a4a4a', marginBottom: 12, lineHeight: 18 },
   vehicleActions: { flexDirection: 'row', gap: 10 },
   actionBtnSmall: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -1836,69 +1836,69 @@ filterChip: {
   paddingHorizontal: 15,
   paddingVertical: 6,
   borderRadius: 20,
-  backgroundColor: 'rgba(30,41,59,1)',   // ✅ solid
+  backgroundColor: '#fff5eb',
   borderWidth: 1.2,
-  borderColor: '#6366f1',                // ✅ visible border
+  borderColor: '#FF8C42',
 },
 
-  filterChipActive: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
+  filterChipActive: { backgroundColor: '#FF8C42', borderColor: '#FF8C42' },
 filterChipText: {
   fontSize: 13, 
-  color: '#ffffff',   // ✅ bright white
+  color: '#1a1a1a',
   fontWeight: '700',
  
 },
-  filterChipTextActive: { color: 'white' },
+  filterChipTextActive: { color: '#ffffff' },
 
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   badgeText: { fontSize: 10, fontWeight: '800' },
 
   bookingHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  bookingVehicle: { fontSize: 16, fontWeight: '700', color: '#f8fafc', flex: 1 },
-  bookingCustomer: { fontSize: 13, color: '#94a3b8', marginBottom: 4 },
-  bookingDates: { fontSize: 13, color: '#94a3b8', marginBottom: 4 },
-  driverNote: { fontSize: 12, color: '#6366f1', fontWeight: '600', marginBottom: 4 },
+  bookingVehicle: { fontSize: 16, fontWeight: '700', color: '#1a1a1a', flex: 1 },
+  bookingCustomer: { fontSize: 13, color: '#4a4a4a', marginBottom: 4 },
+  bookingDates: { fontSize: 13, color: '#4a4a4a', marginBottom: 4 },
+  driverNote: { fontSize: 12, color: '#FF8C42', fontWeight: '600', marginBottom: 4 },
   bookingAmountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
-  bookingAmount: { fontSize: 20, fontWeight: '800', color: '#6366f1' },
+  bookingAmount: { fontSize: 20, fontWeight: '800', color: '#FF8C42' },
   bookingActionBtn: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   bookingActionText: { color: 'white', fontWeight: '700', fontSize: 13 },
   bookingActionsCol: { gap: 8, marginTop: 10 },
   verifyBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  invoiceBox: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(99,102,241,0.15)' },
-  invoiceTitle: { fontSize: 10, fontWeight: '700', color: '#64748b', marginBottom: 4, letterSpacing: 0.5 },
-  invoiceLine: { fontSize: 12, color: '#94a3b8', marginBottom: 2 },
+  invoiceBox: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,140,66,0.15)' },
+  invoiceTitle: { fontSize: 10, fontWeight: '700', color: '#4a4a4a', marginBottom: 4, letterSpacing: 0.5 },
+  invoiceLine: { fontSize: 12, color: '#4a4a4a', marginBottom: 2 },
   cashBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 },
-  activeRentalCard: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.1)' },
-  activeRentalVehicle: { fontSize: 15, fontWeight: '700', color: '#f8fafc' },
-  activeRentalCustomer: { fontSize: 13, color: '#94a3b8', marginTop: 2 },
-  activeRentalDates: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  activeRentalCard: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,140,66,0.1)' },
+  activeRentalVehicle: { fontSize: 15, fontWeight: '700', color: '#1a1a1a' },
+  activeRentalCustomer: { fontSize: 13, color: '#4a4a4a', marginTop: 2 },
+  activeRentalDates: { fontSize: 12, color: '#4a4a4a', marginTop: 2 },
   overdueTag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginTop: 6 },
   overdueTagText: { fontSize: 11, fontWeight: '700' },
-  inspectBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#6366f1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  inspectBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FF8C42', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
   inspectBtnText: { color: 'white', fontWeight: '700', fontSize: 12 },
   feedbackTabs: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginBottom: 8 },
-  feedbackTab: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: 'rgba(30,41,59,0.8)', borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)' },
-  feedbackTabActive: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  feedbackTabActiveComplaint: { backgroundColor: '#ef4444', borderColor: '#ef4444' },
-  feedbackTabText: { fontSize: 13, fontWeight: '700', color: '#94a3b8' },
+  feedbackTab: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: '#fff5eb', borderWidth: 1, borderColor: 'rgba(255,140,66,0.2)' },
+  feedbackTabActive: { backgroundColor: '#FF8C42', borderColor: '#FF8C42' },
+  feedbackTabActiveComplaint: { backgroundColor: '#FF8C42', borderColor: '#FF8C42' },
+  feedbackTabText: { fontSize: 13, fontWeight: '700', color: '#4a4a4a' },
   feedbackTabTextActive: { color: 'white' },
   theftComplaintCard: { borderColor: '#ef4444', borderWidth: 2, shadowColor: '#ef4444', shadowOpacity: 0.3, shadowRadius: 8 },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, padding: 14, backgroundColor: 'rgba(15,23,42,0.4)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)' },
-  toggleHint: { fontSize: 11, color: '#64748b', marginTop: 4 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, padding: 14, backgroundColor: 'rgba(255,245,235,0.4)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,140,66,0.2)' },
+  toggleHint: { fontSize: 11, color: '#4a4a4a', marginTop: 4 },
 
   searchBarWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(30,41,59,0.8)',
+    backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 11,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255,140,66,0.25)',
   },
   searchBarInput: {
     flex: 1,
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontSize: 14,
   },
 
@@ -1906,9 +1906,9 @@ filterChipText: {
     width: '100%',
     height: 160,
     borderRadius: 16,
-    backgroundColor: 'rgba(15,23,42,0.6)',
+    backgroundColor: 'rgba(255,245,235,0.6)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255,140,66,0.3)',
     borderStyle: 'dashed',
     overflow: 'hidden',
     justifyContent: 'center',
@@ -1924,7 +1924,7 @@ filterChipText: {
     justifyContent: 'center',
   },
   imagePickerText: {
-    color: '#6366f1',
+    color: '#FF8C42',
     fontSize: 13,
     fontWeight: '600',
     marginTop: 6,
@@ -1936,7 +1936,7 @@ filterChipText: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(99,102,241,0.9)',
+    backgroundColor: 'rgba(255,140,66,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1944,19 +1944,19 @@ filterChipText: {
   // Complaints / Feedback
   feedbackHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   typePill: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  feedbackComment: { fontSize: 15, color: '#e2e8f0', fontStyle: 'italic', marginBottom: 6, lineHeight: 22 },
-  feedbackMeta: { fontSize: 12, color: '#64748b', marginBottom: 4 },
+  feedbackComment: { fontSize: 15, color: '#1a1a1a', fontStyle: 'italic', marginBottom: 6, lineHeight: 22 },
+  feedbackMeta: { fontSize: 12, color: '#4a4a4a', marginBottom: 4 },
   complaintStatusRow: { marginBottom: 6 },
-  staffResponseText: { fontSize: 13, color: '#94a3b8', marginBottom: 8, fontStyle: 'italic' },
+  staffResponseText: { fontSize: 13, color: '#4a4a4a', marginBottom: 8, fontStyle: 'italic' },
   feedbackActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
   feedbackActionBtn: { flex: 1 },
   feedbackActionGrad: { borderRadius: 10, paddingVertical: 8, alignItems: 'center', borderRadius: 10 },
-  feedbackActionText: { color: '#f8fafc', fontWeight: '600', fontSize: 13 },
+  feedbackActionText: { color: '#1a1a1a', fontWeight: '600', fontSize: 13 },
 
   // Empty State
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, marginTop: 60 },
-  emptyText: { fontSize: 18, fontWeight: '700', color: '#f8fafc', marginTop: 16 },
-  emptySubText: { fontSize: 14, color: '#64748b', marginTop: 6, textAlign: 'center' },
+  emptyText: { fontSize: 18, fontWeight: '700', color: '#1a1a1a', marginTop: 16 },
+  emptySubText: { fontSize: 14, color: '#4a4a4a', marginTop: 6, textAlign: 'center' },
 
   // Modals
   modalOverlay: {
@@ -1964,41 +1964,41 @@ filterChipText: {
     backgroundColor: 'rgba(0,0,0,0.7)',
   },
   modalSheet: {
-    backgroundColor: '#1e293b',
+    backgroundColor: '#ffffff',
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     padding: 24, maxHeight: '90%',
-    borderTopWidth: 1, borderColor: 'rgba(99,102,241,0.3)',
+    borderTopWidth: 1, borderColor: 'rgba(255,140,66,0.3)',
   },
   modalHandle: {
     width: 40, height: 4, borderRadius: 2,
     backgroundColor: 'rgba(148,163,184,0.4)',
     alignSelf: 'center', marginBottom: 20,
   },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: '#f8fafc', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#94a3b8', marginBottom: 20, lineHeight: 18 },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: '#94a3b8', marginBottom: 6, marginTop: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: '#1a1a1a', marginBottom: 4 },
+  modalSubtitle: { fontSize: 13, color: '#4a4a4a', marginBottom: 20, lineHeight: 18 },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: '#4a4a4a', marginBottom: 6, marginTop: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   modalInput: {
-    backgroundColor: 'rgba(15,23,42,0.6)',
+    backgroundColor: 'rgba(255,245,235,0.6)',
     borderRadius: 12, borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
-    color: '#f8fafc', padding: 14, fontSize: 15,
+    borderColor: 'rgba(255,140,66,0.3)',
+    color: '#1a1a1a', padding: 14, fontSize: 15,
   },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   typeChip: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12,
-    backgroundColor: 'rgba(30,41,59,0.8)', borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    backgroundColor: '#fff5eb', borderWidth: 1,
+    borderColor: 'rgba(255,140,66,0.3)',
   },
-  typeChipActive: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  typeChipText: { fontSize: 13, color: '#94a3b8', fontWeight: '600' },
+  typeChipActive: { backgroundColor: '#FF8C42', borderColor: '#FF8C42' },
+  typeChipText: { fontSize: 13, color: '#4a4a4a', fontWeight: '600' },
   modalBtns: { flexDirection: 'row', gap: 12, marginTop: 24, marginBottom: 8 },
   cancelBtn: {
     flex: 1, borderRadius: 14, paddingVertical: 14,
     alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(30,41,59,0.8)',
-    borderWidth: 1, borderColor: 'rgba(99,102,241,0.2)',
+    backgroundColor: '#fff5eb',
+    borderWidth: 1, borderColor: 'rgba(255,140,66,0.2)',
   },
-  cancelBtnText: { color: '#94a3b8', fontWeight: '700', fontSize: 15 },
+  cancelBtnText: { color: '#4a4a4a', fontWeight: '700', fontSize: 15 },
   primaryBtn: { borderRadius: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
   primaryBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
 
@@ -2006,14 +2006,14 @@ filterChipText: {
   
   // Replies
   previousReplies: {
-    backgroundColor: 'rgba(15,23,42,0.5)',
+    backgroundColor: 'rgba(255,245,235,0.5)',
     borderRadius: 12, padding: 12, marginBottom: 12,
-    borderWidth: 1, borderColor: 'rgba(99,102,241,0.15)',
+    borderWidth: 1, borderColor: 'rgba(255,140,66,0.15)',
   },
-  prevRepliesTitle: { fontSize: 13, fontWeight: '700', color: '#f8fafc', marginBottom: 10 },
-  replyItem: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(99,102,241,0.1)' },
-  replyStaff: { fontSize: 11, fontWeight: '700', color: '#6366f1', marginBottom: 2 },
-  replyText: { fontSize: 13, color: '#94a3b8', lineHeight: 18 },
+  prevRepliesTitle: { fontSize: 13, fontWeight: '700', color: '#1a1a1a', marginBottom: 10 },
+  replyItem: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(255,140,66,0.1)' },
+  replyStaff: { fontSize: 11, fontWeight: '700', color: '#FF8C42', marginBottom: 2 },
+  replyText: { fontSize: 13, color: '#4a4a4a', lineHeight: 18 },
 });
 // Profile specific styles
 const profileStyles = StyleSheet.create({
@@ -2031,7 +2031,7 @@ const profileStyles = StyleSheet.create({
   pageTitle: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: 0.2,
   },
 welcomeImage: {
@@ -2045,9 +2045,9 @@ welcomeImage: {
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2061,7 +2061,7 @@ welcomeImage: {
     borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.5,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
@@ -2079,36 +2079,36 @@ welcomeImage: {
     borderRadius: 8,
     backgroundColor: '#10b981',
     borderWidth: 2.5,
-    borderColor: '#0f172a',
+    borderColor: '#ffffff',
     top: 66,
     right: '37%',
   },
   userName: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     marginTop: 14,
     letterSpacing: 0.2,
   },
   userEmail: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: '#888888',
     marginTop: 4,
   },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 5,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
   },
   roleBadgeText: {
-    color: '#818cf8',
+    color: '#FFA366',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -2122,26 +2122,26 @@ welcomeImage: {
   
   statCard: {
     flex: 1,
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     paddingVertical: 16,
     paddingHorizontal: 10,
     alignItems: 'center',
   },
   statCardMiddle: {
-    borderColor: 'rgba(99,102,241,0.35)',
+    borderColor: 'rgba(255, 140, 66, 0.35)',
   },
   statValue: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#6366f1',
+    color: '#FF8C42',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: '#888888',
     fontWeight: '600',
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -2163,7 +2163,7 @@ welcomeImage: {
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 12,
@@ -2215,7 +2215,7 @@ heroSubtitle: {
 
 
 heroButton: {
-  backgroundColor: '#6366f1',
+  backgroundColor: '#FF8C42',
   paddingVertical: 12,
   paddingHorizontal: 24,
   borderRadius: 12,
@@ -2230,13 +2230,13 @@ heroButtonText: {
 
 
   glassCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     padding: 18,
     marginBottom: 24,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.07,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -2244,7 +2244,7 @@ heroButtonText: {
   },
   rowDivider: {
     height: 1,
-    backgroundColor: 'rgba(99,102,241,0.1)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
     marginVertical: 10,
   },
   infoRow: {
@@ -2255,7 +2255,7 @@ heroButtonText: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(99,102,241,0.12)',
+    backgroundColor: 'rgba(255, 140, 66, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -2265,7 +2265,7 @@ heroButtonText: {
   },
   infoLabel: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: '#888888',
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -2273,7 +2273,7 @@ heroButtonText: {
   },
   infoValue: {
     fontSize: 15,
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontWeight: '600',
   },
   settingsRow: {
@@ -2285,7 +2285,7 @@ heroButtonText: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(99,102,241,0.12)',
+    backgroundColor: 'rgba(255, 140, 66, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -2294,7 +2294,7 @@ heroButtonText: {
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: '#f8fafc',
+    color: '#1a1a1a',
   },
   logoutBtn: {
     flexDirection: 'row',
