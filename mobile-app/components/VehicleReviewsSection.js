@@ -30,7 +30,7 @@ export default function VehicleReviewsSection({ vehicleId }) {
           key={star}
           name={star <= rating ? 'star' : 'star-outline'}
           size={14}
-          color={star <= rating ? '#f59e0b' : '#475569'}
+          color={star <= rating ? '#f59e0b' : '#4a4a4a'}
           style={{ marginRight: 1 }}
         />
       ))}
@@ -40,7 +40,7 @@ export default function VehicleReviewsSection({ vehicleId }) {
   if (loading) {
     return (
       <View style={styles.loadingWrap}>
-        <ActivityIndicator color="#6366f1" size="small" />
+        <ActivityIndicator color="#FF8C42" size="small" />
       </View>
     );
   }
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 4,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#f8fafc' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1a1a1a' },
   avgBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -109,34 +109,34 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   avgText: { color: '#f59e0b', fontWeight: '700', fontSize: 13, marginLeft: 2 },
-  avgCount: { color: '#94a3b8', fontSize: 12, marginLeft: 2 },
+  avgCount: { color: '#888888', fontSize: 12, marginLeft: 2 },
 
   emptyCard: {
-    backgroundColor: 'rgba(30,41,59,0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.15)',
+    borderColor: 'rgba(255, 140, 66, 0.15)',
     padding: 16,
     alignItems: 'center',
   },
-  emptyText: { color: '#64748b', fontSize: 13 },
+  emptyText: { color: '#888888', fontSize: 13 },
 
   reviewCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     padding: 14,
     marginBottom: 10,
   },
   reviewTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   avatarCircle: {
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: 'rgba(99,102,241,0.25)',
+    backgroundColor: 'rgba(255, 140, 66, 0.25)',
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { color: '#818cf8', fontWeight: '700', fontSize: 14 },
-  reviewerName: { color: '#f8fafc', fontWeight: '600', fontSize: 14 },
-  reviewDate: { color: '#64748b', fontSize: 11, marginTop: 1 },
-  reviewComment: { color: '#cbd5e1', fontSize: 13, lineHeight: 19 },
+  avatarText: { color: '#FFA366', fontWeight: '700', fontSize: 14 },
+  reviewerName: { color: '#1a1a1a', fontWeight: '600', fontSize: 14 },
+  reviewDate: { color: '#888888', fontSize: 11, marginTop: 1 },
+  reviewComment: { color: '#4a4a4a', fontSize: 13, lineHeight: 19 },
 });

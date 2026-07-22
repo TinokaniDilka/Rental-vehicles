@@ -50,7 +50,7 @@ function StaffTabButton({ tab, focused, onPress, onLayout }) {
           <Ionicons
             name={focused ? tab.activeIcon : tab.icon}
             size={focused ? 18 : 16}
-            color={focused ? '#e0e7ff' : '#7c88a3'}
+            color={focused ? '#FFF5EB' : '#888888'}
           />
           {focused && <Text style={styles.tabLabelActive}>{tab.label}</Text>}
         </View>
@@ -130,15 +130,15 @@ const styles = StyleSheet.create({
     height: 76,
     marginLeft: -60,
     borderRadius: 60,
-    backgroundColor: 'rgba(99,102,241,0.18)',
+    backgroundColor: 'rgba(255, 140, 66, 0.18)',
   },
   barRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(30,41,59,0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.97)',
     borderWidth: 1,
-    borderColor: 'rgba(129,140,248,0.28)',
+    borderColor: 'rgba(255, 140, 66, 0.28)',
     borderRadius: 34,
     height: 60,
     paddingHorizontal: 8,
@@ -153,9 +153,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     height: 44,
-    backgroundColor: 'rgba(129,140,248,0.22)',
+    backgroundColor: 'rgba(255, 140, 66, 0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(165,180,252,0.45)',
+    borderColor: 'rgba(255, 163, 102, 0.45)',
     borderRadius: 16,
   },
   tabTouchable: {
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#e0e7ff',
+    color: '#FFF5EB',
     marginTop: 2,
   },
 });
