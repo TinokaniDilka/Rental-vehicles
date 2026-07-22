@@ -73,7 +73,7 @@ function AnimatedTabButton({ label, iconName, focused, onPress, onLayout, badgeC
             <Ionicons
               name={iconName}
               size={focused ? 18 : 16}
-              color={focused ? '#e0e7ff' : '#7c88a3'}
+              color={focused ? '#FFF5EB' : '#888888'}
             />
             {badgeCount > 0 && (
               <View style={styles.badge}>
@@ -144,7 +144,7 @@ function FabButton({ onPress }) {
       >
         <Animated.View style={{ transform: [{ scale }] }}>
           <LinearGradient
-            colors={['#a5b4fc', '#6366f1', '#4338ca']}
+            colors={['#FFA366', '#FF8C42', '#E6732A']}
             start={{ x: 0.2, y: 0 }}
             end={{ x: 0.8, y: 1 }}
             style={styles.fab}
@@ -292,15 +292,15 @@ const styles = StyleSheet.create({
     height: 76,
     marginLeft: -60,
     borderRadius: 60,
-    backgroundColor: 'rgba(99,102,241,0.18)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
   },
   barRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(30,41,59,0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.97)',
     borderWidth: 1,
-    borderColor: 'rgba(129,140,248,0.28)',
+    borderColor: 'rgba(255, 140, 66, 0.3)',
     borderRadius: 34,
     height: 60,
     paddingHorizontal: 8,
@@ -315,9 +315,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     height: 44,
-    backgroundColor: 'rgba(129,140,248,0.22)',
+    backgroundColor: 'rgba(255, 140, 66, 0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(165,180,252,0.45)',
+    borderColor: 'rgba(255, 163, 102, 0.4)',
     borderRadius: 16,
   },
   tabTouchable: {
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#e0e7ff',
+    color: '#FFF5EB',
     marginTop: 2,
   },
   fabSlot: {
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: 'rgba(99,102,241,0.45)',
+    backgroundColor: 'rgba(255, 140, 66, 0.4)',
   },
   fab: {
     width: 46,
@@ -381,6 +381,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(199,210,254,0.5)',
+    borderColor: 'rgba(255, 200, 150, 0.5)',
   },
 });
