@@ -78,7 +78,7 @@ export default function PaymentScreen({ route, navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b']} style={styles.gradientBg}>
+    <LinearGradient colors={['#ffffff', '#fff5eb']} style={styles.gradientBg}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -87,7 +87,7 @@ export default function PaymentScreen({ route, navigation }) {
         {/* Header */}
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={22} color="#f8fafc" />
+            <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Payment</Text>
           <View style={styles.headerSpacer} />
@@ -96,14 +96,14 @@ export default function PaymentScreen({ route, navigation }) {
         {/* Amount Display Card */}
         <View style={styles.amountCard}>
           <LinearGradient
-            colors={['rgba(99,102,241,0.2)', 'rgba(99,102,241,0.05)']}
+            colors={['rgba(255, 140, 66, 0.12)', 'rgba(255, 140, 66, 0.06)']}
             style={styles.amountCardGradient}
           >
             <Text style={styles.cardEmoji}>💳</Text>
             <Text style={styles.amountDueLabel}>Amount Due</Text>
             <Text style={styles.amountValue}>{formatCurrency(total)}</Text>
             <View style={styles.bookingIdPill}>
-              <Ionicons name="pricetag-outline" size={12} color="#94a3b8" />
+              <Ionicons name="pricetag-outline" size={12} color="#888888" />
               <Text style={styles.bookingIdText} numberOfLines={1}>
                 {days} day{days !== 1 ? 's' : ''} · {vehicle.name}
               </Text>
@@ -120,7 +120,7 @@ export default function PaymentScreen({ route, navigation }) {
           {/* Vehicle */}
           <View style={styles.detailRow}>
             <View style={styles.detailIconWrap}>
-              <Ionicons name="car-outline" size={16} color="#6366f1" />
+              <Ionicons name="car-outline" size={16} color="#FF8C42" />
             </View>
             <View style={styles.detailTextWrap}>
               <Text style={styles.detailLabel}>Vehicle</Text>
@@ -133,7 +133,7 @@ export default function PaymentScreen({ route, navigation }) {
           {/* Dates */}
           <View style={styles.detailRow}>
             <View style={styles.detailIconWrap}>
-              <Ionicons name="calendar-outline" size={16} color="#6366f1" />
+              <Ionicons name="calendar-outline" size={16} color="#FF8C42" />
             </View>
             <View style={styles.detailTextWrap}>
               <Text style={styles.detailLabel}>Dates</Text>
@@ -146,7 +146,7 @@ export default function PaymentScreen({ route, navigation }) {
           {/* Status */}
           <View style={styles.detailRow}>
             <View style={styles.detailIconWrap}>
-              <Ionicons name="pulse-outline" size={16} color="#6366f1" />
+              <Ionicons name="pulse-outline" size={16} color="#FF8C42" />
             </View>
             <View style={styles.detailTextWrap}>
               <Text style={styles.detailLabel}>Status</Text>
@@ -170,7 +170,7 @@ export default function PaymentScreen({ route, navigation }) {
         >
           <View style={styles.paymentMethodRow}>
             <View style={styles.cardIconWrap}>
-              <Ionicons name="card" size={22} color="#6366f1" />
+              <Ionicons name="card" size={22} color="#FF8C42" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.paymentMethodTitle}>Credit / Debit Card</Text>
@@ -215,7 +215,7 @@ export default function PaymentScreen({ route, navigation }) {
                 <TextInput
                   style={styles.cardInput}
                   placeholder="4242 4242 4242 4242"
-                  placeholderTextColor="#64748b"
+                  placeholderTextColor="#888888"
                   value={cardNumber}
                   onChangeText={setCardNumber}
                   keyboardType="numeric"
@@ -230,7 +230,7 @@ export default function PaymentScreen({ route, navigation }) {
                 <TextInput
                   style={styles.cardInput}
                   placeholder="12/34"
-                  placeholderTextColor="#64748b"
+                  placeholderTextColor="#888888"
                   value={cardExpiry}
                   onChangeText={setCardExpiry}
                   keyboardType="numeric"
@@ -242,7 +242,7 @@ export default function PaymentScreen({ route, navigation }) {
                 <TextInput
                   style={styles.cardInput}
                   placeholder="123"
-                  placeholderTextColor="#64748b"
+                  placeholderTextColor="#888888"
                   value={cardCvc}
                   onChangeText={setCardCvc}
                   keyboardType="numeric"
@@ -274,7 +274,7 @@ export default function PaymentScreen({ route, navigation }) {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#6366f1', '#4f46e5']}
+            colors={['#FF8C42', '#E6732A']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.payBtn}
@@ -333,9 +333,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: 0.3,
   },
   headerSpacer: {
@@ -355,10 +355,10 @@ const styles = StyleSheet.create({
   amountCard: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     overflow: 'hidden',
     marginBottom: 28,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.15,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   amountDueLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 8,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   amountValue: {
     fontSize: 40,
     fontWeight: '800',
-    color: '#6366f1',
+    color: '#FF8C42',
     marginBottom: 14,
     letterSpacing: -0.5,
   },
@@ -392,15 +392,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(15,23,42,0.5)',
+    backgroundColor: 'rgba(255, 245, 235, 0.05)',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.15)',
+    borderColor: 'rgba(255, 140, 66, 0.15)',
   },
   bookingIdText: {
-    color: '#94a3b8',
+    color: '#888888',
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 12,
@@ -422,13 +422,13 @@ const styles = StyleSheet.create({
 
   // Glass Card
   glassCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     padding: 18,
     marginBottom: 24,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.07,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(99,102,241,0.12)',
+    backgroundColor: 'rgba(255, 140, 66, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#888888',
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -461,12 +461,12 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 14,
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontWeight: '600',
   },
   rowDivider: {
     height: 1,
-    backgroundColor: 'rgba(99,102,241,0.1)',
+    backgroundColor: 'rgba(255, 140, 66, 0.1)',
     marginVertical: 10,
   },
   statusPill: {
@@ -487,15 +487,15 @@ const styles = StyleSheet.create({
 
   // Payment Method
   paymentMethodCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: 'rgba(99,102,241,0.15)',
+    borderColor: 'rgba(255, 140, 66, 0.15)',
     padding: 18,
     marginBottom: 12,
   },
   paymentMethodCardActive: {
-    borderColor: 'rgba(99,102,241,0.5)',
+    borderColor: 'rgba(255, 140, 66, 0.05)',
   },
   paymentMethodRow: {
     flexDirection: 'row',
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -513,18 +513,18 @@ const styles = StyleSheet.create({
   paymentMethodTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
   },
   paymentMethodSub: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#888888',
     marginTop: 2,
   },
   checkCircle: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#FF8C42',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   cardInputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: '#888888',
     marginBottom: 10,
     marginLeft: 2,
   },
@@ -571,22 +571,22 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: '#888888',
     marginBottom: 6,
     marginLeft: 2,
   },
   cardInput: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
-    color: '#f8fafc',
+    color: '#1a1a1a',
   },
   cardHint: {
     fontSize: 11,
-    color: '#64748b',
+    color: '#888888',
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 8,
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.45,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 5 },
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   payLaterText: {
-    color: '#94a3b8',
+    color: '#888888',
     fontSize: 15,
     fontWeight: '600',
     textDecorationLine: 'underline',

@@ -138,7 +138,7 @@ export default function EditProfileScreen({ navigation }) {
   const avatarLetter = name ? name.charAt(0).toUpperCase() : (user?.name?.charAt(0).toUpperCase() || '?');
 
   return (
-    <LinearGradient colors={['#0f172a', '#1e1b4b']} style={styles.gradientBg}>
+    <LinearGradient colors={['#ffffff', '#fff5eb']} style={styles.gradientBg}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -148,7 +148,7 @@ export default function EditProfileScreen({ navigation }) {
           {/* Header */}
           <View style={styles.headerRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={22} color="#f8fafc" />
+              <Ionicons name="chevron-back" size={22} color="#1a1a1a" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Edit Profile</Text>
             <View style={styles.headerSpacer} />
@@ -156,11 +156,11 @@ export default function EditProfileScreen({ navigation }) {
 
           {/* Avatar Preview */}
           <View style={styles.avatarSection}>
-            <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.avatarCircle}>
+            <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.avatarCircle}>
               <Text style={styles.avatarLetter}>{avatarLetter}</Text>
             </LinearGradient>
             <View style={styles.roleBadge}>
-              <Ionicons name="shield-checkmark" size={12} color="#818cf8" />
+              <Ionicons name="shield-checkmark" size={12} color="#FFA366" />
               <Text style={styles.roleBadgeText}>{user?.role?.toUpperCase() || 'USER'}</Text>
             </View>
           </View>
@@ -174,7 +174,7 @@ export default function EditProfileScreen({ navigation }) {
                 value={name}
                 onChangeText={setName}
                 placeholder="Your full name"
-                placeholderTextColor="#475569"
+                placeholderTextColor="#4a4a4a"
                 autoCapitalize="words"
                 returnKeyType="next"
                 blurOnSubmit={false}
@@ -186,7 +186,7 @@ export default function EditProfileScreen({ navigation }) {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="you@example.com"
-                placeholderTextColor="#475569"
+                placeholderTextColor="#4a4a4a"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -202,7 +202,7 @@ export default function EditProfileScreen({ navigation }) {
                 value={name}
                 onChangeText={setName}
                 placeholder="Full Name"
-                placeholderTextColor="#475569"
+                placeholderTextColor="#4a4a4a"
                 autoCapitalize="words"
                 returnKeyType="next"
                 blurOnSubmit={false}
@@ -214,7 +214,7 @@ export default function EditProfileScreen({ navigation }) {
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="Phone Number"
-                placeholderTextColor="#475569"
+                placeholderTextColor="#4a4a4a"
                 keyboardType="phone-pad"
                 returnKeyType="next"
                 blurOnSubmit={false}
@@ -226,7 +226,7 @@ export default function EditProfileScreen({ navigation }) {
                 value={nic}
                 onChangeText={setNic}
                 placeholder="NIC Number"
-                placeholderTextColor="#475569"
+                placeholderTextColor="#4a4a4a"
                 returnKeyType="next"
                 blurOnSubmit={false}
               />
@@ -237,7 +237,7 @@ export default function EditProfileScreen({ navigation }) {
                 value={dl}
                 onChangeText={setDl}
                 placeholder="Driving License"
-                placeholderTextColor="#475569"
+                placeholderTextColor="#4a4a4a"
                 returnKeyType="next"
                 blurOnSubmit={false}
               />
@@ -271,7 +271,7 @@ export default function EditProfileScreen({ navigation }) {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Leave blank to keep current password"
-                placeholderTextColor="#475569"
+                placeholderTextColor="#4a4a4a"
                 secureTextEntry
                 returnKeyType="done"
               />
@@ -285,7 +285,7 @@ export default function EditProfileScreen({ navigation }) {
             disabled={saving}
             activeOpacity={0.85}
           >
-            <LinearGradient colors={['#6366f1', '#4f46e5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.saveBtn}>
+            <LinearGradient colors={['#FF8C42', '#E6732A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.saveBtn}>
               {saving ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
@@ -325,9 +325,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: 0.3,
   },
   headerSpacer: { width: 40 },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.5,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
@@ -367,15 +367,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255, 140, 66, 0.15)',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
   },
   roleBadgeText: {
-    color: '#818cf8',
+    color: '#FFA366',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -383,13 +383,13 @@ const styles = StyleSheet.create({
   },
 
   glassCard: {
-    backgroundColor: 'rgba(30,41,59,0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     padding: 20,
     marginBottom: 24,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -398,24 +398,24 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#888888',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: 'rgba(15,23,42,0.6)',
+    backgroundColor: 'rgba(255, 245, 235, 0.06)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     paddingHorizontal: 16,
     paddingVertical: 13,
-    color: '#f8fafc',
+    color: '#1a1a1a',
     fontSize: 15,
     fontWeight: '500',
   },
   hintText: {
-    color: '#94a3b8',
+    color: '#888888',
     fontSize: 11,
     marginTop: 8,
   },
@@ -424,9 +424,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(15,23,42,0.6)',
+    backgroundColor: 'rgba(255, 245, 235, 0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
     borderRadius: 12,
     padding: 12,
     gap: 6,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 14,
-    shadowColor: '#6366f1',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.4,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -465,10 +465,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255, 140, 66, 0.25)',
   },
   cancelBtnText: {
-    color: '#94a3b8',
+    color: '#888888',
     fontSize: 16,
     fontWeight: '600',
   },
