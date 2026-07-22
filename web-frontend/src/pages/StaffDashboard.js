@@ -562,18 +562,8 @@ const filteredComplaints = complaintCategoryFilter === "all"
 });
 
   return (
-    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden",  backgroundImage: `url("https://koala.sh/api/image/v2-7tvj1-k9p5g.jpg?width=1216&height=832&dream")`, // put your image path here
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat"}} className="fade-in">
-       <div
-    style={{
-      position: "absolute",
-      inset: 0,
-      background: "rgba(0,0,0,0.6)", // adjust darkness
-      zIndex: 0,
-    }}
-  />
+    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden", 
+ background: "var(--bg-main)"}} className="fade-in">
       {/* Background glow orbs */}
       <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
       <div className="glow-orb glow-orb-accent" style={{ bottom: "-100px", right: "-100px" }}></div>
