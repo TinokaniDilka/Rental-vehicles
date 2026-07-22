@@ -62,9 +62,9 @@ const fetchVehicles = async () => {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <LinearGradient
-        colors={['#0f172a', '#1e1b4b']}
+        colors={['#ffffff', '#fff5eb', '#ffffff']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -75,24 +75,24 @@ const fetchVehicles = async () => {
           <Text style={styles.subTitle}>{filtered.length} vehicles found</Text>
         </View>
         <TouchableOpacity style={styles.filterIconBtn} activeOpacity={0.7}>
-          <Ionicons name="options-outline" size={20} color="#a5b4fc" />
+          <Ionicons name="options-outline" size={20} color="#FF8C42" />
         </TouchableOpacity>
       </View>
 
       {/* ── Search Bar ── */}
       <View style={styles.searchWrapper}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#6366f1" style={styles.searchIcon} />
+          <Ionicons name="search" size={18} color="#FF8C42" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by name or location..."
-            placeholderTextColor="#475569"
+            placeholderTextColor="#888888"
             value={search}
             onChangeText={setSearch}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} activeOpacity={0.7}>
-              <Ionicons name="close-circle" size={18} color="#475569" />
+              <Ionicons name="close-circle" size={18} color="#888888" />
             </TouchableOpacity>
           )}
         </View>
@@ -117,7 +117,7 @@ const fetchVehicles = async () => {
               >
                 {isActive && (
                   <LinearGradient
-                    colors={['#6366f1', '#4f46e5']}
+                    colors={['#FF8C42', '#FF6B00']}
                     style={StyleSheet.absoluteFill}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -148,7 +148,7 @@ const fetchVehicles = async () => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="car-outline" size={36} color="#6366f1" />
+              <Ionicons name="car-outline" size={36} color="#FF8C42" />
             </View>
             <Text style={styles.emptyTitle}>No vehicles found</Text>
             <Text style={styles.emptyText}>
@@ -164,7 +164,7 @@ const fetchVehicles = async () => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#ffffff',
   },
 
   /* Top Bar */
@@ -179,23 +179,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     letterSpacing: 0.2,
   },
   subTitle: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     marginTop: 2,
   },
   filterIconBtn: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(99,102,241,0.2)',
+    backgroundColor: 'rgba(255,140,66,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.35)',
+    borderColor: 'rgba(255,140,66,0.35)',
   },
 
   /* Search Bar */
@@ -207,12 +207,12 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(30,41,59,0.8)',
+    backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.3)',
+    borderColor: 'rgba(255,140,66,0.3)',
   },
   searchIcon: {
     marginRight: 10,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: '#f8fafc',
+    color: '#1a1a1a',
     paddingVertical: 0,
   },
 
@@ -238,17 +238,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(30,41,59,0.8)',
+    backgroundColor: '#fff5eb',
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255,140,66,0.25)',
     overflow: 'hidden',
   },
   chipActive: {
-    borderColor: '#6366f1',
+    borderColor: '#FF8C42',
   },
   chipText: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     fontWeight: '600',
   },
   chipTextActive: {
@@ -272,22 +272,22 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(255,140,66,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.25)',
+    borderColor: 'rgba(255,140,66,0.25)',
   },
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#1a1a1a',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#4a4a4a',
     textAlign: 'center',
     lineHeight: 21,
   },
