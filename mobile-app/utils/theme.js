@@ -1,29 +1,29 @@
 export const COLORS = {
-  primary: '#6366f1',
-  primaryHover: '#4f46e5',
-  secondary: '#0ea5e9',
-  accent: '#f43f5e',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
+  primary: '#FF8C42',
+  primaryHover: '#FFA366',
+  secondary: '#FFF0E0',
+  accent: '#FF6B00',
+  success: '#4CAF50',
+  warning: '#FFB84D',
+  danger: '#FF5252',
   
   // Backgrounds
-  backgroundLight: '#f8fafc',
-  backgroundDark: '#0f172a',
+  backgroundLight: '#ffffff',
+  backgroundDark: '#fff5eb',
   backgroundCardLight: '#ffffff',
-  backgroundCardDark: '#1e293b',
+  backgroundCardDark: '#FFF0E0',
   
   // Borders
-  borderLight: '#e2e8f0',
-  borderDark: 'rgba(255,255,255,0.08)',
+  borderLight: 'rgba(255, 140, 66, 0.2)',
+  borderDark: 'rgba(255, 140, 66, 0.2)',
   
   // Texts
-  textPrimary: '#0f172a',
-  textSecondary: '#64748b',
-  textMuted: '#94a3b8',
+  textPrimary: '#1a1a1a',
+  textSecondary: '#4a4a4a',
+  textMuted: '#888888',
   textLight: '#ffffff',
-  textDarkPrimary: '#f8fafc',
-  textDarkSecondary: '#cbd5e1',
+  textDarkPrimary: '#1a1a1a',
+  textDarkSecondary: '#4a4a4a',
 };
 
 export const SHADOWS = {

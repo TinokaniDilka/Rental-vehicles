@@ -25,8 +25,8 @@ export const getStatusColor = (status) => {
     case 'confirmed': return '#22c55e';
     case 'pending':   return '#f59e0b';
     case 'cancelled': return '#ef4444';
-    case 'completed': return '#6366f1';
-    default:          return '#64748b';
+    case 'completed': return '#FF8C42';
+    default:          return '#888888';
   }
 };
 

@@ -72,14 +72,14 @@ export default function VehicleDetailsScreen({ route, navigation }) {
   if (!vehicle) return null;
 
   const SPECS = [
-    { icon: 'location-outline', label: vehicle.location || 'N/A', color: '#6366f1' },
-    { icon: 'people-outline', label: `${vehicle.seats || '—'} Seats`, color: '#0ea5e9' },
+    { icon: 'location-outline', label: vehicle.location || 'N/A', color: '#FF8C42' },
+    { icon: 'people-outline', label: `${vehicle.seats || '—'} Seats`, color: '#FF6B00' },
     { icon: 'speedometer-outline', label: vehicle.transmission || 'N/A', color: '#10b981' },
   ];
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       {/* ── Scrollable Body ── */}
       <ScrollView
@@ -99,7 +99,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
           />
           {/* Overlay gradient so the bottom text remains readable */}
           <LinearGradient
-            colors={['transparent', 'rgba(15,23,42,0.6)', '#0f172a']}
+            colors={['transparent', 'rgba(255,245,235,0.6)', '#ffffff']}
             locations={[0.4, 0.75, 1]}
             style={styles.imageOverlay}
           />
@@ -110,7 +110,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
             activeOpacity={0.8}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={20} color="#f8fafc" />
+            <Ionicons name="arrow-back" size={20} color="#1a1a1a" />
           </TouchableOpacity>
 
           {/* Availability badge */}
@@ -170,8 +170,8 @@ export default function VehicleDetailsScreen({ route, navigation }) {
             <View style={styles.featuresList}>
               {[
                 { icon: 'shield-checkmark-outline', label: 'Full insurance coverage', color: '#10b981' },
-                { icon: 'location-outline', label: 'Free GPS navigation', color: '#0ea5e9' },
-                { icon: 'call-outline', label: '24/7 roadside support', color: '#6366f1' },
+                { icon: 'location-outline', label: 'Free GPS navigation', color: '#FF6B00' },
+                { icon: 'call-outline', label: '24/7 roadside support', color: '#FF8C42' },
                 { icon: 'water-outline', label: 'Full fuel tank', color: '#f59e0b' },
               ].map((f) => (
                 <View key={f.label} style={styles.featureItem}>
@@ -195,7 +195,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
       {/* ── Sticky Bottom Bar ── */}
       <View style={styles.stickyBar}>
         <LinearGradient
-          colors={['rgba(15,23,42,0.0)', '#0f172a']}
+          colors={['rgba(255,255,255,0.0)', '#ffffff']}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
@@ -210,7 +210,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
             onPress={handleBookNowPress}
           >
             <LinearGradient
-              colors={['#6366f1', '#4f46e5']}
+              colors={['#FF8C42', '#FF6B00']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.bookBtn}
@@ -228,7 +228,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#050711',
+    backgroundColor: '#ffffff',
   },
   scroll: {
     flex: 1,
@@ -257,9 +257,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(10, 15, 30, 0.7)',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(0,0,0,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   vehicleName: {
     fontSize: 30,
     fontWeight: '900',
-    color: '#f1f5f9',
+    color: '#1a1a1a',
     letterSpacing: -0.5,
     lineHeight: 36,
   },
@@ -322,11 +322,11 @@ const styles = StyleSheet.create({
   priceAmount: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#7c3aed',
+    color: '#FF8C42',
   },
   priceUnit: {
     fontSize: 15,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     fontWeight: '500',
   },
   ratingBubble: {
@@ -356,12 +356,12 @@ const styles = StyleSheet.create({
   specChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    backgroundColor: '#fff5eb',
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.2)',
+    borderColor: 'rgba(255,140,66,0.2)',
     gap: 8,
   },
   specIconCircle: {
@@ -373,38 +373,38 @@ const styles = StyleSheet.create({
   },
   specLabel: {
     fontSize: 14,
-    color: '#cbd5e1',
+    color: '#1a1a1a',
     fontWeight: '600',
   },
 
   /* Description Card */
   descCard: {
-    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.15)',
+    borderColor: 'rgba(255,140,66,0.15)',
     padding: 22,
     marginBottom: 18,
   },
   descCardTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#f1f5f9',
+    color: '#1a1a1a',
     marginBottom: 12,
     letterSpacing: -0.3,
   },
   descCardText: {
     fontSize: 15,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     lineHeight: 24,
   },
 
   /* Features Card */
   featuresCard: {
-    backgroundColor: 'rgba(10, 15, 30, 0.9)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.15)',
+    borderColor: 'rgba(255,140,66,0.15)',
     padding: 22,
     marginBottom: 18,
   },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: '#1a1a1a',
     fontWeight: '500',
   },
 
@@ -443,13 +443,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginHorizontal: 20,
-    backgroundColor: 'rgba(10, 15, 30, 0.95)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(124, 58, 237, 0.3)',
+    borderColor: 'rgba(255,140,66,0.3)',
     paddingHorizontal: 22,
     paddingVertical: 16,
-    shadowColor: '#7c3aed',
+    shadowColor: '#FF8C42',
     shadowOpacity: 0.3,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: -4 },
@@ -457,14 +457,14 @@ const styles = StyleSheet.create({
   },
   stickyPriceLabel: {
     fontSize: 13,
-    color: '#94a3b8',
+    color: '#4a4a4a',
     fontWeight: '600',
     marginBottom: 3,
   },
   stickyPrice: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#7c3aed',
+    color: '#FF8C42',
   },
   bookBtnWrapper: {
     borderRadius: 16,
