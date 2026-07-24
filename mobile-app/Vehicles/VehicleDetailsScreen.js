@@ -72,8 +72,8 @@ export default function VehicleDetailsScreen({ route, navigation }) {
   if (!vehicle) return null;
 
   const SPECS = [
-    { icon: 'location-outline', label: vehicle.location || 'N/A', color: '#FF8C42' },
-    { icon: 'people-outline', label: `${vehicle.seats || '—'} Seats`, color: '#FF6B00' },
+    { icon: 'location-outline', label: vehicle.location || 'N/A', color: '#1E3A8A' },
+    { icon: 'people-outline', label: `${vehicle.seats || '—'} Seats`, color: '#D4AF37' },
     { icon: 'speedometer-outline', label: vehicle.transmission || 'N/A', color: '#10b981' },
   ];
 
@@ -110,13 +110,13 @@ export default function VehicleDetailsScreen({ route, navigation }) {
             activeOpacity={0.8}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={20} color="#1a1a1a" />
+            <Ionicons name="arrow-back" size={20} color="#1E3A8A" />
           </TouchableOpacity>
 
           {/* Availability badge */}
           <View style={styles.availBadge}>
             <View style={styles.availDot} />
-            <Text style={styles.availText}>Available</Text>
+            <Text style={styles.availText}>Premium</Text>
           </View>
         </View>
 
@@ -130,12 +130,12 @@ export default function VehicleDetailsScreen({ route, navigation }) {
                 <Text style={styles.priceAmount}>{formatCurrency(vehicle.pricePerDay)}</Text>
                 <Text style={styles.priceUnit}> / day</Text>
               </View>
-              <View style={{ marginTop: 8, alignSelf: 'flex-start', backgroundColor: 'rgba(245,158,11,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                <Text style={{ color: '#f59e0b', fontSize: 12, fontWeight: '600' }}>🔒 Deposit: LKR {vehicle.depositAmount || 5000} (Refundable)</Text>
+              <View style={{ marginTop: 8, alignSelf: 'flex-start', backgroundColor: '#FAF0D7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                <Text style={{ color: '#D4AF37', fontSize: 12, fontWeight: '600' }}>🔒 Deposit: LKR {vehicle.depositAmount || 5000} (Refundable)</Text>
               </View>
             </View>
             <View style={styles.ratingBubble}>
-              <Ionicons name="star" size={13} color="#f59e0b" />
+              <Ionicons name="star" size={13} color="#D4AF37" />
               <Text style={styles.ratingText}>4.8</Text>
             </View>
           </View>
@@ -169,10 +169,10 @@ export default function VehicleDetailsScreen({ route, navigation }) {
             <Text style={styles.descCardTitle}>What's Included</Text>
             <View style={styles.featuresList}>
               {[
-                { icon: 'shield-checkmark-outline', label: 'Full insurance coverage', color: '#10b981' },
-                { icon: 'location-outline', label: 'Free GPS navigation', color: '#FF6B00' },
-                { icon: 'call-outline', label: '24/7 roadside support', color: '#FF8C42' },
-                { icon: 'water-outline', label: 'Full fuel tank', color: '#f59e0b' },
+                { icon: 'shield-checkmark-outline', label: 'Full insurance coverage', color: '#1E3A8A' },
+                { icon: 'location-outline', label: 'Free GPS navigation', color: '#1E3A8A' },
+                { icon: 'call-outline', label: '24/7 roadside support', color: '#1E3A8A' },
+                { icon: 'water-outline', label: 'Full fuel tank', color: '#1E3A8A' },
               ].map((f) => (
                 <View key={f.label} style={styles.featureItem}>
                   <View style={[styles.featureIcon, { backgroundColor: f.color + '22' }]}>
@@ -210,7 +210,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
             onPress={handleBookNowPress}
           >
             <LinearGradient
-              colors={['#FF8C42', '#FF6B00']}
+              colors={['#1E3A8A', '#1E3A8A']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.bookBtn}
@@ -269,9 +269,9 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: '#FAF0D7',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderColor: 'rgba(212, 175, 55, 0.4)',
     borderRadius: 22,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -280,11 +280,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10b981',
+    backgroundColor: '#D4AF37',
     marginRight: 6,
   },
   availText: {
-    color: '#10b981',
+    color: '#D4AF37',
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.3,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   priceAmount: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#FF8C42',
+    color: '#1E3A8A',
   },
   priceUnit: {
     fontSize: 15,
@@ -333,17 +333,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    backgroundColor: '#FAF0D7',
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderColor: 'rgba(212, 175, 55, 0.3)',
   },
   ratingText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#f59e0b',
+    color: '#D4AF37',
   },
 
   /* Spec Chips */
@@ -356,12 +356,12 @@ const styles = StyleSheet.create({
   specChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff5eb',
+    backgroundColor: '#FAF0D7',
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,140,66,0.2)',
+    borderColor: 'rgba(212, 175, 55, 0.2)',
     gap: 8,
   },
   specIconCircle: {
@@ -446,10 +446,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,140,66,0.3)',
+    borderColor: 'rgba(30,58,138,0.3)',
     paddingHorizontal: 22,
     paddingVertical: 16,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.3,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: -4 },
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   stickyPrice: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#FF8C42',
+    color: '#1E3A8A',
   },
   bookBtnWrapper: {
     borderRadius: 16,
