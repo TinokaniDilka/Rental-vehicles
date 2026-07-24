@@ -611,9 +611,9 @@ const getGreeting = () => {
 
 {/* Metrics Grid */}
 <View style={styles.metricsGrid}>
-        <MetricCard icon="⏳" title="PENDING" value={stats.pending} color="#f59e0b" />
-        <MetricCard icon="🚗" title="ACTIVE" value={stats.active} color="#FF8C42" />
-        <MetricCard icon="📂" title="FLEET" value={vehicles.length} color="#FF6B00" />
+        <MetricCard icon="⏳" title="PENDING" value={stats.pending} color="#D4AF37" />
+        <MetricCard icon="🚗" title="ACTIVE" value={stats.active} color="#1E3A8A" />
+        <MetricCard icon="📂" title="FLEET" value={vehicles.length} color="#D4AF37" />
         <MetricCard icon="💰" title="EARNINGS" value={`$${earnings}`} color="#10b981" subtitle="All Time" />
         <MetricCard icon="✅" title="CONFIRMATIONS" value={getPendingConfirmationsCount(bookings)} color="#FFB84D" />
       </View>
@@ -623,7 +623,7 @@ const getGreeting = () => {
         <Text style={styles.cardTitle}>⚡ Quick Operations</Text>
         <View style={styles.quickActionsRow}>
           <TouchableOpacity style={styles.quickActionBtn} onPress={() => openVehicleModal(null)} activeOpacity={0.85}>
-            <LinearGradient colors={['#FF8C42', '#E6732A']} style={[styles.quickActionGrad, styles.quickActionShadowIndigo]}>
+            <LinearGradient colors={['#1E3A8A', '#D4AF37']} style={[styles.quickActionGrad, styles.quickActionShadowIndigo]}>
               <View style={styles.quickActionIconWrap}>
                 <Ionicons name="add-circle" size={20} color="white" />
               </View>
@@ -631,7 +631,7 @@ const getGreeting = () => {
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity style={styles.quickActionBtn} onPress={() => setActivePage('bookings')} activeOpacity={0.85}>
-            <LinearGradient colors={['#FF6B00', '#E65C00']} style={[styles.quickActionGrad, styles.quickActionShadowBlue]}>
+            <LinearGradient colors={['#D4AF37', '#C49E2A']} style={[styles.quickActionGrad, styles.quickActionShadowBlue]}>
               <View style={styles.quickActionIconWrap}>
                 <Ionicons name="calendar-outline" size={20} color="white" />
               </View>
@@ -758,7 +758,7 @@ const getGreeting = () => {
           <Text style={styles.pageSubtitle}>Manage your rental inventory</Text>
         </View>
         <TouchableOpacity onPress={() => openVehicleModal(null)}>
-          <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.addBtn}>
+          <LinearGradient colors={['#1E3A8A', '#D4AF37']} style={styles.addBtn}>
             <Ionicons name="add" size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
@@ -797,9 +797,9 @@ const getGreeting = () => {
             </View>
             {v.description ? <Text style={styles.vehicleDesc}>{v.description}</Text> : null}
             <View style={styles.vehicleActions}>
-              <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: 'rgba(255, 140, 66, 0.1)' }]} onPress={() => openVehicleModal(v)}>
-                <Ionicons name="pencil" size={14} color="#FF8C42" />
-                <Text style={[styles.actionBtnText, { color: '#FF8C42' }]}>Edit</Text>
+              <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: 'rgba(30, 58, 138, 0.1)' }]} onPress={() => openVehicleModal(v)}>
+                <Ionicons name="pencil" size={14} color="#1E3A8A" />
+                <Text style={[styles.actionBtnText, { color: '#1E3A8A' }]}>Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: 'rgba(239,68,68,0.2)' }]} onPress={() => deleteVehicle(v._id)}>
                 <Ionicons name="trash" size={14} color="#ef4444" />
@@ -824,7 +824,7 @@ const getGreeting = () => {
       {/* Search + Date Filter */}
       <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
         <View style={styles.searchBarWrap}>
-          <Ionicons name="search" size={16} color="#FF8C42" style={{ marginRight: 8 }} />
+          <Ionicons name="search" size={16} color="#1E3A8A" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchBarInput}
             placeholder="Search customer name or email..."
@@ -839,7 +839,7 @@ const getGreeting = () => {
           )}
         </View>
         <View style={[styles.searchBarWrap, { marginTop: 8 }]}>
-          <Ionicons name="calendar-outline" size={16} color="#FF8C42" style={{ marginRight: 8 }} />
+          <Ionicons name="calendar-outline" size={16} color="#1E3A8A" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchBarInput}
             placeholder="Filter by date (YYYY-MM-DD)"
@@ -939,7 +939,7 @@ const getGreeting = () => {
             <View style={styles.bookingActionsCol}>
               {b.status === 'pending' && (
                 <TouchableOpacity onPress={() => openReviewModal(b)}>
-                  <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.bookingActionBtn}>
+                  <LinearGradient colors={['#1E3A8A', '#D4AF37']} style={styles.bookingActionBtn}>
                     <Text style={styles.bookingActionText}>🔍 Review</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -1014,7 +1014,7 @@ const getGreeting = () => {
         {/* Avatar Section */}
         <View style={profileStyles.avatarSection}>
           <LinearGradient
-            colors={['#FF8C42', '#E6732A']}
+            colors={['#1E3A8A', '#D4AF37']}
             style={profileStyles.avatarCircle}
           >
             {user?.name ? (
@@ -1058,13 +1058,13 @@ const getGreeting = () => {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={profileStyles.sectionLabel}>Account Info</Text>
           <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7} style={{ padding: 4 }}>
-            <Ionicons name="pencil" size={16} color="#FF8C42" />
+            <Ionicons name="pencil" size={16} color="#1E3A8A" />
           </TouchableOpacity>
         </View>
         <View style={profileStyles.glassCard}>
           <View style={profileStyles.infoRow}>
             <View style={profileStyles.infoIconWrap}>
-              <Ionicons name="person-outline" size={16} color="#FF8C42" />
+              <Ionicons name="person-outline" size={16} color="#1E3A8A" />
             </View>
             <View style={profileStyles.infoTextWrap}>
               <Text style={profileStyles.infoLabel}>Name</Text>
@@ -1078,7 +1078,7 @@ const getGreeting = () => {
 
           <View style={profileStyles.infoRow}>
             <View style={profileStyles.infoIconWrap}>
-              <Ionicons name="mail-outline" size={16} color="#FF8C42" />
+              <Ionicons name="mail-outline" size={16} color="#1E3A8A" />
             </View>
             <View style={profileStyles.infoTextWrap}>
               <Text style={profileStyles.infoLabel}>Email</Text>
@@ -1092,7 +1092,7 @@ const getGreeting = () => {
 
           <View style={profileStyles.infoRow}>
             <View style={profileStyles.infoIconWrap}>
-              <Ionicons name="shield-checkmark-outline" size={16} color="#FF8C42" />
+              <Ionicons name="shield-checkmark-outline" size={16} color="#1E3A8A" />
             </View>
             <View style={profileStyles.infoTextWrap}>
               <Text style={profileStyles.infoLabel}>Role</Text>
@@ -1112,7 +1112,7 @@ const getGreeting = () => {
                 activeOpacity={0.7}
               >
                 <View style={profileStyles.settingsIconWrap}>
-                  <Ionicons name={item.icon} size={18} color="#FF8C42" />
+                  <Ionicons name={item.icon} size={18} color="#1E3A8A" />
                 </View>
                 <Text style={profileStyles.settingsLabel}>{item.label}</Text>
                 <Ionicons name="chevron-forward" size={16} color="#4a4a4a" />
@@ -1309,7 +1309,7 @@ const renderVehicleModal = () => (
                 <Image source={{ uri: vehicleImageUri }} style={styles.imagePickerPreview} />
               ) : (
                 <View style={styles.imagePickerPlaceholder}>
-                  <Ionicons name="camera-outline" size={28} color="#FF8C42" />
+                  <Ionicons name="camera-outline" size={28} color="#1E3A8A" />
                   <Text style={styles.imagePickerText}>Tap to add a photo</Text>
                 </View>
               )}
@@ -1401,7 +1401,7 @@ const renderVehicleModal = () => (
               <Switch
                 value={vehicleRequireVerification}
                 onValueChange={setVehicleRequireVerification}
-                trackColor={{ false: '#4a4a4a', true: '#FF8C42' }}
+                trackColor={{ false: '#4a4a4a', true: '#1E3A8A' }}
                 thumbColor="#1a1a1a"
               />
             </View>
@@ -1452,7 +1452,7 @@ const renderVehicleModal = () => (
             <View style={styles.typeRow}>
               {['approved', 'rejected'].map(s => (
                 <TouchableOpacity key={s} onPress={() => setReviewStatus(s)}
-                  style={[styles.typeChip, reviewStatus === s && { ...styles.typeChipActive, backgroundColor: s === 'rejected' ? '#ef4444' : '#FF8C42' }]}>
+                  style={[styles.typeChip, reviewStatus === s && { ...styles.typeChipActive, backgroundColor: s === 'rejected' ? '#ef4444' : '#1E3A8A' }]}>
                   <Text style={[styles.typeChipText, reviewStatus === s && { color: 'white' }]}>
                     {s === 'approved' ? '✅ Approve' : '❌ Reject'}
                   </Text>

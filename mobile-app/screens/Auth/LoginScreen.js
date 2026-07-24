@@ -115,7 +115,7 @@ export default function LoginScreen({ navigation }) {
         >
           {/* Card top accent line */}
           <LinearGradient
-            colors={['#FF8C42', '#FF6B00']}
+            colors={['#1E3A8A', '#D4AF37']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.cardAccentLine}
@@ -184,7 +184,7 @@ export default function LoginScreen({ navigation }) {
             style={styles.signInBtnWrapper}
           >
             <LinearGradient
-              colors={loading ? ['#FFA366', '#FFA366'] : ['#FF8C42', '#FF6B00']}
+              colors={loading ? ['#2563EB', '#2563EB'] : ['#1E3A8A', '#D4AF37']}
               style={styles.signInBtn}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   logoWrapper: {
     marginBottom: 16,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.3)',
+    borderColor: 'rgba(30, 58, 138, 0.3)',
   },
   logoEmoji: {
     fontSize: 46,
@@ -306,10 +306,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.25)',
+    borderColor: 'rgba(30, 58, 138, 0.25)',
     padding: 28,
     overflow: 'hidden',
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FF8C42',
+    color: '#1E3A8A',
     letterSpacing: 0.8,
     marginBottom: 6,
   },
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 14,
     overflow: 'hidden',
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -418,11 +418,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 140, 66, 0.35)',
-    backgroundColor: 'rgba(255, 140, 66, 0.07)',
+    borderColor: 'rgba(30, 58, 138, 0.35)',
+    backgroundColor: 'rgba(30, 58, 138, 0.07)',
   },
   createAccountText: {
-    color: '#FF8C42',
+    color: '#1E3A8A',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   footerLink: {
-    color: '#FF8C42',
+    color: '#1E3A8A',
     fontWeight: '600',
   },
 });
