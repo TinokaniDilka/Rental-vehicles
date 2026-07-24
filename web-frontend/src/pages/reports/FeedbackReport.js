@@ -117,7 +117,7 @@ function ReportHeader({ icon, color, title, subtitle, count, countLabel }) {
           {icon}
         </div>
         <div>
-          <h1 style={{ margin: 0, fontSize: "22px", fontWeight: "800", color: "white" }}>{title}</h1>
+          <h1 style={{ margin: 0, fontSize: "22px", fontWeight: "800", color: "var(--text-primary)" }}>{title}</h1>
           <p style={{ margin: "6px 0 0", color: "var(--text-secondary)", fontSize: "13.5px", maxWidth: "520px" }}>{subtitle}</p>
         </div>
       </div>

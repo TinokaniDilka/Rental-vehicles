@@ -75,7 +75,7 @@ export default function Vehicles() {
             right: "-200px",
             width: "600px",
             height: "400px",
-            background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)",
+            background: "linear-gradient(135deg, #1E3A8A 0%, #172554 100%)",
             borderRadius: "50% 0 0 50%",
             transform: "rotate(-15deg)",
             opacity: 0.8,
@@ -88,7 +88,7 @@ export default function Vehicles() {
             right: "-100px",
             width: "400px",
             height: "300px",
-            background: "linear-gradient(135deg, #FF8533 0%, #FF6B00 100%)",
+            background: "linear-gradient(135deg, #E5C04D 0%, #D4AF37 100%)",
             borderRadius: "50% 0 0 50%",
             transform: "rotate(-10deg)",
             opacity: 0.6,
@@ -104,7 +104,7 @@ export default function Vehicles() {
               margin: "0 0 20px 0",
               lineHeight: "1.2"
             }}>
-              Find Your Best <span style={{ color: "#FF6B00" }}>Dream Car</span> for Rental
+              Find Your Best <span style={{ color: "#D4AF37" }}>Dream Car</span> for Rental
             </h1>
             <p style={{
               fontSize: "18px",
@@ -139,7 +139,7 @@ export default function Vehicles() {
                 height: "auto",
                 maxHeight: "420px",
                 objectFit: "contain",
-                filter: "drop-shadow(0 20px 40px rgba(255, 107, 0, 0.4))"
+                filter: "drop-shadow(0 20px 40px rgba(30, 58, 138, 0.4))"
               }}
             />
           </div>
@@ -182,7 +182,7 @@ export default function Vehicles() {
               }}
             />
             <button style={{
-              background: "#FF6B00",
+              background: "#1E3A8A",
               color: "white",
               border: "none",
               padding: "15px 40px",
@@ -225,7 +225,7 @@ export default function Vehicles() {
                 <div style={{
                   height: "200px",
                   overflow: "hidden",
-                  background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)",
+                  background: "linear-gradient(135deg, #1E3A8A 0%, #172554 100%)",
                   position: "relative"
                 }}>
                   <img
@@ -241,8 +241,8 @@ export default function Vehicles() {
                     position: "absolute",
                     top: "15px",
                     right: "15px",
-                    background: "rgba(0,0,0,0.7)",
-                    color: "white",
+                    background: "#D4AF37",
+                    color: "var(--text-primary)",
                     padding: "5px 15px",
                     borderRadius: "20px",
                     fontSize: "12px",
@@ -276,7 +276,7 @@ export default function Vehicles() {
                       <span style={{
                         fontSize: "24px",
                         fontWeight: "700",
-                        color: "#FF6B00"
+                        color: "#1E3A8A"
                       }}>
                         ${car.pricePerDay}
                       </span>
@@ -289,7 +289,7 @@ export default function Vehicles() {
                       </span>
                     </div>
                     <button style={{
-                      background: "#FF6B00",
+                      background: "#1E3A8A",
                       color: "white",
                       border: "none",
                       padding: "10px 25px",
@@ -351,7 +351,7 @@ export default function Vehicles() {
                       Price: ${v.pricePerDay}/day
                     </p>
                     <button style={{
-                      background: "#FF6B00",
+                      background: "#1E3A8A",
                       color: "white",
                       border: "none",
                       padding: "10px 25px",
