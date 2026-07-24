@@ -90,7 +90,7 @@ export default function BookingScreen({ route, navigation }) {
         {/* Pickup Date */}
         <View style={styles.glassCard}>
           <View style={styles.fieldLabelRow}>
-            <Ionicons name="calendar-outline" size={16} color="#FF8C42" />
+            <Ionicons name="calendar-outline" size={16} color="#1E3A8A" />
             <Text style={styles.fieldLabel}>Pickup Date</Text>
           </View>
           <TextInput
@@ -105,7 +105,7 @@ export default function BookingScreen({ route, navigation }) {
         {/* Return Date */}
         <View style={styles.glassCard}>
           <View style={styles.fieldLabelRow}>
-            <Ionicons name="calendar" size={16} color="#FF8C42" />
+            <Ionicons name="calendar" size={16} color="#1E3A8A" />
             <Text style={styles.fieldLabel}>Return Date</Text>
           </View>
           <TextInput
@@ -148,10 +148,10 @@ export default function BookingScreen({ route, navigation }) {
 
         {/* Terms Checkbox */}
         <TouchableOpacity 
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, paddingHorizontal: 12, paddingVertical: 14, backgroundColor: 'rgba(255, 140, 66, 0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255, 140, 66, 0.25)' }}
+          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, paddingHorizontal: 12, paddingVertical: 14, backgroundColor: 'rgba(30, 58, 138, 0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(30, 58, 138, 0.25)' }}
           onPress={() => setRentalTermsAccepted(!rentalTermsAccepted)}
         >
-          <Ionicons name={rentalTermsAccepted ? "checkbox" : "square-outline"} size={22} color="#FF8C42" />
+          <Ionicons name={rentalTermsAccepted ? "checkbox" : "square-outline"} size={22} color="#1E3A8A" />
           <Text style={{ color: '#1a1a1a', marginLeft: 10, fontSize: 13, flex: 1, fontWeight: '500' }}>
             I agree to the rental terms and damage policy
           </Text>
@@ -165,7 +165,7 @@ export default function BookingScreen({ route, navigation }) {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#FF8C42', '#E6732A']}
+            colors={['#1E3A8A', '#D4AF37']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.confirmBtn}
@@ -236,10 +236,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.25)',
+    borderColor: 'rgba(30, 58, 138, 0.25)',
     padding: 18,
     marginBottom: 14,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   vehiclePrice: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#FF8C42',
+    color: '#D4AF37',
   },
   perDay: {
     fontSize: 14,
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   summaryTotal: {
-    color: '#FF8C42',
+    color: '#D4AF37',
     fontSize: 24,
     fontWeight: '800',
   },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 14,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.4,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },

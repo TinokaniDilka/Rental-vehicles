@@ -107,7 +107,7 @@ export default function LeaveReviewScreen({ route, navigation }) {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#FF8C42', '#E6732A']}
+            colors={['#1E3A8A', '#D4AF37']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.submitBtn}
@@ -151,10 +151,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.25)',
+    borderColor: 'rgba(30, 58, 138, 0.25)',
     padding: 18,
     marginBottom: 14,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginTop: 6,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.4,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
