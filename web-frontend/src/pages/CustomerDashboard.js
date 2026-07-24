@@ -695,7 +695,7 @@ const handleOpenFeedbackModal = (booking) => {
                     </div>
 
                     <div style={{ padding: "20px", display: "flex", flexDirection: "column", flex: 1 }}>
-                      <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "white" }}>{v.name}</h4>
+                      <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--text-primary)" }}>{v.name}</h4>
                       <p style={{ margin: "5px 0", color: "var(--text-secondary)", fontSize: "14px" }}>📍 {v.location}</p>
                       
                       {v.averageRating > 0 && (
@@ -733,7 +733,7 @@ const handleOpenFeedbackModal = (booking) => {
               </div>
 
               <div style={{ flex: 1, minWidth: "300px" }}>
-                <h1 style={{ color: "white", fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>{activePage.data.name}</h1>
+                <h1 style={{ color: "var(--text-primary)", fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>{activePage.data.name}</h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginBottom: "15px" }}>📍 {activePage.data.location}</p>
                 
                 <div style={{ marginBottom: "20px" }}>
@@ -746,14 +746,14 @@ const handleOpenFeedbackModal = (booking) => {
                 </div>
 
                 <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "20px", marginBottom: "25px" }}>
-                  <h4 style={{ margin: "0 0 8px 0", color: "white" }}>Specifications</h4>
+                  <h4 style={{ margin: "0 0 8px 0", color: "var(--text-primary)" }}>Specifications</h4>
                   <p style={{ color: "var(--text-secondary)", margin: 0, fontSize: "14.5px" }}>{activePage.data.description || "No specific details provided."}</p>
                 </div>
 
                 {activePage.data.averageRating > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "25px" }}>
                     <span style={{ fontSize: "22px", color: "#fbbf24" }}>{"★".repeat(Math.floor(activePage.data.averageRating))}</span>
-                    <span style={{ fontSize: "15px", fontWeight: "600", color: "white" }}>
+                    <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>
                       {activePage.data.averageRating} <span style={{ color: "var(--text-secondary)", fontWeight: "normal" }}>({activePage.data.totalReviews} reviews)</span>
                     </span>
                   </div>
@@ -768,7 +768,7 @@ const handleOpenFeedbackModal = (booking) => {
 
             {/* Vehicle Reviews */}
             <div style={{ marginTop: "40px", borderTop: "1px solid var(--border-color)", paddingTop: "30px" }}>
-              <h3 style={{ color: "white", marginBottom: "20px" }}>💬 Customer Reviews ({vehicleReviews.length})</h3>
+              <h3 style={{ color: "var(--text-primary)", marginBottom: "20px" }}>💬 Customer Reviews ({vehicleReviews.length})</h3>
               {loadingReviews ? (
                 <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Loading reviews...</p>
               ) : vehicleReviews.length > 0 ? (
@@ -784,7 +784,7 @@ const handleOpenFeedbackModal = (booking) => {
     }}
   >
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-      <span style={{ fontWeight: "700", color: "white" }}>
+      <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>
         👤 {review.customerId?.name || "Customer"}
       </span>
       <span style={{ color: "#fbbf24" }}>
@@ -807,7 +807,7 @@ const handleOpenFeedbackModal = (booking) => {
           borderRadius: "6px"
         }}
       >
-        <strong style={{ fontSize: "12px", color: "white" }}>
+        <strong style={{ fontSize: "12px", color: "var(--text-primary)" }}>
           💬 Staff Replies:
         </strong>
 
@@ -873,7 +873,7 @@ const handleOpenFeedbackModal = (booking) => {
                   return (
                     <div key={b._id} className="glass-card" style={{ padding: "24px", display: "flex", gap: "25px", flexWrap: "wrap", alignItems: "center" }}>
                       <div style={{ flex: 2 }}>
-                        <h4 style={{ margin: "0 0 5px 0", fontSize: "20px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Vehicle"}</h4>
+                        <h4 style={{ margin: "0 0 5px 0", fontSize: "20px", color: "var(--text-primary)", fontWeight: "700" }}>{b.vehicleId?.name || "Vehicle"}</h4>
                         <p style={{ fontSize: "12px", color: "var(--text-muted)" }}> Booking ID: {b._id}</p>
                         <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "14px" }}>📅 Period: {start} - {end}</p>
                         {b.pickupTime && <p style={{ margin: "4px 0 0 0", fontSize: "13.5px", color: "var(--text-muted)" }}>🕐 Pickup: {b.pickupTime} | Dropoff: {b.dropoffTime}</p>}
@@ -881,7 +881,7 @@ const handleOpenFeedbackModal = (booking) => {
                         
                         {b.status === "completed" && (
                           <div style={{ marginTop: "15px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", padding: "12px 16px", borderRadius: "8px" }}>
-                            <h5 style={{ margin: "0 0 6px 0", color: "white" }}>🔧 Return Inspection Details</h5>
+                            <h5 style={{ margin: "0 0 6px 0", color: "var(--text-primary)" }}>🔧 Return Inspection Details</h5>
                             <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
                               <strong>Condition:</strong> {b.returnCondition} | <strong>Mileage:</strong> {b.returnMileage} km | <strong>Fuel:</strong> {b.returnFuelLevel}%
                             </p>
@@ -894,7 +894,7 @@ const handleOpenFeedbackModal = (booking) => {
                         <p style={{ margin: "4px 0 0 0", fontSize: "13.5px" }}>Base Price: ${b.baseCharge}</p>
                         {b.driverCharge > 0 && <p style={{ margin: 0, fontSize: "13.5px" }}>Driver: ${b.driverCharge}</p>}
                         {b.discount > 0 && <p style={{ margin: 0, fontSize: "13.5px", color: "var(--accent)" }}>Discount: -${b.discount}</p>}
-                        <h4 style={{ margin: "8px 0 0 0", color: "white", fontSize: "18px", fontWeight: "800" }}>Total: ${b.totalAmount}</h4>
+                        <h4 style={{ margin: "8px 0 0 0", color: "var(--text-primary)", fontSize: "18px", fontWeight: "800" }}>Total: ${b.totalAmount}</h4>
 
                         {b.status === "cancelled" && (
                           <div style={{ marginTop: "10px", padding: "8px 10px", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "6px" }}>
@@ -1056,7 +1056,7 @@ const handleOpenFeedbackModal = (booking) => {
                         }}>{f.type.toUpperCase()}</span>
                         {f.type === "feedback" && <span style={{ color: "#fbbf24" }}>{"★".repeat(f.rating)}</span>}
                       </div>
-                      <p style={{ margin: "8px 0", fontSize: "16px", color: "white", fontStyle: "italic" }}>"{f.comment}"</p>
+                      <p style={{ margin: "8px 0", fontSize: "16px", color: "var(--text-primary)", fontStyle: "italic" }}>"{f.comment}"</p>
                       <small style={{ color: "var(--text-muted)" }}>Submitted for: {f.bookingId?.vehicleId?.name || "Vehicle"} on {new Date(f.createdAt).toLocaleDateString()}</small>
                     </div>
 
@@ -1077,7 +1077,7 @@ const handleOpenFeedbackModal = (booking) => {
           style={{
             margin: 0,
             fontSize: "12px",
-            color: "white",
+            color: "var(--text-primary)",
             fontWeight: "600"
           }}
         >
@@ -1107,7 +1107,7 @@ const handleOpenFeedbackModal = (booking) => {
           borderRadius: "8px"
         }}
       >
-        <p style={{ margin: 0, fontSize: "12px", color: "white" }}>
+        <p style={{ margin: 0, fontSize: "12px", color: "var(--text-primary)" }}>
           <strong>Staff Reply:</strong>
         </p>
 
@@ -1261,7 +1261,7 @@ const handleOpenFeedbackModal = (booking) => {
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", padding: "12px", background: "rgba(99,102,241,0.08)", borderRadius: "8px", border: "1px solid rgba(99,102,241,0.2)" }}>
               <input type="checkbox" id="rentalTerms" checked={rentalTermsAccepted} onChange={(e) => setRentalTermsAccepted(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-              <label htmlFor="rentalTerms" style={{ cursor: "pointer", fontWeight: "600", fontSize: "13.5px", color: "white" }}>I agree to the rental terms and damage policy</label>
+              <label htmlFor="rentalTerms" style={{ cursor: "pointer", fontWeight: "600", fontSize: "13.5px", color: "var(--text-primary)" }}>I agree to the rental terms and damage policy</label>
             </div>
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
@@ -1297,7 +1297,7 @@ const handleOpenFeedbackModal = (booking) => {
                 </div>
               )}
               <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "4px 0" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "800", fontSize: "18px", color: "white" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "800", fontSize: "18px", color: "var(--text-primary)" }}>
                 <span>Total:</span>
                 <span>${(tempBookingData.totalAmountBeforePromo - (promoApplied ? (tempBookingData.totalAmountBeforePromo * promoDiscountPercent) / 100 : 0)).toFixed(2)}</span>
               </div>
@@ -1485,7 +1485,7 @@ const DashboardCard = ({ icon, title, value, color }) => (
     </div>
     <div>
       <p style={{ margin: "0 0 4px 0", color: "var(--text-secondary)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>{title}</p>
-      <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", color: "white" }}>{value}</h2>
+      <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", color: "var(--text-primary)" }}>{value}</h2>
     </div>
   </div>
 );

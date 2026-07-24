@@ -49,9 +49,18 @@ export default function Register() {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", position: "relative", overflow: "hidden", 
- background: "var(--bg-main)"
- }} className="fade-in">
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", position: "relative", overflow: "hidden",  backgroundImage: `url("https://static.vecteezy.com/system/resources/thumbnails/040/969/066/small_2x/ai-generated-a-lineup-of-colorful-luxury-cars-in-a-show-room-showcasing-a-prominent-yellow-car-in-front-with-a-focus-on-the-headlight-and-grille-photo.jpeg")`, // put your image path here
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat" }} className="fade-in">
+     <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background: "rgba(0,0,0,0.4)", // adjust darkness
+      zIndex: 0,
+    }}
+  />
       {/* Background glow orbs */}
       <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
       <div className="glow-orb glow-orb-accent" style={{ bottom: "-150px", right: "-150px" }}></div>
@@ -59,7 +68,7 @@ export default function Register() {
       <div className="glass-card scale-in" style={{ padding: "40px", width: "420px", maxWidth: "90%", textAlign: "center", zIndex: 10 }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
           <span style={{ fontSize: "45px", filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.3))" }}>🚗</span>
-          <h1 style={{ color: "white", fontSize: "28px", fontWeight: "800", margin: 0, letterSpacing: "-0.5px" }}>
+          <h1 style={{ color: "var(--text-primary)", fontSize: "28px", fontWeight: "800", margin: 0, letterSpacing: "-0.5px" }}>
             QuickRide <span style={{ color: "var(--primary)" }}>Rentals</span>
           </h1>
         </div>

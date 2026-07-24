@@ -1,24 +1,27 @@
 :root {
   --font-primary: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Color Palette - Light Orange & White Theme */
+  /* Color Palette - Deep Blue + Gold Premium Theme */
   --bg-main: #ffffff;
-  --bg-surface: #fff5eb;
-  --bg-surface-glass: rgba(255, 245, 235, 0.9);
-  --bg-surface-glass-hover: rgba(255, 235, 220, 0.95);
+  --bg-surface: #f5f7fa;
+  --bg-surface-glass: rgba(245, 247, 250, 0.9);
+  --bg-surface-glass-hover: rgba(240, 244, 250, 0.95);
   
-  --primary: #FF8C42;
-  --primary-hover: #FFA366;
-  --primary-glow: rgba(255, 140, 66, 0.3);
-  --primary-gradient: linear-gradient(135deg, #FFA366, #FF8C42, #E6732A);
-  --primary-gradient-hover: linear-gradient(135deg, #FFB788, #FFA366, #FF8C42);
+  --primary: #1E3A8A;
+  --primary-hover: #152B66;
+  --primary-light: #E6ECFB;
+  --primary-glow: rgba(30, 58, 138, 0.3);
+  --primary-gradient: linear-gradient(135deg, #1E3A8A, #152B66, #172554);
+  --primary-gradient-hover: linear-gradient(135deg, #2563EB, #1E3A8A, #152B66);
   
-  --secondary: #FFF0E0;
-  --secondary-gradient: linear-gradient(135deg, #FFF8F0, #FFF0E0, #FFE8D0);
+  --secondary: #F0F4F8;
+  --secondary-gradient: linear-gradient(135deg, #F8FAFC, #F0F4F8, #E8EEF4);
   
-  --accent: #FF6B00;
-  --accent-gradient: linear-gradient(135deg, #FF8533, #FF6B00, #E65C00);
-  --accent-glow: rgba(255, 107, 0, 0.25);
+  --accent: #D4AF37;
+  --accent-hover: #B8952E;
+  --accent-light: #FAF0D7;
+  --accent-gradient: linear-gradient(135deg, #E5C04D, #D4AF37, #B8952E);
+  --accent-glow: rgba(212, 175, 55, 0.25);
   
   --success: #4CAF50;
   --success-gradient: linear-gradient(135deg, #66BB6A, #4CAF50, #43A047);
@@ -27,8 +30,8 @@
   --danger: #FF5252;
   --danger-gradient: linear-gradient(135deg, #FF6E6E, #FF5252, #E63939);
   
-  --border-color: rgba(255, 140, 66, 0.2);
-  --border-color-focus: rgba(255, 140, 66, 0.4);
+  --border-color: rgba(30, 58, 138, 0.2);
+  --border-color-focus: rgba(30, 58, 138, 0.4);
   
   /* Typography & Spacing */
   --text-primary: #1a1a1a;
@@ -42,9 +45,9 @@
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 25px 30px -5px rgba(0, 0, 0, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
-  --glow-primary: 0 0 30px rgba(255, 140, 66, 0.15);
-  --glow-accent: 0 0 30px rgba(255, 107, 0, 0.12);
-  --glow-secondary: 0 0 30px rgba(255, 140, 66, 0.08);
+  --glow-primary: 0 0 30px rgba(30, 58, 138, 0.15);
+  --glow-accent: 0 0 30px rgba(212, 175, 55, 0.12);
+  --glow-secondary: 0 0 30px rgba(30, 58, 138, 0.08);
   
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);

@@ -56,6 +56,14 @@ export default function Login() {
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", position: "relative", overflow: "hidden", 
  background: "var(--bg-main)"
  }} className="fade-in">
+   <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      background: "rgba(0,0,0,0.4)", // adjust darkness
+      zIndex: 0,
+    }}
+  />
       {/* Background glow orbs */}
       <div className="glow-orb glow-orb-primary" style={{ top: "-150px", left: "-150px" }}></div>
       <div className="glow-orb glow-orb-accent" style={{ bottom: "-150px", right: "-150px" }}></div>
@@ -63,7 +71,7 @@ export default function Login() {
       <div className="glass-card scale-in" style={{ padding: "45px", width: "420px", maxWidth: "90%", textAlign: "center", zIndex: 10 }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
           <span style={{ fontSize: "45px", filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.3))" }}>🚗</span>
-          <h1 style={{ color: "white", fontSize: "28px", fontWeight: "800", margin: 0, letterSpacing: "-0.5px" }}>
+          <h1 style={{ color: "var(--text-primary)", fontSize: "28px", fontWeight: "800", margin: 0, letterSpacing: "-0.5px" }}>
             QuickRide <span style={{ color: "var(--primary)" }}>Rentals</span>
           </h1>
         </div>

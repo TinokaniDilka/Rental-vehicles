@@ -782,7 +782,7 @@ const filteredComplaints = complaintCategoryFilter === "all"
                       }}>{v.isAvailable ? "Available" : "Rented"}</span>
                     </div>
                     <div style={{ padding: "20px", display: "flex", flexDirection: "column", flex: 1 }}>
-                      <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "white" }}>{v.name}</h4>
+                      <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--text-primary)" }}>{v.name}</h4>
                       <p style={{ margin: "5px 0", color: "var(--text-secondary)", fontSize: "14px" }}>📍 {v.location} | 📂 {v.type}</p>
                       {v.requireVerification && (
                         <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--warning)", marginBottom: "4px", display: "inline-block" }}>🔒 ID Verification Required</span>
@@ -946,7 +946,7 @@ const filteredComplaints = complaintCategoryFilter === "all"
 <div key={b._id} className="glass-card" style={{ padding: "20px", display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(180px, 1fr) minmax(180px, auto)", gap: "20px", alignItems: "center" }}>  
   {/* Column 1: Booking Info */}
   <div>
-    <h4 style={{ margin: 0, fontSize: "20px", color: "white", fontWeight: "700" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
+    <h4 style={{ margin: 0, fontSize: "20px", color: "var(--text-primary)", fontWeight: "700" }}>{b.vehicleId?.name || "Deleted Vehicle"}</h4>
     <p style={{ margin: "4px 0", fontSize: "14px", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
       👤 <strong>Customer:</strong> {b.customerId?.name} ({b.customerId?.email})
       <StatusPill label={isVerified ? "Verified" : "Not Verified"} tone={isVerified ? "success" : "warning"} />
@@ -970,7 +970,7 @@ const filteredComplaints = complaintCategoryFilter === "all"
             <StatusPill label={depositInfo.text} tone={depositInfo.tone} />
           </div>
         )}
-        <h4 style={{ margin: "4px 0 0", color: "white" }}>Total: ${b.totalAmount}</h4>
+        <h4 style={{ margin: "4px 0 0", color: "var(--text-primary)" }}>Total: ${b.totalAmount}</h4>
       </>
     ) : (
       <div style={{
@@ -1120,7 +1120,7 @@ const filteredComplaints = complaintCategoryFilter === "all"
                         {f.escalated && <StatusPill label="Escalated" tone="warning" />}
                         {f.type === "feedback" && <span style={{ color: "#fbbf24" }}>{"★".repeat(f.rating)}</span>}
                       </div>
-                      <p style={{ margin: "5px 0", fontSize: "17px", color: "white", fontWeight: "500" }}>"{f.comment}"</p>
+                      <p style={{ margin: "5px 0", fontSize: "17px", color: "var(--text-primary)", fontWeight: "500" }}>"{f.comment}"</p>
                       <p style={{ fontSize: "12.5px", color: "var(--text-secondary)" }}>
                         From: <strong>{f.customerId?.name}</strong> ({f.customerId?.email}) | Target: {f.bookingId?.vehicleId?.name || "Vehicle"}
                       </p>
@@ -1396,12 +1396,12 @@ const filteredComplaints = complaintCategoryFilter === "all"
 
             {selectedFeedbackForReply.staffReplies && selectedFeedbackForReply.staffReplies.length > 0 && (
               <div style={{ marginBottom: "15px", padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: "8px" }}>
-                <p style={{ margin: "0 0 8px 0", fontWeight: "700", fontSize: "13px", color: "white" }}>Previous Replies:</p>
+                <p style={{ margin: "0 0 8px 0", fontWeight: "700", fontSize: "13px", color: "var(--text-primary)" }}>Previous Replies:</p>
                 {selectedFeedbackForReply.staffReplies.map(reply => (
                   <div key={reply._id} style={{ marginBottom: "8px", padding: "10px", background: "rgba(15,23,42,0.4)", border: "1px solid var(--border-color)", borderRadius: "6px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
                       <div style={{ flex: 1 }}>
-                        <p style={{ margin: "0 0 4px 0", fontSize: "12px", fontWeight: "700", color: "white" }}>{reply.staffName} ({new Date(reply.createdAt).toLocaleDateString()})</p>
+                        <p style={{ margin: "0 0 4px 0", fontSize: "12px", fontWeight: "700", color: "var(--text-primary)" }}>{reply.staffName} ({new Date(reply.createdAt).toLocaleDateString()})</p>
                         <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>{reply.replyText}</p>
                       </div>
                       <div style={{ display: "flex", gap: "6px", marginLeft: "10px" }}>
@@ -1504,7 +1504,7 @@ const DashboardCard = ({ icon, title, value, color, onClick }) => (
     </div>
     <div>
       <p style={{ margin: "0 0 4px 0", color: "var(--text-secondary)", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>{title}</p>
-      <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", color: "white" }}>{value}</h2>
+      <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", color: "var(--text-primary)" }}>{value}</h2>
     </div>
   </div>
 );

@@ -411,7 +411,7 @@ export default function AdminDashboard() {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <span style={{ fontSize: "20px" }}>🪪</span>
-                  <span style={{ fontSize: "14px", color: "white" }}>
+                  <span style={{ fontSize: "14px", color: "var(--text-primary)" }}>
                     <strong>{unreadCount}</strong> customer{unreadCount > 1 ? "s" : ""} waiting for ID verification
                   </span>
                 </div>
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
 
             {/* Recent Bookings */}
             <div style={{ marginTop: "40px" }}>
-              <h2 style={{ marginBottom: "18px", color: "white", fontSize: "20px" }}>🕒 Recent Bookings</h2>
+              <h2 style={{ marginBottom: "18px", color: "var(--text-primary)", fontSize: "20px" }}>🕒 Recent Bookings</h2>
               <div className="glass-card" style={{ padding: "20px" }}>
                 {loading ? (
                   <p style={{ color: "var(--text-muted)", margin: 0 }}>Loading...</p>
@@ -470,7 +470,7 @@ export default function AdminDashboard() {
 
             {/* Report Cards - Clickable, each navigates to its own report page */}
             <div style={{ marginTop: "40px" }}>
-              <h2 style={{ marginBottom: "25px", color: "white" }}>📊 Quick Reports</h2>
+              <h2 style={{ marginBottom: "25px", color: "var(--text-primary)" }}>📊 Quick Reports</h2>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
                 <div
@@ -817,22 +817,22 @@ export default function AdminDashboard() {
               <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>CUSTOMER NAME</p>
-                  <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "white" }}>{selectedUserForVerification.name}</p>
+                  <p style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "var(--text-primary)" }}>{selectedUserForVerification.name}</p>
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>EMAIL</p>
-                  <p style={{ margin: 0, fontSize: "14px", color: "white" }}>{selectedUserForVerification.email}</p>
+                  <p style={{ margin: 0, fontSize: "14px", color: "var(--text-primary)" }}>{selectedUserForVerification.email}</p>
                 </div>
               </div>
 
               <div style={{ display: "flex", gap: "20px" }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>NIC NUMBER</p>
-                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.nicNumber || "Not provided"}</p>
+                  <p style={{ margin: 0, fontSize: "15px", color: "var(--text-primary)", fontFamily: "monospace" }}>{selectedUserForVerification.nicNumber || "Not provided"}</p>
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: "0 0 5px", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "600" }}>DRIVING LICENSE</p>
-                  <p style={{ margin: 0, fontSize: "15px", color: "white", fontFamily: "monospace" }}>{selectedUserForVerification.drivingLicenseNumber || "Not provided"}</p>
+                  <p style={{ margin: 0, fontSize: "15px", color: "var(--text-primary)", fontFamily: "monospace" }}>{selectedUserForVerification.drivingLicenseNumber || "Not provided"}</p>
                 </div>
               </div>
 
