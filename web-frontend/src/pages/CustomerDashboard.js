@@ -37,6 +37,7 @@ export default function CustomerDashboard() {
   const [profilePassword, setProfilePassword] = useState("");
   const [profileNic, setProfileNic] = useState(user.nicNumber || "");
   const [profileDrivingLicense, setProfileDrivingLicense] = useState(user.drivingLicenseNumber || "");
+  const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const [profileIdPhotoFile, setProfileIdPhotoFile] = useState(null);
   const [profileLicensePhotoFile, setProfileLicensePhotoFile] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -369,6 +370,17 @@ const handleOpenFeedbackModal = (booking) => {
     }
   };
 
+  const handleProfilePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size > MAX_UPLOAD_SIZE) {
+      showToast("Profile photo must be under 5MB", "error");
+      e.target.value = "";
+      setProfilePhotoFile(null);
+      return;
+    }
+    setProfilePhotoFile(file || null);
+  };
+
   const handleIdPhotoChange = (e) => {
     const file = e.target.files[0];
     if (file && file.size > MAX_UPLOAD_SIZE) {
@@ -409,9 +421,10 @@ const handleOpenFeedbackModal = (booking) => {
       );
       let updatedUser = res.data.user;
 
-      // Step 2: if ID/License photos were selected, upload them separately as multipart
-      if (profileIdPhotoFile || profileLicensePhotoFile) {
+      // Step 2: if profile photo, ID/License photos were selected, upload them separately as multipart
+      if (profilePhotoFile || profileIdPhotoFile || profileLicensePhotoFile) {
         const formData = new FormData();
+        if (profilePhotoFile) formData.append("profilePhoto", profilePhotoFile);
         if (profileIdPhotoFile) formData.append("idPhoto", profileIdPhotoFile);
         if (profileLicensePhotoFile) formData.append("licensePhoto", profileLicensePhotoFile);
 
@@ -431,6 +444,7 @@ const handleOpenFeedbackModal = (booking) => {
       localStorage.setItem("user", JSON.stringify(updatedUser));
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
+      setProfilePhotoFile(null);
       setProfileIdPhotoFile(null);
       setProfileLicensePhotoFile(null);
       setShowProfileModal(false);
@@ -1184,6 +1198,16 @@ const handleOpenFeedbackModal = (booking) => {
                   <label className="form-label">Driving License Number</label>
                   <input type="text" placeholder="e.g. B1234567" value={profileDrivingLicense} onChange={(e) => setProfileDrivingLicense(e.target.value)} className="custom-input" />
                 </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Profile Photo</label>
+                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} className="custom-input" style={{ padding: "8px" }} />
+                {profilePhotoFile ? (
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Selected: {profilePhotoFile.name}</span>
+                ) : user.profilePhoto ? (
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>✅ Already uploaded</span>
+                ) : null}
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>

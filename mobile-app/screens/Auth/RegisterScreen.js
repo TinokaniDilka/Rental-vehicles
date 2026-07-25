@@ -17,6 +17,7 @@ import api from '../../services/api';
 import InputField from '../../components/InputField';
 import CustomButton from '../../components/CustomButton';
 import { COLORS, SHADOWS, SIZES } from '../../utils/theme';
+import { validateEmail, validatePassword, validateName } from '../../utils/validation';
 
 const { width } = Dimensions.get('window');
 export default function RegisterScreen({ navigation }) {
@@ -48,8 +49,23 @@ export default function RegisterScreen({ navigation }) {
   }, []);
 
   const handleRegister = async () => {
-    if (!name || !email || !password) {
-      Alert.alert('Error', 'All fields are required');
+    // Validate name
+    const nameValidation = validateName(name);
+    if (!nameValidation.isValid) {
+      Alert.alert('Error', nameValidation.message);
+      return;
+    }
+    
+    // Validate email
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+    
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      Alert.alert('Error', passwordValidation.message);
       return;
     }
 

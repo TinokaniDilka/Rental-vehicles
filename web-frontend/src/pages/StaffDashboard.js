@@ -85,6 +85,8 @@ const totalNotifications =
   const [profileName, setProfileName] = useState(user.name || "");
   const [profileEmail, setProfileEmail] = useState(user.email || "");
   const [profilePassword, setProfilePassword] = useState("");
+  const [profilePhotoFile, setProfilePhotoFile] = useState(null);
+  const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
   // Add/Edit Vehicle Form states
   const [showVehicleModal, setShowVehicleModal] = useState(false);
@@ -220,17 +222,50 @@ const fetchFeedbacks = async () => {
     window.location.href = "/login";
   };
 
+  const handleProfilePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size > MAX_UPLOAD_SIZE) {
+      showToast("Profile photo must be under 5MB", "error");
+      e.target.value = "";
+      setProfilePhotoFile(null);
+      return;
+    }
+    setProfilePhotoFile(file || null);
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
+      // Step 1: update text profile fields
       const res = await axios.put(
         "http://localhost:5000/api/auth/profile",
         { name: profileName, email: profileEmail, password: profilePassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      let updatedUser = res.data.user;
+
+      // Step 2: if profile photo was selected, upload it separately as multipart
+      if (profilePhotoFile) {
+        const formData = new FormData();
+        formData.append("profilePhoto", profilePhotoFile);
+
+        const docsRes = await axios.put(
+          "http://localhost:5000/api/auth/profile/upload-docs",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data"
+            }
+          }
+        );
+        updatedUser = docsRes.data.user;
+      }
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
+      setProfilePhotoFile(null);
       setShowProfileModal(false);
     } catch (err) {
       showToast(err.response?.data?.message || "Profile update failed", "error");
@@ -1170,6 +1205,15 @@ const filteredComplaints = complaintCategoryFilter === "all"
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label className="form-label">Email Address</label>
                 <input type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="custom-input" required />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className="form-label">Profile Photo</label>
+                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} className="custom-input" style={{ padding: "8px" }} />
+                {profilePhotoFile ? (
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Selected: {profilePhotoFile.name}</span>
+                ) : user.profilePhoto ? (
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>✅ Already uploaded</span>
+                ) : null}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label className="form-label">New Password (leave blank to keep current)</label>

@@ -17,6 +17,7 @@ import { AuthContext } from '../../context/AuthContext';
 import InputField from '../../components/InputField';
 import CustomButton from '../../components/CustomButton';
 import { COLORS, SHADOWS, SIZES } from '../../utils/theme';
+import { validateEmail, validatePassword } from '../../utils/validation';
 
 const { width, height } = Dimensions.get('window');
 
@@ -49,8 +50,16 @@ export default function LoginScreen({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill all fields');
+    // Validate email
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+    
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      Alert.alert('Error', passwordValidation.message);
       return;
     }
 

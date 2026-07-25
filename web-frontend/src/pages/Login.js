@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { validateEmail, validatePassword } from "../utils/validation";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,20 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+    // Validate email
+    if (!validateEmail(email)) {
+      showToast("Please enter a valid email address", "error");
+      return;
+    }
+    
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      showToast(passwordValidation.message, "error");
+      return;
+    }
+    
     setLoading(true);
 
     try {

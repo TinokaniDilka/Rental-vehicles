@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { validateEmail, validatePassword, validateName } from "../utils/validation";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -11,13 +12,28 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    if (!email.trim() || !password.trim() || !name.trim()) {
-      alert("Please fill all fields ❌");
-      setLoading(false);
+    
+    // Validate name
+    const nameValidation = validateName(name);
+    if (!nameValidation.isValid) {
+      alert(nameValidation.message);
       return;
     }
+    
+    // Validate email
+    if (!validateEmail(email)) {
+      alert("Please enter a valid email address");
+      return;
+    }
+    
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      alert(passwordValidation.message);
+      return;
+    }
+    
+    setLoading(true);
 
     try {
       const res = await fetch("http://localhost:5000/api/auth/register", {

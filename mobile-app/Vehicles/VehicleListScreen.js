@@ -75,14 +75,14 @@ const fetchVehicles = async () => {
           <Text style={styles.subTitle}>{filtered.length} vehicles found</Text>
         </View>
         <TouchableOpacity style={styles.filterIconBtn} activeOpacity={0.7}>
-          <Ionicons name="options-outline" size={20} color="#1E3A8A" />
+          <Ionicons name="options-outline" size={20} color="#FF8C42" />
         </TouchableOpacity>
       </View>
 
       {/* ── Search Bar ── */}
       <View style={styles.searchWrapper}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#1E3A8A" style={styles.searchIcon} />
+          <Ionicons name="search" size={18} color="#FF8C42" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search by name or location..."
@@ -117,7 +117,7 @@ const fetchVehicles = async () => {
               >
                 {isActive && (
                   <LinearGradient
-                    colors={['#1E3A8A', '#D4AF37']}
+                    colors={['#FF8C42', '#FF6B00']}
                     style={StyleSheet.absoluteFill}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -148,7 +148,7 @@ const fetchVehicles = async () => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="car-outline" size={36} color="#1E3A8A" />
+              <Ionicons name="car-outline" size={36} color="#FF8C42" />
             </View>
             <Text style={styles.emptyTitle}>No vehicles found</Text>
             <Text style={styles.emptyText}>
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   chipActive: {
-    borderColor: '#1E3A8A',
+    borderColor: '#FF8C42',
   },
   chipText: {
     fontSize: 13,
