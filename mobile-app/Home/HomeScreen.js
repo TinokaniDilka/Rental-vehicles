@@ -54,7 +54,7 @@ useFocusEffect(
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
       <LinearGradient
-        colors={['#ffffff', '#fff5eb', '#ffffff']}
+        colors={['#ffffff', '#f5f7fa', '#ffffff']}
         style={StyleSheet.absoluteFill}
       />
 
@@ -67,7 +67,7 @@ useFocusEffect(
           </View>
 
           <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={20} color="#FF8C42" />
+            <Ionicons name="notifications-outline" size={20} color="#1E3A8A" />
           </TouchableOpacity>
         </View>
 
@@ -106,7 +106,7 @@ useFocusEffect(
 
         {/* SEARCH */}
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#FF8C42" />
+          <Ionicons name="search" size={18} color="#1E3A8A" />
           <TextInput
             placeholder="Search by car or location"
             placeholderTextColor="#888888"
@@ -144,20 +144,20 @@ useFocusEffect(
     marginHorizontal: 20,
      marginTop: 20,
     marginBottom: 60,
-    backgroundColor: 'rgba(255, 140, 66, 0.1)',
+    backgroundColor: 'rgba(30, 58, 138, 0.1)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.3)',
+    borderColor: 'rgba(30, 58, 138, 0.3)',
     padding: 16,
   }}>
     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
       <View style={{
-        backgroundColor: 'rgba(255, 140, 66, 0.2)',
+        backgroundColor: 'rgba(30, 58, 138, 0.2)',
         borderRadius: 8,
         paddingHorizontal: 10,
         paddingVertical: 4,
       }}>
-        <Text style={{ color: '#FF8C42', fontWeight: '800', fontSize: 11 }}>🚗 ONGOING</Text>
+        <Text style={{ color: '#1E3A8A', fontWeight: '800', fontSize: 11 }}>🚗 ONGOING</Text>
       </View>
     </View>
 
@@ -172,21 +172,21 @@ useFocusEffect(
     </View>
 
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={{ color: '#FF8C42', fontSize: 20, fontWeight: '800' }}>
+      <Text style={{ color: '#D4AF37', fontSize: 20, fontWeight: '800' }}>
         LKR {ongoingBooking.totalAmount?.toLocaleString()}
       </Text>
       <TouchableOpacity
         onPress={() => navigation.navigate('Bookings')}
         style={{
-          backgroundColor: 'rgba(255, 140, 66, 0.2)',
+          backgroundColor: 'rgba(30, 58, 138, 0.2)',
           borderRadius: 10,
           paddingHorizontal: 14,
           paddingVertical: 8,
           borderWidth: 1,
-          borderColor: 'rgba(255, 140, 66, 0.4)',
+          borderColor: 'rgba(30, 58, 138, 0.4)',
         }}
       >
-        <Text style={{ color: '#FF8C42', fontWeight: '700', fontSize: 13 }}>View Details →</Text>
+        <Text style={{ color: '#1E3A8A', fontWeight: '700', fontSize: 13 }}>View Details →</Text>
       </TouchableOpacity>
     </View>
   </View>
@@ -214,11 +214,11 @@ const styles = StyleSheet.create({
   title: { color: '#1a1a1a', fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
 
   iconBtn: {
-    backgroundColor: 'rgba(255, 140, 66, 0.15)',
+    backgroundColor: 'rgba(30, 58, 138, 0.15)',
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.3)',
+    borderColor: 'rgba(30, 58, 138, 0.3)',
   },
 
   hero: {
@@ -226,22 +226,22 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.3)',
+    borderColor: 'rgba(30, 58, 138, 0.3)',
   },
 
-  available: { color: '#FF8C42', fontSize: 13, marginBottom: 12, fontWeight: '600', letterSpacing: 0.5 },
+  available: { color: '#D4AF37', fontSize: 13, marginBottom: 12, fontWeight: '600', letterSpacing: 0.5 },
   heroTitle: { color: '#1a1a1a', fontSize: 28, fontWeight: '700' },
   heroTitleBold: { color: '#1a1a1a', fontSize: 30, fontWeight: '900', letterSpacing: -1 },
-  heroSub: { color: '#FF8C42', marginVertical: 12, fontSize: 15, lineHeight: 22 },
+  heroSub: { color: '#D4AF37', marginVertical: 12, fontSize: 15, lineHeight: 22 },
 
   heroButtons: { flexDirection: 'row', marginTop: 16, gap: 12 },
 
   primaryBtn: {
-    backgroundColor: '#FF8C42',
+    backgroundColor: '#1E3A8A',
     padding: 14,
     borderRadius: 14,
     marginRight: 0,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.3,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -251,10 +251,10 @@ const styles = StyleSheet.create({
 
   secondaryBtn: {
     borderWidth: 1.5,
-    borderColor: '#FF8C42',
+    borderColor: '#1E3A8A',
     padding: 14,
     borderRadius: 14,
-    backgroundColor: 'rgba(255, 140, 66, 0.1)',
+    backgroundColor: 'rgba(30, 58, 138, 0.1)',
   },
   secondaryText: { color: '#1a1a1a', fontWeight: '700', fontSize: 15 },
 
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.2)',
+    borderColor: 'rgba(30, 58, 138, 0.2)',
   },
 
   locationBox: {
@@ -277,11 +277,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.2)',
+    borderColor: 'rgba(30, 58, 138, 0.2)',
   },
 
   locationText: { color: '#1a1a1a', marginLeft: 8, fontSize: 15, fontWeight: '600' },
-  changeText: { color: '#FF8C42', fontSize: 14, fontWeight: '700' },
+  changeText: { color: '#1E3A8A', fontSize: 14, fontWeight: '700' },
 
   sectionTitle: {
     color: '#1a1a1a',
@@ -307,8 +307,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.15)',
-    shadowColor: '#FF8C42',
+    borderColor: 'rgba(30, 58, 138, 0.15)',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.1,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  seeAll: { color: '#FF8C42', fontSize: 14, fontWeight: '700' },
+  seeAll: { color: '#1E3A8A', fontSize: 14, fontWeight: '700' },
 
   vehicleCard: {
     width: 180,
@@ -339,12 +339,12 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.2)',
+    borderColor: 'rgba(30, 58, 138, 0.2)',
     padding: 10,
   },
 
   badge: {
-    backgroundColor: '#FF8C42',
+    backgroundColor: '#D4AF37',
     color: '#fff',
     padding: 4,
     borderRadius: 6,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
 
   badgeBlue: {
-    backgroundColor: '#FF8C42',
+    backgroundColor: '#1E3A8A',
     color: '#fff',
     padding: 4,
     borderRadius: 6,

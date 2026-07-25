@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: COLORS.primary,
-    backgroundColor: 'rgba(255, 140, 66, 0.08)',
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
     paddingVertical: 2,
     paddingHorizontal: 8,
     borderRadius: 8,
