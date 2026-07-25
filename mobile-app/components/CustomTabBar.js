@@ -73,7 +73,7 @@ function AnimatedTabButton({ label, iconName, focused, onPress, onLayout, badgeC
             <Ionicons
               name={iconName}
               size={focused ? 18 : 16}
-              color={focused ? '#FFF5EB' : '#888888'}
+              color={focused ? '#D4AF37' : '#888888'}
             />
             {badgeCount > 0 && (
               <View style={styles.badge}>
@@ -144,7 +144,7 @@ function FabButton({ onPress }) {
       >
         <Animated.View style={{ transform: [{ scale }] }}>
           <LinearGradient
-            colors={['#FFA366', '#FF8C42', '#E6732A']}
+            colors={['#1E3A8A', '#172554']}
             start={{ x: 0.2, y: 0 }}
             end={{ x: 0.8, y: 1 }}
             style={styles.fab}
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     height: 76,
     marginLeft: -60,
     borderRadius: 60,
-    backgroundColor: 'rgba(255, 140, 66, 0.15)',
+    backgroundColor: '#FAF0D7',
   },
   barRow: {
     flexDirection: 'row',
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: 'rgba(255, 255, 255, 0.97)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 140, 66, 0.3)',
+    borderColor: 'rgba(30, 58, 138, 0.3)',
     borderRadius: 34,
     height: 60,
     paddingHorizontal: 8,
@@ -315,9 +315,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     height: 44,
-    backgroundColor: 'rgba(255, 140, 66, 0.2)',
+    backgroundColor: '#FAF0D7',
     borderWidth: 1,
-    borderColor: 'rgba(255, 163, 102, 0.4)',
+    borderColor: 'rgba(212, 175, 55, 0.4)',
     borderRadius: 16,
   },
   tabTouchable: {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     minWidth: 15,
     height: 15,
     borderRadius: 8,
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#D4AF37',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
@@ -350,12 +350,12 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 8,
     fontWeight: '700',
-    color: '#431407',
+    color: '#ffffff',
   },
   tabLabelActive: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#FFF5EB',
+    color: '#D4AF37',
     marginTop: 2,
   },
   fabSlot: {
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: 'rgba(255, 140, 66, 0.4)',
+    backgroundColor: 'rgba(30, 58, 138, 0.4)',
   },
   fab: {
     width: 46,
@@ -381,6 +381,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 200, 150, 0.5)',
+    borderColor: 'rgba(30, 58, 138, 0.5)',
   },
 });

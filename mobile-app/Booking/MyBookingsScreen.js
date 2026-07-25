@@ -143,7 +143,7 @@ const renderItem = ({ item }) => {
       </View>
 
       <View style={styles.datesRow}>
-        <Ionicons name="calendar-outline" size={16} color="#FF8C42" />
+        <Ionicons name="calendar-outline" size={16} color="#1E3A8A" />
         <Text style={styles.dateText}>
           {formatDate(item.pickupDate || item.startDate) || '—'}
         </Text>
@@ -161,8 +161,8 @@ const renderItem = ({ item }) => {
           {(!item.handoverStatus || item.handoverStatus === 'pending_pickup') ? (
             <View>
               <Text style={{ fontSize: 13, color: '#f59e0b', fontWeight: '600', marginBottom: 6 }}>⏳ Pending Pickup</Text>
-              <TouchableOpacity style={{ backgroundColor: 'rgba(255,140,66,0.15)', borderWidth: 1, borderColor: 'rgba(255,140,66,0.3)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, alignSelf: 'flex-start' }} onPress={() => handleConfirmReceived(item._id)}>
-                <Text style={{ color: '#FF8C42', fontSize: 12, fontWeight: '700' }}>Confirm Received</Text>
+              <TouchableOpacity style={{ backgroundColor: 'rgba(30,58,138,0.15)', borderWidth: 1, borderColor: 'rgba(30,58,138,0.3)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, alignSelf: 'flex-start' }} onPress={() => handleConfirmReceived(item._id)}>
+                <Text style={{ color: '#1E3A8A', fontSize: 12, fontWeight: '700' }}>Confirm Received</Text>
               </TouchableOpacity>
             </View>
           ) : item.handoverStatus === 'rented' ? (
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     color: '#4a4a4a',
   },
   tabTextActive: {
-    color: '#FF8C42',
+    color: '#1E3A8A',
     fontWeight: '700',
   },
   tabUnderline: {
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2.5,
-    backgroundColor: '#FF8C42',
+    backgroundColor: '#1E3A8A',
     borderRadius: 2,
   },
 
@@ -345,9 +345,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,140,66,0.25)',
+    borderColor: 'rgba(30,58,138,0.25)',
     padding: 18,
-    shadowColor: '#FF8C42',
+    shadowColor: '#1E3A8A',
     shadowOpacity: 0.08,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FF8C42',
+    color: '#D4AF37',
   },
   viewBtn: {
     flexDirection: 'row',
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   viewBtnText: {
-    color: '#FF8C42',
+    color: '#1E3A8A',
     fontSize: 13,
     fontWeight: '700',
   },
