@@ -3,7 +3,7 @@ import axios from "axios";
 
 export default function CustomerDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")) || {});
   const token = localStorage.getItem("token");
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
@@ -442,6 +442,7 @@ const handleOpenFeedbackModal = (booking) => {
       }
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
       setProfilePhotoFile(null);
@@ -612,8 +613,16 @@ const handleOpenFeedbackModal = (booking) => {
 
           <div style={{ position: "relative" }}>
             <div className="profile-pill" onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
-              <span style={{ fontSize: "18px" }}>👤</span>
-              <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Customer"}</span>
+  {user.profilePhoto ? (
+    <img
+      src={`http://localhost:5000${user.profilePhoto}`}
+      alt="avatar"
+      style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }}
+    />
+  ) : (
+    <span style={{ fontSize: "18px" }}>👤</span>
+  )}
+  <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Customer"}</span>
               <span style={{ fontSize: "10px", marginLeft: "4px" }}>▼</span>
             </div>
 
