@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
-import { updateProfile as updateProfileApi, uploadVerificationDocs } from '../services/authService';
+import { updateProfile as updateProfileApi, uploadVerificationDocs, getImageUrl } from '../services/authService';
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -27,6 +27,7 @@ export default function EditProfileScreen({ navigation }) {
   // Shared
   const [name, setName] = useState(user?.name || '');
   const [saving, setSaving] = useState(false);
+  const [profilePhotoAsset, setProfilePhotoAsset] = useState(null);
 
   // Staff-only
   const [email, setEmail] = useState(user?.email || '');
@@ -49,7 +50,8 @@ export default function EditProfileScreen({ navigation }) {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.7,
-      allowsEditing: false,
+      allowsEditing: true,
+      aspect: [1, 1],
     });
 
     if (result.canceled || !result.assets?.length) return;
@@ -79,10 +81,21 @@ export default function EditProfileScreen({ navigation }) {
     }
     setSaving(true);
     try {
-      await updateProfileApi({ name: name.trim(), email: email.trim() });
-      if (typeof refreshUser === 'function') {
+      let updatedUser;
+      const res = await updateProfileApi({ name: name.trim(), email: email.trim() });
+      updatedUser = res.data.user || res.data;
+
+      if (profilePhotoAsset) {
+        const docsRes = await uploadVerificationDocs({ profilePhoto: profilePhotoAsset });
+        updatedUser = docsRes.data.user;
+      }
+
+      if (typeof updateUser === 'function') {
+        await updateUser(updatedUser);
+      } else if (typeof refreshUser === 'function') {
         await refreshUser();
       }
+
       Alert.alert('Success', 'Profile updated ✅', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
@@ -108,18 +121,15 @@ export default function EditProfileScreen({ navigation }) {
       const res = await updateProfileApi(payload);
       let updatedUser = res.data.user || res.data;
 
-      if (idPhotoAsset || licensePhotoAsset) {
+      if (profilePhotoAsset || idPhotoAsset || licensePhotoAsset) {
         const docsRes = await uploadVerificationDocs({
+          profilePhoto: profilePhotoAsset,
           idPhoto: idPhotoAsset,
           licensePhoto: licensePhotoAsset,
         });
         updatedUser = docsRes.data.user;
       }
 
-      // updateUser writes straight into AuthContext (same as the old modal
-      // did) — used here instead of refreshUser() since we already have the
-      // fresh user object back from the save call, no need for a second
-      // round-trip to the server.
       if (typeof updateUser === 'function') {
         await updateUser(updatedUser);
       }
@@ -136,6 +146,7 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   const avatarLetter = name ? name.charAt(0).toUpperCase() : (user?.name?.charAt(0).toUpperCase() || '?');
+  const avatarUri = profilePhotoAsset?.uri || getImageUrl(user?.profilePhoto);
 
   return (
     <LinearGradient colors={['#ffffff', '#fff5eb']} style={styles.gradientBg}>
@@ -156,9 +167,19 @@ export default function EditProfileScreen({ navigation }) {
 
           {/* Avatar Preview */}
           <View style={styles.avatarSection}>
-            <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.avatarCircle}>
-              <Text style={styles.avatarLetter}>{avatarLetter}</Text>
-            </LinearGradient>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => pickImage(setProfilePhotoAsset)}>
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+              ) : (
+                <LinearGradient colors={['#FF8C42', '#E6732A']} style={styles.avatarCircle}>
+                  <Text style={styles.avatarLetter}>{avatarLetter}</Text>
+                </LinearGradient>
+              )}
+              <View style={styles.avatarEditBadge}>
+                <Ionicons name="camera" size={14} color="#fff" />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.changePhotoText}>Tap to change photo</Text>
             <View style={styles.roleBadge}>
               <Ionicons name="shield-checkmark" size={12} color="#FFA366" />
               <Text style={styles.roleBadgeText}>{user?.role?.toUpperCase() || 'USER'}</Text>
@@ -356,7 +377,35 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
     elevation: 8,
-    marginBottom: 12,
+  },
+  avatarImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    shadowColor: '#FF8C42',
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#E6732A',
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  changePhotoText: {
+    fontSize: 12,
+    color: '#888888',
+    marginTop: 10,
+    fontWeight: '600',
   },
   avatarLetter: {
     fontSize: 34,
@@ -371,6 +420,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 5,
+    marginTop: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 140, 66, 0.25)',
   },

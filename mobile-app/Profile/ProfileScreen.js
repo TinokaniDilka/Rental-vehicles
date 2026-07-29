@@ -7,10 +7,12 @@ import {
   Alert,
   TouchableOpacity,
   StatusBar,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
+import { getImageUrl } from '../services/authService';
 
 const SETTINGS_ITEMS = [
   { icon: 'person-outline', label: 'Edit Profile', route: 'EditProfile' },
@@ -32,6 +34,7 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const avatarLetter = user?.name ? user.name.charAt(0).toUpperCase() : '?';
+  const avatarUri = getImageUrl(user?.profilePhoto);
 
   return (
     <LinearGradient colors={['#ffffff', '#fff5eb']} style={styles.gradientBg}>
@@ -51,16 +54,20 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
-          <LinearGradient
-            colors={['#FF8C42', '#E6732A']}
-            style={styles.avatarCircle}
-          >
-            {user?.name ? (
-              <Text style={styles.avatarLetter}>{avatarLetter}</Text>
-            ) : (
-              <Ionicons name="person" size={38} color="#fff" />
-            )}
-          </LinearGradient>
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+          ) : (
+            <LinearGradient
+              colors={['#FF8C42', '#E6732A']}
+              style={styles.avatarCircle}
+            >
+              {user?.name ? (
+                <Text style={styles.avatarLetter}>{avatarLetter}</Text>
+              ) : (
+                <Ionicons name="person" size={38} color="#fff" />
+              )}
+            </LinearGradient>
+          )}
 
           {/* Online badge */}
           <View style={styles.onlineDot} />
@@ -162,8 +169,6 @@ const styles = StyleSheet.create({
     paddingTop: 56,
     paddingBottom: 24,
   },
-
-  // Page Header
   pageHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,8 +191,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // Avatar Section
   avatarSection: {
     alignItems: 'center',
     marginBottom: 28,
@@ -198,6 +201,16 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#FF8C42',
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  avatarImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     shadowColor: '#FF8C42',
     shadowOpacity: 0.5,
     shadowRadius: 16,
@@ -251,8 +264,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginLeft: 4,
   },
-
-  // Section Label
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
@@ -262,8 +273,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginLeft: 2,
   },
-
-  // Glass Card
   glassCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
@@ -282,8 +291,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 140, 66, 0.1)',
     marginVertical: 10,
   },
-
-  // Info Rows
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -313,8 +320,6 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     fontWeight: '600',
   },
-
-  // Settings Rows
   settingsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -335,8 +340,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1a1a1a',
   },
-
-  // Logout Button
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
