@@ -23,6 +23,7 @@ const { width } = Dimensions.get('window');
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('customer'); // default
   const [loading, setLoading] = useState(false);
@@ -71,7 +72,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const res = await api.post('/api/auth/register', { name, email, password, role });
+      const res = await api.post('/api/auth/register', { name, email, phone, password, role });
       Alert.alert('Success', 'Account created! Please login.');
       navigation.navigate('Login');
     } catch (error) {
@@ -188,6 +189,30 @@ export default function RegisterScreen({ navigation }) {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* ── Phone ── */}
+          <View style={styles.fieldWrapper}>
+            <Text style={styles.fieldLabel}>
+              PHONE NUMBER{' '}
+              <Text style={{ color: '#4a4a4a', fontWeight: '400', fontSize: 10 }}>(optional)</Text>
+            </Text>
+            <View style={styles.inputRow}>
+              <Ionicons
+                name="call-outline"
+                size={18}
+                color={COLORS.primary}
+                style={styles.inputIcon}
+              />
+              <View style={styles.inputInner}>
+                <InputField
+                  placeholder="        +94 77 123 4567"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
                 />
               </View>
             </View>

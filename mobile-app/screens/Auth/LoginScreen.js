@@ -29,7 +29,6 @@ export default function LoginScreen({ navigation }) {
 
   const { login } = useContext(AuthContext);
 
-  // Subtle scale animation for the card on mount
   const cardScale = useRef(new Animated.Value(0.96)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
 
@@ -50,13 +49,11 @@ export default function LoginScreen({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
-    // Validate email
     if (!validateEmail(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
     
-    // Validate password
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       Alert.alert('Error', passwordValidation.message);
@@ -67,7 +64,6 @@ export default function LoginScreen({ navigation }) {
     try {
       await login(email, password);
       Alert.alert('Success', 'Welcome back!');
-      // console.log('Login success');
     } catch (error) {
       Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
     } finally {
@@ -80,7 +76,6 @@ export default function LoginScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      {/* Light gradient background */}
       <LinearGradient
         colors={['#ffffff', '#fff5eb', '#ffffff']}
         style={StyleSheet.absoluteFillObject}
@@ -88,10 +83,7 @@ export default function LoginScreen({ navigation }) {
         end={{ x: 0.8, y: 1 }}
       />
 
-      {/* Glowing orb — top left */}
       <View style={styles.orbTopLeft} />
-
-      {/* Glowing orb — bottom right */}
       <View style={styles.orbBottomRight} />
 
       <ScrollView
@@ -99,7 +91,6 @@ export default function LoginScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Hero Section ── */}
         <View style={styles.heroSection}>
           <View style={styles.logoWrapper}>
             <LinearGradient
@@ -115,14 +106,12 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.brandTagline}>Staff & Customer Portal</Text>
         </View>
 
-        {/* ── Glass Card Form ── */}
         <Animated.View
           style={[
             styles.glassCard,
             { transform: [{ scale: cardScale }], opacity: cardOpacity },
           ]}
         >
-          {/* Card top accent line */}
           <LinearGradient
             colors={['#1E3A8A', '#D4AF37']}
             start={{ x: 0, y: 0 }}
@@ -135,7 +124,6 @@ export default function LoginScreen({ navigation }) {
             Sign in to manage bookings and rentals.
           </Text>
 
-          {/* Email field */}
           <View style={styles.fieldWrapper}>
             <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
             <View style={styles.inputRow}>
@@ -155,7 +143,6 @@ export default function LoginScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Password field */}
           <View style={styles.fieldWrapper}>
             <Text style={styles.fieldLabel}>PASSWORD</Text>
             <View style={styles.inputRow}>
@@ -185,6 +172,15 @@ export default function LoginScreen({ navigation }) {
             </View>
           </View>
 
+          {/* Forgot Password */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ForgotPassword')}
+            style={{ alignSelf: 'flex-end', marginBottom: 16 }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ color: '#1E3A8A', fontSize: 13, fontWeight: '600' }}>Forgot Password?</Text>
+          </TouchableOpacity>
+
           {/* Sign In button */}
           <TouchableOpacity
             onPress={handleLogin}
@@ -209,14 +205,12 @@ export default function LoginScreen({ navigation }) {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Divider */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>or</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Create Account */}
           <TouchableOpacity
             onPress={() => navigation.navigate('Register')}
             style={styles.createAccountBtn}
@@ -227,7 +221,6 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Footer */}
         <Text style={styles.footerText}>
           By signing in, you agree to our{' '}
           <Text style={styles.footerLink}>Terms of Service</Text>
@@ -242,8 +235,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-
-  /* ── Orbs ── */
   orbTopLeft: {
     position: 'absolute',
     top: -80,
@@ -262,16 +253,12 @@ const styles = StyleSheet.create({
     borderRadius: 120,
     backgroundColor: 'rgba(255, 107, 0, 0.1)',
   },
-
-  /* ── Scroll ── */
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 48,
   },
-
-  /* ── Hero ── */
   heroSection: {
     alignItems: 'center',
     marginBottom: 36,
@@ -309,8 +296,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.3,
   },
-
-  /* ── Glass Card ── */
   glassCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 24,
@@ -333,7 +318,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },
-
   cardTitle: {
     fontSize: 22,
     fontWeight: '700',
@@ -347,8 +331,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: 20,
   },
-
-  /* ── Fields ── */
   fieldWrapper: {
     marginBottom: 4,
   },
@@ -375,8 +357,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 4,
   },
-
-  /* ── Sign In button ── */
   signInBtnWrapper: {
     marginTop: 8,
     borderRadius: 14,
@@ -400,8 +380,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.3,
   },
-
-  /* ── Divider ── */
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -418,8 +396,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     fontWeight: '500',
   },
-
-  /* ── Create Account ── */
   createAccountBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -435,8 +411,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-
-  /* ── Footer ── */
   footerText: {
     textAlign: 'center',
     color: '#4a4a4a',
