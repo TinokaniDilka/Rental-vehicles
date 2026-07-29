@@ -13,19 +13,29 @@ const {
   updateProfile,
   updateVerificationStatus,
   uploadVerificationDocs,
-  deleteUser
+  deleteUser,
+  forgotPassword,
+  verifyResetOtp,
+  resetPassword
 } = require("../controllers/userController");
 
-// ===================== ID VERIFICATION FILE UPLOAD CONFIG =====================
+// ===================== PROFILE / ID VERIFICATION FILE UPLOAD CONFIG =====================
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
 const verificationUploadDir = path.join(__dirname, "..", "uploads", "verification");
-if (!fs.existsSync(verificationUploadDir)) {
-  fs.mkdirSync(verificationUploadDir, { recursive: true });
-}
+const profileUploadDir = path.join(__dirname, "..", "uploads", "profile");
 
-const verificationStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, verificationUploadDir),
+[verificationUploadDir, profileUploadDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+const profileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = file.fieldname === "profilePhoto" ? profileUploadDir : verificationUploadDir;
+    cb(null, dir);
+  },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname) || "";
     const userId = req.user?.id || "unknown";
@@ -33,33 +43,37 @@ const verificationStorage = multer.diskStorage({
   }
 });
 
-const verificationFileFilter = (req, file, cb) => {
+const profileFileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed for ID/License photos"), false);
+    cb(new Error("Only image files are allowed"), false);
   }
 };
 
-const uploadVerificationFiles = multer({
-  storage: verificationStorage,
-  fileFilter: verificationFileFilter,
+const uploadProfileFiles = multer({
+  storage: profileStorage,
+  fileFilter: profileFileFilter,
   limits: { fileSize: MAX_UPLOAD_SIZE }
 });
 
 // Public routes
 router.post("/login", loginUser);
 
+// Password reset (public — no token yet, that's the point)
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-reset-otp", verifyResetOtp);
+router.post("/reset-password", resetPassword);
+
 // Register user - Staff or Customer Registration
 router.post("/register", async (req, res) => {
   try {
-    let { name, email, password, role } = req.body;
+    let { name, email, password, role, phone } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    // Default role to "customer" if not specified or invalid. Allow "customer" or "staff".
     if (!role || !["customer", "staff"].includes(role)) {
       role = "customer";
     }
@@ -76,6 +90,7 @@ router.post("/register", async (req, res) => {
       email, 
       password, 
       role,
+      phone: phone ? phone.trim() : "",
       isActive: true
     });
 
@@ -87,6 +102,7 @@ router.post("/register", async (req, res) => {
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        phone: newUser.phone,
         role: newUser.role
       }
     });
@@ -103,9 +119,10 @@ router.post("/register", async (req, res) => {
 // Protected profile route
 router.put("/profile", protect, updateProfile);
 
-// ID Verification document upload (multipart/form-data: idPhoto, licensePhoto)
+// Profile photo + ID Verification document upload (multipart/form-data: profilePhoto, idPhoto, licensePhoto)
 router.put("/profile/upload-docs", protect, (req, res, next) => {
-  const handler = uploadVerificationFiles.fields([
+  const handler = uploadProfileFiles.fields([
+    { name: "profilePhoto", maxCount: 1 },
     { name: "idPhoto", maxCount: 1 },
     { name: "licensePhoto", maxCount: 1 }
   ]);

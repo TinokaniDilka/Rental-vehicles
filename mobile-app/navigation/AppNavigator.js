@@ -7,7 +7,8 @@ import { AuthContext } from '../context/AuthContext';
 // Auth Screens
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterScreen from '../screens/Auth/RegisterScreen';
-
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 // Customer Screens
 import HomeScreen from '../Home/HomeScreen';
 import VehicleListScreen from '../Vehicles/VehicleListScreen';
@@ -71,9 +72,10 @@ export default function AppNavigator() {
         {!user ? (
           // ── Unauthenticated: Auth Stack ──
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ animation: 'slide_from_right' }} />  </>
         ) : user.role === 'staff' ? (
           // ── Staff: Staff Dashboard (self-contained with own bottom tab bar) ──
           <>
