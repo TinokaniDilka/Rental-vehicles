@@ -4,7 +4,7 @@ import axios from "axios";
 export default function StaffDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")) || {});
   const token = localStorage.getItem("token");
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
@@ -263,6 +263,7 @@ const fetchFeedbacks = async () => {
       }
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
       setProfilePhotoFile(null);
@@ -698,8 +699,11 @@ const filteredComplaints = complaintCategoryFilter === "all"
             {showProfileMenu && (
               <div className="profile-dropdown-menu glass-card scale-in" onClick={(e) => e.stopPropagation()}>
                 <div style={{ textAlign: "center", padding: "15px", borderBottom: "1px solid var(--border-color)" }}>
-                  <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "var(--primary-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", color: "white", margin: "0 auto 10px" }}>👤</div>
-                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{user.name}</h3>
+<div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "var(--primary-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", color: "white", margin: "0 auto 10px", overflow: "hidden" }}>
+  {user.profilePhoto ? (
+    <img src={`http://localhost:5000${user.profilePhoto}`} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+  ) : "👤"}
+</div>                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{user.name}</h3>
                   <p style={{ color: "var(--text-secondary)", fontSize: "12px", margin: "4px 0 0" }}>{user.email}</p>
                 </div>
                 <div style={{ padding: "12px 16px", cursor: "pointer", fontSize: "14px", borderBottom: "1px solid var(--border-color)" }} onClick={() => { setShowProfileModal(true); setShowProfileMenu(false); }}>👤 Edit Profile</div>
