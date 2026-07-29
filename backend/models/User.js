@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
     trim: true, 
     lowercase: true 
   },
+  phone: {
+    type: String,
+    default: "",
+    trim: true
+  },
   password: { 
     type: String, 
     required: true 
@@ -25,6 +30,10 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  profilePhoto: {
+    type: String,
+    default: ""
   },
   nicNumber: {
     type: String,
@@ -46,6 +55,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['Not Verified', 'Pending Review', 'Verified'],
     default: 'Not Verified'
+  },
+  resetPasswordOtp: {
+    type: String,
+    default: null
+  },
+  resetPasswordOtpExpires: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true });
 

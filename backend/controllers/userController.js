@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const { logAudit } = require("../utils/auditLogger");
+const crypto = require("crypto");
+const { sendOtpEmail } = require("../utils/mailer");
 
 const loginUser = async (req, res) => {
   try {
@@ -9,10 +11,6 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Please provide email and password" });
     }
 
-    // Emails are stored trimmed + lowercased (see /register and the
-    // schema's `lowercase: true`). The lookup must normalize the same
-    // way, or a login with different casing/whitespace silently fails
-    // to match and returns "Invalid email or password".
     email = email.trim().toLowerCase();
 
     const user = await User.findOne({ email });
@@ -21,17 +19,14 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Check account status
     if (user.isActive === false) {
       return res.status(403).json({ message: "Your account is deactivated. Please contact administration." });
     }
 
-    // Plain text comparison
     if (user.password !== password) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Generate Token
     const token = require("jsonwebtoken").sign(
       { id: user._id }, 
       process.env.JWT_SECRET || "mysecretkey123456789", 
@@ -47,6 +42,7 @@ const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         isActive: user.isActive,
+        profilePhoto: user.profilePhoto,
         nicNumber: user.nicNumber,
         drivingLicenseNumber: user.drivingLicenseNumber,
         idPhoto: user.idPhoto,
@@ -67,9 +63,6 @@ const getAllUsers = async (req, res) => {
     const filter = {};
 
     if (req.query.verificationStatus) {
-      // Only customers ever carry a verificationStatus, so scope the
-      // query to that role as a safety net even if stray data exists
-      // on a staff/admin record.
       filter.role = "customer";
       filter.verificationStatus = req.query.verificationStatus;
     }
@@ -88,9 +81,6 @@ const registerStaff = async (req, res) => {
       return res.status(400).json({ message: "Name, email, and password are required" });
     }
 
-    // Only "staff" and "admin" can be created through this admin-only
-    // endpoint. Anything else (or missing) safely defaults to "staff"
-    // rather than silently ignoring what was actually requested.
     const finalRole = ["staff", "admin"].includes(role) ? role : "staff";
 
     const trimmedEmail = email.trim().toLowerCase();
@@ -133,7 +123,6 @@ const toggleUserActive = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Don't allow toggling self (prevent lockouts)
     if (user._id.toString() === req.user.id.toString()) {
       return res.status(400).json({ message: "You cannot deactivate your own account" });
     }
@@ -157,13 +146,14 @@ const toggleUserActive = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, email, password, nicNumber, drivingLicenseNumber, idPhoto, licensePhoto } = req.body;
+    const { name, email, password, phone, nicNumber, drivingLicenseNumber, idPhoto, licensePhoto } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (name) user.name = name;
     if (email) user.email = email.trim().toLowerCase();
     if (password) user.password = password;
+    if (phone !== undefined) user.phone = phone.trim();
     if (nicNumber !== undefined) user.nicNumber = nicNumber;
     if (drivingLicenseNumber !== undefined) user.drivingLicenseNumber = drivingLicenseNumber;
     if (idPhoto) user.idPhoto = idPhoto;
@@ -180,7 +170,9 @@ const updateProfile = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
+        profilePhoto: user.profilePhoto,
         nicNumber: user.nicNumber,
         drivingLicenseNumber: user.drivingLicenseNumber,
         idPhoto: user.idPhoto,
@@ -193,19 +185,23 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// Upload ID / License photo documents (multipart form data)
+// Upload profile photo / ID / License photo documents (multipart form data)
 const uploadVerificationDocs = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    const profilePhotoFile = req.files?.profilePhoto?.[0];
     const idPhotoFile = req.files?.idPhoto?.[0];
     const licensePhotoFile = req.files?.licensePhoto?.[0];
 
-    if (!idPhotoFile && !licensePhotoFile) {
+    if (!profilePhotoFile && !idPhotoFile && !licensePhotoFile) {
       return res.status(400).json({ message: "No files were uploaded" });
     }
 
+    if (profilePhotoFile) {
+      user.profilePhoto = `/uploads/profile/${profilePhotoFile.filename}`;
+    }
     if (idPhotoFile) {
       user.idPhoto = `/uploads/verification/${idPhotoFile.filename}`;
     }
@@ -213,18 +209,20 @@ const uploadVerificationDocs = async (req, res) => {
       user.licensePhoto = `/uploads/verification/${licensePhotoFile.filename}`;
     }
 
-    // Any new document submission requires a fresh admin review
-    user.verificationStatus = "Pending Review";
+    if (idPhotoFile || licensePhotoFile) {
+      user.verificationStatus = "Pending Review";
+    }
 
     await user.save();
 
     res.json({
-      message: "Documents uploaded successfully ✅. Your account is now Pending Review.",
+      message: "Uploaded successfully ✅",
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        profilePhoto: user.profilePhoto,
         nicNumber: user.nicNumber,
         drivingLicenseNumber: user.drivingLicenseNumber,
         idPhoto: user.idPhoto,
@@ -254,9 +252,6 @@ const updateVerificationStatus = async (req, res) => {
     user.verificationStatus = verificationStatus;
     await user.save();
 
-    // Only log an explicit approve/reject decision — "Pending Review" is
-    // an intermediate state set by the customer's own upload, not an
-    // admin action worth an audit entry.
     if (verificationStatus === "Verified" || verificationStatus === "Not Verified") {
       await logAudit({
         actor: req.user,
@@ -273,9 +268,6 @@ const updateVerificationStatus = async (req, res) => {
   }
 };
 
-// Permanently delete a user. Only allowed for accounts that are already
-// deactivated — this is a safety rail so an admin can't accidentally
-// wipe out an active account in one click. Self-deletion is blocked too.
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -310,6 +302,118 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    let { emailOrPhone } = req.body;
+    if (!emailOrPhone) return res.status(400).json({ message: "Email or phone number is required" });
+    emailOrPhone = emailOrPhone.trim();
+
+    const genericResponse = { message: "If that account exists, a reset code has been sent to the registered email." };
+
+    // Determine if the input looks like an email or a phone number
+    const isEmail = emailOrPhone.includes("@");
+    let user;
+    if (isEmail) {
+      user = await User.findOne({ email: emailOrPhone.toLowerCase() });
+    } else {
+      // Normalize phone: strip spaces/dashes for comparison
+      const normalizedPhone = emailOrPhone.replace(/[\s\-().]/g, "");
+      user = await User.findOne({
+        $or: [
+          { phone: normalizedPhone },
+          { phone: emailOrPhone }
+        ]
+      });
+    }
+
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    if (!user.email) {
+      return res.json(genericResponse);
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    user.resetPasswordOtp = otp;
+    user.resetPasswordOtpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    try {
+      await sendOtpEmail(user.email, otp);
+    } catch (mailErr) {
+      console.error("Failed to send OTP email:", mailErr);
+      return res.status(500).json({ message: "Failed to send reset email. Please try again later." });
+    }
+
+    // Return the email (partially masked) so the UI can show confirmation
+    const maskedEmail = user.email.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) => a + "*".repeat(b.length) + c);
+    res.json({ ...genericResponse, maskedEmail, resolvedEmail: user.email });
+  } catch (err) {
+    res.status(500).json({ message: "Error processing request", error: err.message });
+  }
+};
+
+const verifyResetOtp = async (req, res) => {
+  try {
+    let { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: "Email and code are required" });
+    email = email.trim().toLowerCase();
+
+    const user = await User.findOne({ email });
+    if (!user || !user.resetPasswordOtp || !user.resetPasswordOtpExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+
+    if (user.resetPasswordOtpExpires < Date.now()) {
+      return res.status(400).json({ message: "This code has expired. Please request a new one." });
+    }
+
+    if (user.resetPasswordOtp !== otp.toString().trim()) {
+      return res.status(400).json({ message: "Incorrect code" });
+    }
+
+    res.json({ message: "Code verified ✅" });
+  } catch (err) {
+    res.status(500).json({ message: "Error verifying code", error: err.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    let { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "Email, code, and new password are required" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+    email = email.trim().toLowerCase();
+
+    const user = await User.findOne({ email });
+    if (!user || !user.resetPasswordOtp || !user.resetPasswordOtpExpires) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+
+    if (user.resetPasswordOtpExpires < Date.now()) {
+      return res.status(400).json({ message: "This code has expired. Please request a new one." });
+    }
+
+    if (user.resetPasswordOtp !== otp.toString().trim()) {
+      return res.status(400).json({ message: "Incorrect code" });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordOtp = null;
+    user.resetPasswordOtpExpires = null;
+    await user.save();
+
+    res.json({ message: "Password reset successfully ✅. You can now log in." });
+  } catch (err) {
+    res.status(500).json({ message: "Error resetting password", error: err.message });
+  }
+};
+
 module.exports = {
   loginUser,
   getAllUsers,
@@ -318,5 +422,8 @@ module.exports = {
   updateProfile,
   uploadVerificationDocs,
   updateVerificationStatus,
-  deleteUser
+  deleteUser,
+  forgotPassword,
+  verifyResetOtp,
+  resetPassword
 };
