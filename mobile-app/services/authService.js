@@ -12,10 +12,26 @@ export const getProfile = () =>
 export const updateProfile = (data) =>
   api.put('/api/auth/profile', data);
 
-// Upload ID Photo / License Photo as multipart form data.
-// `docs` = { idPhoto?: { uri, name, type }, licensePhoto?: { uri, name, type } }
+export const forgotPassword = (email) =>
+  api.post('/api/auth/forgot-password', { email });
+
+export const verifyResetOtp = (email, otp) =>
+  api.post('/api/auth/verify-reset-otp', { email, otp });
+
+export const resetPassword = (email, otp, newPassword) =>
+  api.post('/api/auth/reset-password', { email, otp, newPassword });
+
+// Upload Profile Photo / ID Photo / License Photo as multipart form data.
+// `docs` = { profilePhoto?: {uri,name,type}, idPhoto?: {...}, licensePhoto?: {...} }
 export const uploadVerificationDocs = (docs) => {
   const formData = new FormData();
+  if (docs.profilePhoto) {
+    formData.append('profilePhoto', {
+      uri: docs.profilePhoto.uri,
+      name: docs.profilePhoto.name || 'profilePhoto.jpg',
+      type: docs.profilePhoto.type || 'image/jpeg',
+    });
+  }
   if (docs.idPhoto) {
     formData.append('idPhoto', {
       uri: docs.idPhoto.uri,
@@ -34,4 +50,12 @@ export const uploadVerificationDocs = (docs) => {
   return api.put('/api/auth/profile/upload-docs', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+};
+
+// Builds a full image URL from a relative path like "/uploads/profile/xyz.jpg"
+// using whatever host api.js is configured with, so it works on device too.
+export const getImageUrl = (path) => {
+  if (!path) return null;
+  const origin = api.defaults.baseURL.replace(/\/api\/?$/, '');
+  return `${origin}${path}`;
 };
