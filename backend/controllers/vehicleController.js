@@ -28,6 +28,8 @@ const createVehicle = async (req, res) => {
   try {
     const renterId = req.user.id;
 
+    const uploadedImages = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
+
     const vehicleData = {
       owner: renterId,
       name: req.body.name,
@@ -36,7 +38,8 @@ const createVehicle = async (req, res) => {
       type: req.body.type || "car",
       location: req.body.location || "Colombo",
       isAvailable: true,
-      image: req.file ? `/uploads/${req.file.filename}` : null,
+      image: uploadedImages[0] || null,
+      images: uploadedImages,
       requireVerification: req.body.requireVerification === "true" || req.body.requireVerification === true,
       depositAmount: req.body.depositAmount ? Number(req.body.depositAmount) : undefined
     };
@@ -78,8 +81,29 @@ const updateVehicle = async (req, res) => {
       updateData.depositAmount = Number(req.body.depositAmount);
     }
 
-    if (req.file) {
-      updateData.image = `/uploads/${req.file.filename}`;
+    // Images: frontend sends which existing images to keep as "existingImages"
+    // (JSON array of paths), and any newly uploaded files come through req.files.
+    let finalImages;
+    if (req.body.existingImages !== undefined) {
+      let keptImages = [];
+      try {
+        keptImages = JSON.parse(req.body.existingImages);
+        if (!Array.isArray(keptImages)) keptImages = [];
+      } catch {
+        keptImages = [];
+      }
+      const newImages = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
+      finalImages = [...keptImages, ...newImages];
+    } else if (req.files && req.files.length > 0) {
+      // No existingImages info sent — just append new uploads to whatever's there
+      const existingVehicle = await Vehicle.findById(req.params.id);
+      const newImages = req.files.map(f => `/uploads/${f.filename}`);
+      finalImages = [...(existingVehicle?.images || []), ...newImages];
+    }
+
+    if (finalImages) {
+      updateData.images = finalImages;
+      updateData.image = finalImages[0] || null;
     }
 
     const query = (req.user.role === "admin" || req.user.role === "staff")

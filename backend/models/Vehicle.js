@@ -14,7 +14,8 @@ const vehicleSchema = new mongoose.Schema({
   type: { type: String, enum: ['car', 'bike', 'van', 'scooter'], required: true },
   pricePerDay: { type: Number, required: true },
   location: { type: String, required: true },
-  image: { type: String }, // URL or path
+  image: { type: String }, // URL or path (cover/primary image, kept for backward compatibility)
+  images: { type: [String], default: [] }, // Full gallery of vehicle photos
   description: String,
   isAvailable: { type: Boolean, default: true },
   depositAmount: { type: Number, default: 5000 },
