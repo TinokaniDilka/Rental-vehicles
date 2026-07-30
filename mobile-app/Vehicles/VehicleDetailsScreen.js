@@ -30,6 +30,7 @@ export default function VehicleDetailsScreen({ route, navigation }) {
   const { user, refreshUser } = useContext(AuthContext);
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   // AuthContext's `user` only reflects whatever was true at login. If admin
   // approves ID/license on web while the customer is still logged in on
@@ -63,13 +64,21 @@ export default function VehicleDetailsScreen({ route, navigation }) {
 
   useEffect(() => {
     getVehicleById(vehicleId)
-      .then((res) => setVehicle(res.data.vehicle || res.data))
+      .then((res) => {
+        setVehicle(res.data.vehicle || res.data);
+        setGalleryIndex(0);
+      })
       .catch(() => Alert.alert('Error', 'Failed to load vehicle'))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <Loader message="Loading details..." />;
   if (!vehicle) return null;
+
+  const galleryImages = vehicle.images && vehicle.images.length > 0
+    ? vehicle.images
+    : (vehicle.image ? [vehicle.image] : []);
+  const safeGalleryIndex = galleryImages.length > 0 ? Math.min(galleryIndex, galleryImages.length - 1) : 0;
 
   const SPECS = [
     { icon: 'location-outline', label: vehicle.location || 'N/A', color: '#FF8C42' },
@@ -91,8 +100,8 @@ export default function VehicleDetailsScreen({ route, navigation }) {
         <View style={styles.imageContainer}>
           <Image
            source={{
-  uri: vehicle?.image
-    ? `http://10.24.89.129:5000${vehicle.image}`
+  uri: galleryImages[safeGalleryIndex]
+    ? `http://10.24.89.129:5000${galleryImages[safeGalleryIndex]}`
     : 'https://via.placeholder.com/300'
 }} style={styles.heroImage}
             resizeMode="cover"
@@ -118,7 +127,48 @@ export default function VehicleDetailsScreen({ route, navigation }) {
             <View style={styles.availDot} />
             <Text style={styles.availText}>Available</Text>
           </View>
+
+          {/* Gallery prev/next + counter, only when there's more than one photo */}
+          {galleryImages.length > 1 && (
+            <>
+              <TouchableOpacity
+                style={styles.galleryNavBtnLeft}
+                activeOpacity={0.8}
+                onPress={() => setGalleryIndex((safeGalleryIndex - 1 + galleryImages.length) % galleryImages.length)}
+              >
+                <Ionicons name="chevron-back" size={20} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.galleryNavBtnRight}
+                activeOpacity={0.8}
+                onPress={() => setGalleryIndex((safeGalleryIndex + 1) % galleryImages.length)}
+              >
+                <Ionicons name="chevron-forward" size={20} color="#fff" />
+              </TouchableOpacity>
+              <View style={styles.galleryCounter}>
+                <Text style={styles.galleryCounterText}>{safeGalleryIndex + 1} / {galleryImages.length}</Text>
+              </View>
+            </>
+          )}
         </View>
+
+        {/* Thumbnail strip */}
+        {galleryImages.length > 1 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.galleryThumbRow}
+          >
+            {galleryImages.map((img, i) => (
+              <TouchableOpacity key={i} onPress={() => setGalleryIndex(i)} activeOpacity={0.8}>
+                <Image
+                  source={{ uri: `http://10.24.89.129:5000${img}` }}
+                  style={[styles.galleryThumb, i === safeGalleryIndex && styles.galleryThumbActive]}
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
         {/* ── Content ── */}
         <View style={styles.content}>
@@ -288,6 +338,61 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  galleryNavBtnLeft: {
+    position: 'absolute',
+    left: 16,
+    top: '50%',
+    marginTop: -18,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  galleryNavBtnRight: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    marginTop: -18,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  galleryCounter: {
+    position: 'absolute',
+    bottom: 16,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  galleryCounterText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  galleryThumbRow: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  galleryThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
+    marginRight: 10,
+    opacity: 0.65,
+  },
+  galleryThumbActive: {
+    opacity: 1,
+    borderWidth: 2,
+    borderColor: '#FF8C42',
   },
 
   /* Content */
