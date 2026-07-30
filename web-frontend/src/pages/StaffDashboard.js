@@ -96,7 +96,8 @@ const totalNotifications =
   const [vehiclePrice, setVehiclePrice] = useState("");
   const [vehicleLocation, setVehicleLocation] = useState("");
   const [vehicleDesc, setVehicleDesc] = useState("");
-  const [vehicleImageFile, setVehicleImageFile] = useState(null);
+  const [vehicleImageFiles, setVehicleImageFiles] = useState([]); // newly selected files (not yet uploaded)
+  const [existingVehicleImages, setExistingVehicleImages] = useState([]); // image URLs already on the vehicle (editing)
   const [vehicleRequireVerification, setVehicleRequireVerification] = useState(false);
 
   // Complaint category filter
@@ -282,6 +283,11 @@ const fetchFeedbacks = async () => {
       setVehicleLocation(vehicle.location);
       setVehicleDesc(vehicle.description || "");
       setVehicleRequireVerification(!!vehicle.requireVerification);
+      setExistingVehicleImages(
+        vehicle.images && vehicle.images.length > 0
+          ? vehicle.images
+          : (vehicle.image ? [vehicle.image] : [])
+      );
     } else {
       setVehicleName("");
       setVehicleType("car");
@@ -289,9 +295,18 @@ const fetchFeedbacks = async () => {
       setVehicleLocation("");
       setVehicleDesc("");
       setVehicleRequireVerification(false);
+      setExistingVehicleImages([]);
     }
-    setVehicleImageFile(null);
+    setVehicleImageFiles([]);
     setShowVehicleModal(true);
+  };
+
+  const handleRemoveExistingVehicleImage = (indexToRemove) => {
+    setExistingVehicleImages((prev) => prev.filter((_, i) => i !== indexToRemove));
+  };
+
+  const handleRemoveNewVehicleImage = (indexToRemove) => {
+    setVehicleImageFiles((prev) => prev.filter((_, i) => i !== indexToRemove));
   };
 
   const handleSaveVehicle = async (e) => {
@@ -307,9 +322,14 @@ const fetchFeedbacks = async () => {
     formData.append("location", vehicleLocation);
     formData.append("description", vehicleDesc);
     formData.append("requireVerification", vehicleRequireVerification);
-    if (vehicleImageFile) {
-      formData.append("image", vehicleImageFile);
+    if (editingVehicle) {
+      // Tell the backend which of the vehicle's existing images to keep;
+      // anything removed by the staff member here won't be included.
+      formData.append("existingImages", JSON.stringify(existingVehicleImages));
     }
+    vehicleImageFiles.forEach((file) => {
+      formData.append("images", file);
+    });
 
     try {
       if (editingVehicle) {
@@ -691,7 +711,15 @@ const filteredComplaints = complaintCategoryFilter === "all"
 
           <div style={{ position: "relative" }}>
             <div className="profile-pill" onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
-              <span style={{ fontSize: "18px" }}>👤</span>
+              {user.profilePhoto ? (
+                <img
+                  src={`http://localhost:5000${user.profilePhoto}`}
+                  alt="avatar"
+                  style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ fontSize: "18px" }}>👤</span>
+              )}
               <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Staff"}</span>
               <span style={{ fontSize: "10px", marginLeft: "4px" }}>▼</span>
             </div>
@@ -1271,8 +1299,56 @@ const filteredComplaints = complaintCategoryFilter === "all"
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label className="form-label">Upload Photo</label>
-                <input type="file" accept="image/*" onChange={(e) => setVehicleImageFile(e.target.files[0])} className="custom-input" />
+                <label className="form-label">Vehicle Photos</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => setVehicleImageFiles((prev) => [...prev, ...Array.from(e.target.files)])}
+                  className="custom-input"
+                />
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
+                  Add one or more photos. Customers will see all of them on the vehicle details page.
+                </p>
+
+                {(existingVehicleImages.length > 0 || vehicleImageFiles.length > 0) && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
+                    {existingVehicleImages.map((imgPath, i) => (
+                      <div key={`existing-${i}`} style={{ position: "relative", width: "70px", height: "70px" }}>
+                        <img
+                          src={`http://localhost:5000${imgPath}`}
+                          alt={`Vehicle ${i + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--border-color)" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingVehicleImage(i)}
+                          style={{ position: "absolute", top: "-6px", right: "-6px", width: "20px", height: "20px", borderRadius: "50%", background: "var(--danger)", color: "white", border: "none", cursor: "pointer", fontSize: "12px", lineHeight: "20px", padding: 0 }}
+                          title="Remove photo"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    {vehicleImageFiles.map((file, i) => (
+                      <div key={`new-${i}`} style={{ position: "relative", width: "70px", height: "70px" }}>
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`New upload ${i + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px", border: "2px solid var(--primary)" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveNewVehicleImage(i)}
+                          style={{ position: "absolute", top: "-6px", right: "-6px", width: "20px", height: "20px", borderRadius: "50%", background: "var(--danger)", color: "white", border: "none", cursor: "pointer", fontSize: "12px", lineHeight: "20px", padding: 0 }}
+                          title="Remove photo"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid var(--border-color)" }}>

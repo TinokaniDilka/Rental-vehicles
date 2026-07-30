@@ -11,6 +11,7 @@ import {
   Dimensions,
   TextInput,
   ImageBackground,
+  Image,
   Modal,                    // ✅ ADD THIS
   KeyboardAvoidingView,     // ✅ ADD THIS
   Platform,                 // ✅ ADD THIS
@@ -25,7 +26,6 @@ import { AuthContext } from '../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { COLORS, SHADOWS, SIZES } from '../utils/theme';
-import { Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 // ─── Mini Components ────────────────────────────────────────────────────────
 
@@ -106,8 +106,8 @@ export default function StaffDashboardScreen({ navigation }) {
   const [vehicleDesc, setVehicleDesc] = useState('');
   const [vehicleRequireVerification, setVehicleRequireVerification] = useState(false);
   const [vehicleIsAvailable, setVehicleIsAvailable] = useState(true);
-  const [vehicleImageUri, setVehicleImageUri] = useState(null);
-  const [vehicleImageChanged, setVehicleImageChanged] = useState(false);
+  const [existingVehicleImages, setExistingVehicleImages] = useState([]); // raw paths already on server, e.g. "/uploads/x.jpg"
+  const [newVehicleImages, setNewVehicleImages] = useState([]); // picked assets not yet uploaded
   const [vehicleSaving, setVehicleSaving] = useState(false);
 
   // Review booking modal
@@ -220,28 +220,38 @@ const fetchBookings = async (t) => {
   setVehicleDesc(vehicle?.description || '');
   setVehicleRequireVerification(!!vehicle?.requireVerification);
   setVehicleIsAvailable(vehicle?.isAvailable !== undefined ? vehicle.isAvailable : true);
-  setVehicleImageUri(vehicle?.image ? `${api.defaults.baseURL}${vehicle.image}` : null);
-  setVehicleImageChanged(false);
+  setExistingVehicleImages(
+    vehicle?.images && vehicle.images.length > 0
+      ? vehicle.images
+      : (vehicle?.image ? [vehicle.image] : [])
+  );
+  setNewVehicleImages([]);
 
   setShowVehicleModal(true);
 };
 
-const pickVehicleImage = async () => {
+const pickVehicleImages = async () => {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
-    Alert.alert('Permission needed', 'Please allow photo library access to upload a vehicle photo.');
+    Alert.alert('Permission needed', 'Please allow photo library access to upload vehicle photos.');
     return;
   }
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     quality: 0.7,
-    allowsEditing: true,
-    aspect: [4, 3],
+    allowsMultipleSelection: true,
   });
-  if (!result.canceled && result.assets?.[0]?.uri) {
-    setVehicleImageUri(result.assets[0].uri);
-    setVehicleImageChanged(true);
+  if (!result.canceled && result.assets?.length) {
+    setNewVehicleImages((prev) => [...prev, ...result.assets]);
   }
+};
+
+const removeExistingVehicleImage = (index) => {
+  setExistingVehicleImages((prev) => prev.filter((_, i) => i !== index));
+};
+
+const removeNewVehicleImage = (index) => {
+  setNewVehicleImages((prev) => prev.filter((_, i) => i !== index));
 };
 
 
@@ -252,51 +262,44 @@ const saveVehicle = async () => {
   }
   setVehicleSaving(true);
   try {
-    let payload;
-    let config = authHeaders();
+    const formData = new FormData();
+    formData.append('name', vehicleName);
+    formData.append('type', vehicleType);
+    formData.append('pricePerDay', parseFloat(vehiclePrice));
+    formData.append('location', vehicleLocation);
+    formData.append('description', vehicleDesc);
+    formData.append('requireVerification', vehicleRequireVerification);
+    formData.append('isAvailable', vehicleIsAvailable);
 
-    if (vehicleImageChanged && vehicleImageUri) {
-      // A new photo was picked — send as multipart/form-data
-      const formData = new FormData();
-      formData.append('name', vehicleName);
-      formData.append('type', vehicleType);
-      formData.append('pricePerDay', parseFloat(vehiclePrice));
-      formData.append('location', vehicleLocation);
-      formData.append('description', vehicleDesc);
-      formData.append('requireVerification', vehicleRequireVerification);
-      formData.append('isAvailable', vehicleIsAvailable);
-      const filename = vehicleImageUri.split('/').pop() || 'vehicle.jpg';
+    if (editingVehicle) {
+      // Tell the backend which existing photos to keep — anything the
+      // staff member removed here won't be included.
+      formData.append('existingImages', JSON.stringify(existingVehicleImages));
+    }
+
+    newVehicleImages.forEach((asset) => {
+      const filename = asset.uri.split('/').pop() || 'vehicle.jpg';
       const match = /\.(\w+)$/.exec(filename);
       const ext = match ? match[1].toLowerCase() : 'jpg';
-      formData.append('image', {
-        uri: vehicleImageUri,
+      formData.append('images', {
+        uri: asset.uri,
         name: filename,
         type: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
       });
-      payload = formData;
-      config = {
-        headers: {
-          ...authHeaders().headers,
-          'Content-Type': 'multipart/form-data',
-        },
-      };
-    } else {
-      payload = {
-        name: vehicleName,
-        type: vehicleType,
-        pricePerDay: parseFloat(vehiclePrice),
-        location: vehicleLocation,
-        description: vehicleDesc,
-        requireVerification: vehicleRequireVerification,
-        isAvailable: vehicleIsAvailable,
-      };
-    }
+    });
+
+    const config = {
+      headers: {
+        ...authHeaders().headers,
+        'Content-Type': 'multipart/form-data',
+      },
+    };
 
     if (editingVehicle) {
-      await api.put(`/api/vehicles/${editingVehicle._id}`, payload, config);
+      await api.put(`/api/vehicles/${editingVehicle._id}`, formData, config);
       Alert.alert('Success', 'Vehicle updated successfully ✅');
     } else {
-      await api.post('/api/vehicles', payload, config);   // ← Fixed
+      await api.post('/api/vehicles', formData, config);
       Alert.alert('Success', 'Vehicle added successfully ✅');
     }
     setShowVehicleModal(false);
@@ -779,7 +782,14 @@ const getGreeting = () => {
           <View style={styles.glassCard}>
             <View style={styles.vehicleRow}>
               <View style={styles.vehicleIconBox}>
-                <Text style={{ fontSize: 28 }}>🚗</Text>
+                {v.image ? (
+                  <Image
+                    source={{ uri: `${api.defaults.baseURL}${v.image}` }}
+                    style={styles.vehicleThumbImage}
+                  />
+                ) : (
+                  <Text style={{ fontSize: 28 }}>🚗</Text>
+                )}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.vehicleName}>{v.name}</Text>
@@ -856,15 +866,29 @@ const getGreeting = () => {
       </View>
 
       {/* Filter chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
-        {['all', 'pending', 'confirmed', 'ongoing', 'completed', 'rejected'].map(s => (
-          <TouchableOpacity key={s} onPress={() => setFilterStatus(s)}
-            style={[styles.filterChip, filterStatus === s && styles.filterChipActive]}>
-            <Text style={[styles.filterChipText, filterStatus === s && styles.filterChipTextActive]}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
+        {['all', 'pending', 'confirmed', 'ongoing', 'completed', 'rejected'].map(s => {
+          const isActive = filterStatus === s;
+          const label = s.charAt(0).toUpperCase() + s.slice(1);
+          return (
+            <TouchableOpacity key={s} onPress={() => setFilterStatus(s)} activeOpacity={0.85}>
+              {isActive ? (
+                <LinearGradient
+                  colors={['#FF8C42', '#FF6B00']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.filterChip, styles.filterChipActiveShadow]}
+                >
+                  <Text style={[styles.filterChipText, styles.filterChipTextActive]}>{label}</Text>
+                </LinearGradient>
+              ) : (
+                <View style={[styles.filterChip, styles.filterChipInactive]}>
+                  <Text style={styles.filterChipText}>{label}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
       <FlatList
         data={filteredBookings}
@@ -884,7 +908,17 @@ const getGreeting = () => {
           return (
           <View style={styles.glassCard}>
             <View style={styles.bookingHeaderRow}>
-              <Text style={styles.bookingVehicle}>{b.vehicleId?.name || 'Vehicle'}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+                <Image
+                  source={{
+                    uri: b.vehicleId?.image
+                      ? `${api.defaults.baseURL}${b.vehicleId.image}`
+                      : 'https://via.placeholder.com/100'
+                  }}
+                  style={styles.bookingVehicleThumb}
+                />
+                <Text style={styles.bookingVehicle}>{b.vehicleId?.name || 'Vehicle'}</Text>
+              </View>
               <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 <StatusBadge status={b.status} />
                 {overdue && (
@@ -1160,22 +1194,29 @@ const getGreeting = () => {
         </TouchableOpacity>
       </View>
       {feedbackTab === 'complaints' && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 8 }}>
-          <TouchableOpacity
-            style={[styles.filterChip, complaintCategoryFilter === 'all' && styles.filterChipActive]}
-            onPress={() => setComplaintCategoryFilter('all')}
-          >
-            <Text style={[styles.filterChipText, complaintCategoryFilter === 'all' && styles.filterChipTextActive]}>All</Text>
-          </TouchableOpacity>
-          {COMPLAINT_CATEGORIES.filter(c => c !== 'Other').map(cat => (
-            <TouchableOpacity
-              key={cat}
-              style={[styles.filterChip, complaintCategoryFilter === cat && styles.filterChipActive]}
-              onPress={() => setComplaintCategoryFilter(cat)}
-            >
-              <Text style={[styles.filterChipText, complaintCategoryFilter === cat && styles.filterChipTextActive]}>{cat}</Text>
-            </TouchableOpacity>
-          ))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 8 }}>
+          {['all', ...COMPLAINT_CATEGORIES.filter(c => c !== 'Other')].map(cat => {
+            const isActive = complaintCategoryFilter === cat;
+            const label = cat === 'all' ? 'All' : cat;
+            return (
+              <TouchableOpacity key={cat} onPress={() => setComplaintCategoryFilter(cat)} activeOpacity={0.85}>
+                {isActive ? (
+                  <LinearGradient
+                    colors={['#FF8C42', '#FF6B00']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[styles.filterChip, styles.filterChipActiveShadow]}
+                  >
+                    <Text style={[styles.filterChipText, styles.filterChipTextActive]}>{label}</Text>
+                  </LinearGradient>
+                ) : (
+                  <View style={[styles.filterChip, styles.filterChipInactive]}>
+                    <Text style={styles.filterChipText}>{label}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       )}
       <FlatList
@@ -1303,20 +1344,37 @@ const renderVehicleModal = () => (
             contentContainerStyle={{ paddingBottom: 120 }}
             bounces={false}
           >
-            <Text style={styles.inputLabel}>Vehicle Photo</Text>
-            <TouchableOpacity onPress={pickVehicleImage} style={styles.imagePickerBox} activeOpacity={0.8}>
-              {vehicleImageUri ? (
-                <Image source={{ uri: vehicleImageUri }} style={styles.imagePickerPreview} />
-              ) : (
-                <View style={styles.imagePickerPlaceholder}>
-                  <Ionicons name="camera-outline" size={28} color="#1E3A8A" />
-                  <Text style={styles.imagePickerText}>Tap to add a photo</Text>
-                </View>
-              )}
-              <View style={styles.imagePickerEditBadge}>
-                <Ionicons name="pencil" size={13} color="#fff" />
+            <Text style={styles.inputLabel}>Vehicle Photos</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {existingVehicleImages.map((imgPath, i) => (
+                  <View key={`existing-${i}`} style={styles.vehiclePhotoThumbWrap}>
+                    <Image source={{ uri: `${api.defaults.baseURL}${imgPath}` }} style={styles.vehiclePhotoThumb} />
+                    <TouchableOpacity
+                      style={styles.vehiclePhotoRemoveBtn}
+                      onPress={() => removeExistingVehicleImage(i)}
+                    >
+                      <Ionicons name="close" size={12} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {newVehicleImages.map((asset, i) => (
+                  <View key={`new-${i}`} style={styles.vehiclePhotoThumbWrap}>
+                    <Image source={{ uri: asset.uri }} style={[styles.vehiclePhotoThumb, styles.vehiclePhotoThumbNew]} />
+                    <TouchableOpacity
+                      style={styles.vehiclePhotoRemoveBtn}
+                      onPress={() => removeNewVehicleImage(i)}
+                    >
+                      <Ionicons name="close" size={12} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                <TouchableOpacity onPress={pickVehicleImages} style={styles.vehiclePhotoAddBox} activeOpacity={0.8}>
+                  <Ionicons name="camera-outline" size={24} color="#1E3A8A" />
+                  <Text style={styles.imagePickerText}>Add</Text>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            </ScrollView>
 
             <Text style={styles.inputLabel}>Vehicle Name *</Text>
             <TextInput
@@ -1816,6 +1874,11 @@ overviewLabel: {
     width: 52, height: 52, borderRadius: 14,
     backgroundColor: 'rgba(255,140,66,0.15)',
     alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  vehicleThumbImage: {
+    width: '100%',
+    height: '100%',
   },
   vehicleName: { fontSize: 16, fontWeight: '700', color: '#1a1a1a' },
   vehicleMeta: { fontSize: 12, color: '#4a4a4a', marginTop: 2 },
@@ -1834,19 +1897,35 @@ overviewLabel: {
   filterRow: { marginBottom: 8 },
 filterChip: {
   paddingHorizontal: 15,
-  paddingVertical: 6,
-  borderRadius: 20,
-  backgroundColor: '#fff5eb',
-  borderWidth: 1.2,
-  borderColor: '#FF8C42',
+  paddingVertical: 8,
+  borderRadius: 18,
+  minHeight: 34,
+  justifyContent: 'center',
+  alignItems: 'center',
 },
 
-  filterChipActive: { backgroundColor: '#FF8C42', borderColor: '#FF8C42' },
+filterChipInactive: {
+  backgroundColor: '#ffffff',
+  borderWidth: 1.5,
+  borderColor: 'rgba(255,140,66,0.3)',
+  shadowColor: '#000',
+  shadowOpacity: 0.05,
+  shadowRadius: 5,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 1,
+},
+filterChipActiveShadow: {
+  shadowColor: '#FF8C42',
+  shadowOpacity: 0.45,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 5 },
+  elevation: 6,
+},
 filterChipText: {
   fontSize: 13, 
-  color: '#1a1a1a',
+  color: '#4a4a4a',
   fontWeight: '700',
- 
+  letterSpacing: 0.2,
 },
   filterChipTextActive: { color: '#ffffff' },
 
@@ -1854,6 +1933,7 @@ filterChipText: {
   badgeText: { fontSize: 10, fontWeight: '800' },
 
   bookingHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  bookingVehicleThumb: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#FFF0E0' },
   bookingVehicle: { fontSize: 16, fontWeight: '700', color: '#1a1a1a', flex: 1 },
   bookingCustomer: { fontSize: 13, color: '#4a4a4a', marginBottom: 4 },
   bookingDates: { fontSize: 13, color: '#4a4a4a', marginBottom: 4 },
@@ -1937,6 +2017,44 @@ filterChipText: {
     height: 26,
     borderRadius: 13,
     backgroundColor: 'rgba(255,140,66,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vehiclePhotoThumbWrap: {
+    width: 90,
+    height: 90,
+    borderRadius: 14,
+    overflow: 'visible',
+    position: 'relative',
+  },
+  vehiclePhotoThumb: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+  },
+  vehiclePhotoThumbNew: {
+    borderWidth: 2,
+    borderColor: '#FF8C42',
+  },
+  vehiclePhotoRemoveBtn: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vehiclePhotoAddBox: {
+    width: 90,
+    height: 90,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,245,235,0.6)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,140,66,0.3)',
+    borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
   },
