@@ -75,7 +75,8 @@ export default function AppNavigator() {
           <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ animation: 'slide_from_right' }} />  </>
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ animation: 'slide_from_right' }} />
+          </>
         ) : user.role === 'staff' ? (
           // ── Staff: Staff Dashboard (self-contained with own bottom tab bar) ──
           <>

@@ -12,7 +12,7 @@ const {
 const Vehicle = require("../models/Vehicle");
 
 router.get("/", getAllVehicles);
-router.post("/", protect, upload.single("image"), createVehicle);
+router.post("/", protect, upload.array("images", 10), createVehicle);
 router.get("/my-vehicles", protect, getMyVehicles);
 
 // GET SINGLE VEHICLE BY ID
@@ -29,7 +29,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", protect, upload.single("image"), updateVehicle);
+router.put("/:id", protect, upload.array("images", 10), updateVehicle);
 router.delete("/:id", protect, deleteVehicle);
 
 module.exports = router;
