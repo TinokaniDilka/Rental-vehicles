@@ -1047,16 +1047,23 @@ const getGreeting = () => {
 
         {/* Avatar Section */}
         <View style={profileStyles.avatarSection}>
-          <LinearGradient
-            colors={['#1E3A8A', '#D4AF37']}
-            style={profileStyles.avatarCircle}
-          >
-            {user?.name ? (
-              <Text style={profileStyles.avatarLetter}>{avatarLetter}</Text>
-            ) : (
-              <Ionicons name="person" size={38} color="#fff" />
-            )}
-          </LinearGradient>
+          {user?.profilePhoto ? (
+            <Image 
+              source={{ uri: user.profilePhoto.startsWith('http') ? user.profilePhoto : `${api.defaults.baseURL}/${user.profilePhoto.startsWith('/') ? user.profilePhoto.substring(1) : user.profilePhoto}` }}
+              style={profileStyles.avatarCircle} 
+            />
+          ) : (
+            <LinearGradient
+              colors={['#1E3A8A', '#D4AF37']}
+              style={profileStyles.avatarCircle}
+            >
+              {user?.name ? (
+                <Text style={profileStyles.avatarLetter}>{avatarLetter}</Text>
+              ) : (
+                <Ionicons name="person" size={38} color="#fff" />
+              )}
+            </LinearGradient>
+          )}
 
           <View style={profileStyles.onlineDot} />
 
@@ -1695,27 +1702,11 @@ const renderVehicleModal = () => (
 
   // ─── Main Render ──────────────────────────────────────────────────────────
 
+  // ─── Main Render ──────────────────────────────────────────────────────────
+
   return (
     <LinearGradient colors={['#ffffff', '#fff5eb', '#ffffff']} style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-
-      {/* Top Navbar */}
-      <View style={styles.topBar}>
-        <View style={styles.topBarRow}>
-          <LinearGradient colors={['#FFA366', '#FF8C42']} style={styles.topBarAvatar}>
-            <Text style={styles.topBarAvatarText}>{(user?.name || 'S').charAt(0).toUpperCase()}</Text>
-          </LinearGradient>
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.topBarBrand}>{user?.name || 'Staff Member'}</Text>
-            <Text style={styles.topBarUser}>QuickRide Staff Console</Text>
-          </View>
-          <View style={styles.topBarRolePill}>
-            <Ionicons name="build" size={12} color="#FFA366" />
-            <Text style={styles.topBarRoleText}>STAFF</Text>
-          </View>
-        </View>
-        <View style={styles.topBarGlow} />
-      </View>
 
       {/* Page Content */}
       <View style={{ flex: 1 }}>
@@ -1731,10 +1722,10 @@ const renderVehicleModal = () => (
 
       {/* Modals */}
       {renderVehicleModal()}
-{ReviewModal()}
-{ReturnModal()}
-{ComplaintModal()}
-{ReplyModal()}
+      {ReviewModal()}
+      {ReturnModal()}
+      {ComplaintModal()}
+      {ReplyModal()}
     </LinearGradient>
   );
 }

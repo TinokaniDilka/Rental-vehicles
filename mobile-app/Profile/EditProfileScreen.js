@@ -82,8 +82,11 @@ export default function EditProfileScreen({ navigation }) {
     setSaving(true);
     try {
       let updatedUser;
-      const res = await updateProfileApi({ name: name.trim(), email: email.trim() });
-      updatedUser = res.data.user || res.data;
+const res = await updateProfileApi({
+  name: name.trim(),
+  email: email.trim(),
+  phone: phone.trim(),
+});      updatedUser = res.data.user || res.data;
 
       if (profilePhotoAsset) {
         const docsRes = await uploadVerificationDocs({ profilePhoto: profilePhotoAsset });
@@ -213,6 +216,16 @@ export default function EditProfileScreen({ navigation }) {
                 autoCorrect={false}
                 returnKeyType="done"
               />
+              <Text style={[styles.inputLabel, { marginTop: 18 }]}>Phone Number</Text>
+    <TextInput
+      style={styles.input}
+      value={phone}
+      onChangeText={setPhone}
+      placeholder="e.g. 0771234567"
+      placeholderTextColor="#4a4a4a"
+      keyboardType="phone-pad"
+      returnKeyType="done"
+    />
             </View>
           ) : (
             // ── Customer: full profile — same fields as the old modal ──

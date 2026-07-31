@@ -18,20 +18,6 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // Validate email
-    if (!validateEmail(email)) {
-      showToast("Please enter a valid email address", "error");
-      return;
-    }
-    
-    // Validate password
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      showToast(passwordValidation.message, "error");
-      return;
-    }
-    
     setLoading(true);
 
     try {
@@ -106,22 +92,7 @@ export default function Login() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <label className="form-label">Password</label>
-              <Link
-                to="/forgot-password"
-                style={{
-                  color: "var(--primary)",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  textDecoration: "none",
-                  letterSpacing: "0.3px",
-                  opacity: 0.9,
-                }}
-              >
-                Forgot Password?
-              </Link>
-            </div>
+            <label className="form-label">Password</label>
             <input
               type="password"
               placeholder="••••••••"
