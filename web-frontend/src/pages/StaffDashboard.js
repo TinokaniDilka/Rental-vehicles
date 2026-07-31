@@ -84,6 +84,7 @@ const totalNotifications =
   // Profile state
   const [profileName, setProfileName] = useState(user.name || "");
   const [profileEmail, setProfileEmail] = useState(user.email || "");
+ const [profilePhone, setProfilePhone] = useState(user.phone || "");
   const [profilePassword, setProfilePassword] = useState("");
   const [profilePhotoFile, setProfilePhotoFile] = useState(null);
   const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
@@ -240,8 +241,7 @@ const fetchFeedbacks = async () => {
       // Step 1: update text profile fields
       const res = await axios.put(
         "http://localhost:5000/api/auth/profile",
-        { name: profileName, email: profileEmail, password: profilePassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+{ name: profileName, email: profileEmail, phone: profilePhone, password: profilePassword },        { headers: { Authorization: `Bearer ${token}` } }
       );
       let updatedUser = res.data.user;
 
@@ -1238,6 +1238,16 @@ const filteredComplaints = complaintCategoryFilter === "all"
                 <label className="form-label">Email Address</label>
                 <input type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="custom-input" required />
               </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+  <label className="form-label">Phone Number</label>
+  <input
+    type="tel"
+    value={profilePhone}
+    onChange={(e) => setProfilePhone(e.target.value)}
+    className="custom-input"
+    placeholder="e.g. 0771234567"
+  />
+</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label className="form-label">Profile Photo</label>
                 <input type="file" accept="image/*" onChange={handleProfilePhotoChange} className="custom-input" style={{ padding: "8px" }} />

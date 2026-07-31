@@ -56,6 +56,9 @@ export default function VehicleFleetReport() {
               <th className="custom-th">CATEGORY</th>
               <th className="custom-th">DAILY RATE</th>
               <th className="custom-th">LOCATION</th>
+              <th className="custom-th">STAFF / OWNER</th>
+              <th className="custom-th">PHONE</th>
+              <th className="custom-th">EMAIL</th>
               <th className="custom-th">ADDED DATE</th>
               <th className="custom-th">PHYSICAL STATE</th>
             </tr>
@@ -68,6 +71,9 @@ export default function VehicleFleetReport() {
                 <td className="custom-td">{v.type.toUpperCase()}</td>
                 <td className="custom-td" style={{ fontWeight: 600 }}>${v.pricePerDay}</td>
                 <td className="custom-td">{v.location}</td>
+                <td className="custom-td">{v.owner?.name || "N/A"}</td>
+                <td className="custom-td">{v.owner?.phone || "N/A"}</td>
+                <td className="custom-td">{v.owner?.email || "N/A"}</td>
                 <td className="custom-td">{v.createdAt ? new Date(v.createdAt).toLocaleDateString() : "N/A"}</td>
                 <td className="custom-td">
                   <span style={{
