@@ -3,7 +3,7 @@ import axios from "axios";
 
 export default function CustomerDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")) || {});
+  const user = JSON.parse(localStorage.getItem("user")) || {};
   const token = localStorage.getItem("token");
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
@@ -16,7 +16,6 @@ export default function CustomerDashboard() {
 
   // Navigation
   const [activePage, setActivePage] = useState({ page: "dashboard" });
-  const [vehicleGalleryIndex, setVehicleGalleryIndex] = useState(0);
 
   // Core Data
   const [vehicles, setVehicles] = useState([]);
@@ -443,7 +442,6 @@ const handleOpenFeedbackModal = (booking) => {
       }
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
       showToast("Profile updated successfully ✅");
       setProfilePassword("");
       setProfilePhotoFile(null);
@@ -614,31 +612,15 @@ const handleOpenFeedbackModal = (booking) => {
 
           <div style={{ position: "relative" }}>
             <div className="profile-pill" onClick={(e) => { e.stopPropagation(); setShowProfileMenu(!showProfileMenu); }}>
-  {user.profilePhoto ? (
-    <img
-      src={`http://localhost:5000${user.profilePhoto}`}
-      alt="avatar"
-      style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }}
-    />
-  ) : (
-    <span style={{ fontSize: "18px" }}>👤</span>
-  )}
-  <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Customer"}</span>
+              <span style={{ fontSize: "18px" }}>👤</span>
+              <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name || "Customer"}</span>
               <span style={{ fontSize: "10px", marginLeft: "4px" }}>▼</span>
             </div>
 
             {showProfileMenu && (
               <div className="profile-dropdown-menu glass-card scale-in" onClick={(e) => e.stopPropagation()}>
                 <div style={{ textAlign: "center", padding: "15px", borderBottom: "1px solid var(--border-color)" }}>
-                  {user.profilePhoto ? (
-                    <img
-                      src={`http://localhost:5000${user.profilePhoto}`}
-                      alt="avatar"
-                      style={{ width: "60px", height: "60px", borderRadius: "50%", objectFit: "cover", margin: "0 auto 10px", display: "block" }}
-                    />
-                  ) : (
-                    <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "var(--primary-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", color: "white", margin: "0 auto 10px" }}>👤</div>
-                  )}
+                  <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "var(--primary-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", color: "white", margin: "0 auto 10px" }}>👤</div>
                   <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{user.name}</h3>
                   <p style={{ color: "var(--text-secondary)", fontSize: "12px", margin: "4px 0 0" }}>{user.email}</p>
                 </div>
@@ -712,7 +694,7 @@ const handleOpenFeedbackModal = (booking) => {
               ) : (
                 filteredVehicles.map(v => (
                   <div key={v._id} className="glass-card glass-card-hover" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                    <div style={{ position: "relative", height: "180px", background: "#1e293b", cursor: "pointer" }} onClick={() => { setVehicleGalleryIndex(0); setActivePage({ page: "vehicleDetails", data: v }); }}>
+                    <div style={{ position: "relative", height: "180px", background: "#1e293b", cursor: "pointer" }} onClick={() => setActivePage({ page: "vehicleDetails", data: v })}>
                       {v.image ? (
                         <img src={`http://localhost:5000${v.image}`} alt={v.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
@@ -741,7 +723,7 @@ const handleOpenFeedbackModal = (booking) => {
                         ${v.pricePerDay} <span style={{ fontSize: "14px", color: "var(--text-secondary)", fontWeight: "normal" }}>/day</span>
                       </h3>
 
-                      <button className="btn-base btn-primary" style={{ width: "100%", marginTop: "auto" }} onClick={() => { setVehicleGalleryIndex(0); setActivePage({ page: "vehicleDetails", data: v }); }}>
+                      <button className="btn-base btn-primary" style={{ width: "100%", marginTop: "auto" }} onClick={() => setActivePage({ page: "vehicleDetails", data: v })}>
                         View Details & Book
                       </button>
                     </div>
@@ -757,70 +739,11 @@ const handleOpenFeedbackModal = (booking) => {
           <div className="slide-up glass-card" style={{ padding: "40px" }}>
             <div style={{ display: "flex", gap: "40px", flexWrap: "wrap", alignItems: "flex-start" }}>
               <div style={{ flex: 1, minWidth: "300px" }}>
-                {(() => {
-                  const galleryImages = activePage.data.images && activePage.data.images.length > 0
-                    ? activePage.data.images
-                    : (activePage.data.image ? [activePage.data.image] : []);
-
-                  if (galleryImages.length === 0) {
-                    return (
-                      <div style={{ width: "100%", height: "240px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "70px" }}>🚗</div>
-                    );
-                  }
-
-                  const safeIndex = Math.min(vehicleGalleryIndex, galleryImages.length - 1);
-
-                  return (
-                    <div>
-                      <div style={{ position: "relative" }}>
-                        <img
-                          src={`http://localhost:5000${galleryImages[safeIndex]}`}
-                          alt={`${activePage.data.name} ${safeIndex + 1}`}
-                          style={{ width: "100%", height: "320px", objectFit: "cover", borderRadius: "14px", boxShadow: "var(--shadow-md)" }}
-                        />
-                        {galleryImages.length > 1 && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setVehicleGalleryIndex((safeIndex - 1 + galleryImages.length) % galleryImages.length)}
-                              style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.5)", color: "white", cursor: "pointer", fontSize: "16px" }}
-                            >
-                              ‹
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setVehicleGalleryIndex((safeIndex + 1) % galleryImages.length)}
-                              style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.5)", color: "white", cursor: "pointer", fontSize: "16px" }}
-                            >
-                              ›
-                            </button>
-                            <span style={{ position: "absolute", bottom: "10px", right: "12px", padding: "3px 10px", borderRadius: "12px", background: "rgba(0,0,0,0.6)", color: "white", fontSize: "12px" }}>
-                              {safeIndex + 1} / {galleryImages.length}
-                            </span>
-                          </>
-                        )}
-                      </div>
-
-                      {galleryImages.length > 1 && (
-                        <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
-                          {galleryImages.map((img, i) => (
-                            <img
-                              key={i}
-                              src={`http://localhost:5000${img}`}
-                              alt={`Thumbnail ${i + 1}`}
-                              onClick={() => setVehicleGalleryIndex(i)}
-                              style={{
-                                width: "60px", height: "60px", objectFit: "cover", borderRadius: "8px", cursor: "pointer",
-                                border: i === safeIndex ? "2px solid var(--primary)" : "2px solid transparent",
-                                opacity: i === safeIndex ? 1 : 0.7
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                {activePage.data.image ? (
+                  <img src={`http://localhost:5000${activePage.data.image}`} alt={activePage.data.name} style={{ width: "100%", borderRadius: "14px", boxShadow: "var(--shadow-md)" }} />
+                ) : (
+                  <div style={{ width: "100%", height: "240px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "70px" }}>🚗</div>
+                )}
               </div>
 
               <div style={{ flex: 1, minWidth: "300px" }}>
@@ -1275,16 +1198,6 @@ const handleOpenFeedbackModal = (booking) => {
                   <label className="form-label">Driving License Number</label>
                   <input type="text" placeholder="e.g. B1234567" value={profileDrivingLicense} onChange={(e) => setProfileDrivingLicense(e.target.value)} className="custom-input" />
                 </div>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label className="form-label">Profile Photo</label>
-                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} className="custom-input" style={{ padding: "8px" }} />
-                {profilePhotoFile ? (
-                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Selected: {profilePhotoFile.name}</span>
-                ) : user.profilePhoto ? (
-                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>✅ Already uploaded</span>
-                ) : null}
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>

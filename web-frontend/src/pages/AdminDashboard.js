@@ -529,14 +529,81 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: "12px", marginTop: "24px", flexWrap: "wrap" }}>
-                <button className="btn-base btn-secondary" onClick={() => navigate("/admin/reports/bookings")}>
-                  🔗 View All Reports
-                </button>
-                <button className="btn-base btn-primary" onClick={handleGenerateMonthlyReport}>
-                  📥 Generate Monthly Report (PDF)
-                </button>
-              </div>
+              {(() => {
+                const profitByMonth = {};
+                reports.bookings
+                  .filter((b) => ["completed", "ongoing", "confirmed"].includes(b.status))
+                  .forEach((b) => {
+                    const d = new Date(b.startDate || b.createdAt);
+                    if (isNaN(d)) return;
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                    
+                    const bookingPayments = reports.payments.filter((p) => 
+                      (p.bookingId?._id === b._id || p.bookingId === b._id) && 
+                      p.status === "completed" && 
+                      p.type !== "refund"
+                    );
+
+                    let comm = 0;
+                    if (bookingPayments.length > 0) {
+                      comm = bookingPayments.reduce((sum, p) => sum + (p.platformCommission || 0), 0);
+                      if (comm === 0 && b.totalAmount > 0) {
+                        comm = b.totalAmount * 0.50; // Fallback for older records
+                      }
+                    } else if (b.totalAmount > 0) {
+                      comm = b.totalAmount * 0.50; // Fallback if payment not logged yet
+                    }
+
+                    profitByMonth[key] = (profitByMonth[key] || 0) + comm;
+                  });
+
+                const sortedKeys = Object.keys(profitByMonth).sort();
+                const last12 = sortedKeys.slice(-12);
+                const monthLabel = (key) => {
+                  const [y, m] = key.split("-");
+                  return new Date(Number(y), Number(m) - 1, 1).toLocaleString("default", { month: "short", year: "numeric" });
+                };
+                const maxProfit = Math.max(...last12.map((k) => profitByMonth[k]), 1);
+
+                return (
+                  <div className="glass-card" style={{ padding: "25px", marginTop: "30px" }}>
+                    <h3 style={{ margin: "0 0 20px 0", color: "var(--text-primary)" }}>💼 Monthly Profit</h3>
+                    {last12.length === 0 ? (
+                      <p style={{ color: "var(--text-muted)", margin: 0 }}>No profit data yet.</p>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "flex-end", gap: "16px", height: "220px", paddingTop: "10px", overflowX: "auto" }}>
+                        {last12.map((key) => {
+                          const value = profitByMonth[key];
+                          const heightPct = maxProfit > 0 ? (value / maxProfit) * 100 : 0;
+                          return (
+                            <div key={key} style={{ flex: "1 0 60px", minWidth: "60px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
+                              <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "6px", whiteSpace: "nowrap" }}>
+                                ${value.toLocaleString()}
+                              </span>
+                              <div
+                                title={`$${value.toLocaleString()}`}
+                                style={{
+                                  width: "100%",
+                                  maxWidth: "48px",
+                                  height: `${Math.max(heightPct, 3)}%`,
+                                  background: "linear-gradient(180deg, var(--accent), var(--primary))",
+                                  borderRadius: "8px 8px 0 0",
+                                  transition: "height 0.3s ease",
+                                }}
+                              />
+                              <span style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "8px", fontWeight: "600", textAlign: "center", lineHeight: "1.2" }}>
+                                {monthLabel(key)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+             
             </div>
           </div>
         )}

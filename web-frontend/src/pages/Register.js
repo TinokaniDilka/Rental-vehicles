@@ -5,7 +5,6 @@ import { validateEmail, validatePassword, validateName } from "../utils/validati
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
   const [role, setRole] = useState("customer");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,28 +12,13 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    
-    // Validate name
-    const nameValidation = validateName(name);
-    if (!nameValidation.isValid) {
-      alert(nameValidation.message);
-      return;
-    }
-    
-    // Validate email
-    if (!validateEmail(email)) {
-      alert("Please enter a valid email address");
-      return;
-    }
-    
-    // Validate password
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      alert(passwordValidation.message);
-      return;
-    }
-    
     setLoading(true);
+
+    if (!email.trim() || !password.trim() || !name.trim()) {
+      alert("Please fill all fields ❌");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("http://localhost:5000/api/auth/register", {
@@ -46,7 +30,6 @@ export default function Register() {
           name,
           email,
           password,
-          phone,
           role
         })
       });
@@ -114,17 +97,6 @@ export default function Register() {
               onChange={(e) => setEmail(e.target.value)}
               className="custom-input"
               required
-            />
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label className="form-label">Phone Number <span style={{ color: "var(--text-secondary)", fontWeight: 400, fontSize: "11px" }}>(optional)</span></label>
-            <input
-              type="tel"
-              placeholder="+94 77 123 4567"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="custom-input"
             />
           </div>
 
