@@ -80,7 +80,7 @@ router.get("/reports", protect, async (req, res) => {
       .populate("customerId", "name email")
       .sort({ createdAt: -1 });
 
-    const vehicles = await Vehicle.find().populate("owner", "name email");
+    const vehicles = await Vehicle.find().populate("owner", "name email phone");
 
     const feedback = await Feedback.find()
       .populate("customerId", "name email")
