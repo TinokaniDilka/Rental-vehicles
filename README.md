@@ -214,21 +214,22 @@ Edit profile
 ## Staff Dashboard
 
 <img width="1748" height="904" alt="image" src="https://github.com/user-attachments/assets/6d83a818-e8d2-4eed-b3bf-3ac00a4f5cb6" />
+<img width="1736" height="916" alt="image" src="https://github.com/user-attachments/assets/59d73aab-d459-4402-b551-5c8b1fe481ac" />
 
 vehicle Details
 <img width="1740" height="910" alt="image" src="https://github.com/user-attachments/assets/ccab31a1-9a6b-4fb9-8e57-d2d5da08be6a" />
 
-Vehicle management
+Manage Vehicle
 <img width="1742" height="905" alt="image" src="https://github.com/user-attachments/assets/aaae7a98-536b-4470-87df-4928e5ea1278" />
 
 <img width="1746" height="910" alt="image" src="https://github.com/user-attachments/assets/6c183675-d5b0-4e58-aa8e-f61089dc5558" />
-Booking Management
+
+Booking approval / status update
 <img width="1754" height="860" alt="image" src="https://github.com/user-attachments/assets/de911b83-5d0b-47ac-8991-242dfb0e0b25" />
 
 <img width="1740" height="887" alt="image" src="https://github.com/user-attachments/assets/a39c19d5-2e1e-400f-b544-ac0719427c58" />
 
-<img width="1736" height="916" alt="image" src="https://github.com/user-attachments/assets/59d73aab-d459-4402-b551-5c8b1fe481ac" />
-
+Vehicle return
 <img width="1737" height="903" alt="image" src="https://github.com/user-attachments/assets/4d14bbc6-3100-437d-b60e-5aacc8f74b9f" />
 
 ## Admin Dashboard
@@ -237,6 +238,8 @@ Booking Management
 <img width="1752" height="828" alt="image" src="https://github.com/user-attachments/assets/2bcf4478-39ba-4347-bb82-c532c97eb784" />
 
 <img width="1721" height="903" alt="image" src="https://github.com/user-attachments/assets/1054a057-9462-4c6e-8764-ebd6f1546685" />
+
+
 <img width="1739" height="912" alt="image" src="https://github.com/user-attachments/assets/134dbf15-a81c-4c28-811d-4a3d80324a82" />
 <img width="1766" height="907" alt="image" src="https://github.com/user-attachments/assets/bcddd255-a0b8-4340-8210-0dfcc9a131ff" />
 <img width="1741" height="910" alt="image" src="https://github.com/user-attachments/assets/7b5b332e-fee0-4ce1-b072-9e822671e54e" />
