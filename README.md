@@ -195,7 +195,7 @@ This project (built for IT3150) demonstrates practical experience in:
 
 ## 🤝 Contributing
 
-This is currently a solo/academic project, but contributions are welcome:
+This is currently a solo & academic project, but contributions are welcome:
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/NewFeature`
@@ -206,11 +206,8 @@ This is currently a solo/academic project, but contributions are welcome:
 ## 👨‍🎓 Author
 
 **Dilka**
-IT Undergraduate — QuickRide built as a hands-on full-stack learning project (course IT3150)
+IT Undergraduate — QuickRide built as a hands-on full-stack learning project 
 
-## 📄 License
-
-Add a license here (e.g. MIT) if you intend to open source this project.
 
 ## ⭐ Support
 
