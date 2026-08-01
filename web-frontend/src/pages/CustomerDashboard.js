@@ -599,7 +599,7 @@ const handleOpenFeedbackModal = (booking) => {
         <div className="navbar-container">
           <div className="nav-logo">
             <span style={{ fontSize: "28px", marginRight: "10px" }}>🚗</span>
-            <span>QuickRide <span style={{ color: "var(--primary)" }}>Rentals</span></span>
+            <span>Quick <span style={{ color: "var(--primary)" }}>Ride</span></span>
           </div>
 
           <div className="nav-links-wrap">

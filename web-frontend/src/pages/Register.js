@@ -50,7 +50,7 @@ export default function Register() {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", position: "relative", overflow: "hidden",  backgroundImage: `url("https://static.vecteezy.com/system/resources/thumbnails/040/969/066/small_2x/ai-generated-a-lineup-of-colorful-luxury-cars-in-a-show-room-showcasing-a-prominent-yellow-car-in-front-with-a-focus-on-the-headlight-and-grille-photo.jpeg")`, // put your image path here
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", position: "relative", overflow: "hidden",   // put your image path here
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat" }} className="fade-in">
