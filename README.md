@@ -175,16 +175,15 @@ Vehicle details
 
 <img width="1730" height="894" alt="image" src="https://github.com/user-attachments/assets/e192ab94-6813-482a-914c-4d4684aba5c3" />
 
-Booking flow
-
 <img width="1739" height="909" alt="image" src="https://github.com/user-attachments/assets/aa8122cf-20ef-414e-a77e-db5205f11356" />
 
 <img width="1735" height="906" alt="image" src="https://github.com/user-attachments/assets/731691f4-7e5b-4ede-bcfd-b2862ef2fe03" />
 
-Payment
+Booking flow
 
 <img width="1743" height="900" alt="image" src="https://github.com/user-attachments/assets/1868df8e-9938-40ac-b303-78424532b91a" />
 
+Payment
 <img width="1781" height="902" alt="image" src="https://github.com/user-attachments/assets/e82b02cc-d544-48b6-b25d-ec851f446bb0" />
 
 <img width="1735" height="909" alt="image" src="https://github.com/user-attachments/assets/0083aa39-60bf-48f1-9316-dd133bd57617" />
