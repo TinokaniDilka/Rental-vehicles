@@ -166,6 +166,28 @@ Login
 Register
 <img width="1738" height="908" alt="image" src="https://github.com/user-attachments/assets/a2d0f9f3-f4df-4396-98dc-d9048685a15f" />
 
+Customer Dashboard 
+<img width="1733" height="907" alt="image" src="https://github.com/user-attachments/assets/eeaf1c36-ea2f-4f9e-aa2d-20938a1ec9ec" />
+
+<img width="1730" height="894" alt="image" src="https://github.com/user-attachments/assets/e192ab94-6813-482a-914c-4d4684aba5c3" />
+
+<img width="1739" height="909" alt="image" src="https://github.com/user-attachments/assets/aa8122cf-20ef-414e-a77e-db5205f11356" />
+
+<img width="1735" height="906" alt="image" src="https://github.com/user-attachments/assets/731691f4-7e5b-4ede-bcfd-b2862ef2fe03" />
+
+<img width="1743" height="900" alt="image" src="https://github.com/user-attachments/assets/1868df8e-9938-40ac-b303-78424532b91a" />
+
+<img width="1781" height="902" alt="image" src="https://github.com/user-attachments/assets/e82b02cc-d544-48b6-b25d-ec851f446bb0" />
+
+<img width="1735" height="909" alt="image" src="https://github.com/user-attachments/assets/0083aa39-60bf-48f1-9316-dd133bd57617" />
+
+<img width="1727" height="911" alt="image" src="https://github.com/user-attachments/assets/1bbadcf0-b734-4ce4-ae6c-7674ccb71c71" />
+
+<img width="1741" height="908" alt="image" src="https://github.com/user-attachments/assets/9ac7c174-fea3-4ae9-8fbb-34ce23a87ecc" />
+
+<img width="1732" height="508" alt="image" src="https://github.com/user-attachments/assets/098205ff-3d38-4540-b0f4-0fd946d5839c" />
+
+<img width="1742" height="908" alt="image" src="https://github.com/user-attachments/assets/ac82b42b-6b18-4e48-8743-8e13cbe301e5" />
 
 _Add screenshots here, e.g.:_
 
