@@ -160,12 +160,13 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 
 ## 📷 Screenshots
 
+Login 
+<img width="1732" height="908" alt="image" src="https://github.com/user-attachments/assets/8245f65f-7988-416b-b096-40eacd677901" />
+
 _Add screenshots here, e.g.:_
 
 ```
 screenshots/
-Login
-<img width="1732" height="908" alt="image" src="https://github.com/user-attachments/assets/a1906975-712e-4a94-92e4-d2e8a0582fa7" />
 
   home.png
   vehicle-list.png
