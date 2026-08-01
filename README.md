@@ -270,18 +270,7 @@ Promotional / discount management
 Edit profile
 <img width="1739" height="899" alt="image" src="https://github.com/user-attachments/assets/336721f1-4a94-4757-8237-6413e2f01867" />
 
-_Add screenshots here, e.g.:_
 
-```
-screenshots/
-
-  home.png
-  vehicle-list.png
-  booking-flow.png
-  admin-dashboard.png
-  mobile-home.png
-  mobile-booking.png
-```
 
 ## 🎯 Future Enhancements
 
