@@ -160,6 +160,8 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 
 ## 📷 Screenshots
 
+## web Application
+
 ## Login 
 <img width="1732" height="908" alt="image" src="https://github.com/user-attachments/assets/8245f65f-7988-416b-b096-40eacd677901" />
 
@@ -257,14 +259,15 @@ User management
 Customer ID verification
 <img width="1743" height="910" alt="image" src="https://github.com/user-attachments/assets/63d5879e-34c4-4ddc-abd1-ffd3aa412d1b" />
 
-New Registrations
 <img width="1757" height="900" alt="image" src="https://github.com/user-attachments/assets/44a0368a-c670-47b8-9eb6-9d123bf6fd86" />
 
-Promotional / discount management
+New Registrations
 <img width="1757" height="903" alt="image" src="https://github.com/user-attachments/assets/3327d8db-fdae-4867-a8da-b8dd67841c45" />
 
-Edit profile
+
+Promotional / discount management
 <img width="1748" height="753" alt="image" src="https://github.com/user-attachments/assets/cb36378c-10ec-4120-ad42-61cf2b151520" />
+Edit profile
 <img width="1739" height="899" alt="image" src="https://github.com/user-attachments/assets/336721f1-4a94-4757-8237-6413e2f01867" />
 
 _Add screenshots here, e.g.:_
