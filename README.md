@@ -193,9 +193,11 @@ Booking history
 
 <img width="1727" height="911" alt="image" src="https://github.com/user-attachments/assets/1bbadcf0-b734-4ce4-ae6c-7674ccb71c71" />
 
-feedback
+Payment History
 
 <img width="1741" height="908" alt="image" src="https://github.com/user-attachments/assets/9ac7c174-fea3-4ae9-8fbb-34ce23a87ecc" />
+
+feedback
 
 <img width="1732" height="508" alt="image" src="https://github.com/user-attachments/assets/098205ff-3d38-4540-b0f4-0fd946d5839c" />
 
