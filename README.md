@@ -193,6 +193,9 @@ Booking history
 
 <img width="1727" height="911" alt="image" src="https://github.com/user-attachments/assets/1bbadcf0-b734-4ce4-ae6c-7674ccb71c71" />
 
+
+<img width="1733" height="826" alt="image" src="https://github.com/user-attachments/assets/71837772-09dd-4fe5-8f09-4aca816af075" />
+
 Payment History
 
 <img width="1741" height="908" alt="image" src="https://github.com/user-attachments/assets/9ac7c174-fea3-4ae9-8fbb-34ce23a87ecc" />
@@ -201,13 +204,17 @@ feedback
 
 <img width="1732" height="508" alt="image" src="https://github.com/user-attachments/assets/098205ff-3d38-4540-b0f4-0fd946d5839c" />
 
-<img width="1742" height="908" alt="image" src="https://github.com/user-attachments/assets/ac82b42b-6b18-4e48-8743-8e13cbe301e5" />
-
 <img width="1741" height="912" alt="image" src="https://github.com/user-attachments/assets/ecab3301-4fbd-413c-a0ea-eb8626089bee" />
 
-<img width="1733" height="826" alt="image" src="https://github.com/user-attachments/assets/71837772-09dd-4fe5-8f09-4aca816af075" />
-
 <img width="1741" height="911" alt="image" src="https://github.com/user-attachments/assets/c46b0468-6e60-45d5-8d3f-9b6cab38e2e2" />
+
+Edit profile
+<img width="1742" height="908" alt="image" src="https://github.com/user-attachments/assets/ac82b42b-6b18-4e48-8743-8e13cbe301e5" />
+
+
+
+
+
 
 
 
