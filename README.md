@@ -163,6 +163,10 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 Login 
 <img width="1732" height="908" alt="image" src="https://github.com/user-attachments/assets/8245f65f-7988-416b-b096-40eacd677901" />
 
+Register
+<img width="1738" height="908" alt="image" src="https://github.com/user-attachments/assets/a2d0f9f3-f4df-4396-98dc-d9048685a15f" />
+
+
 _Add screenshots here, e.g.:_
 
 ```
