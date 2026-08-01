@@ -227,6 +227,9 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 <img width="1737" height="904" alt="image" src="https://github.com/user-attachments/assets/5410be61-5e39-44d7-8e78-a56a61c15c98" />
 <img width="1741" height="757" alt="image" src="https://github.com/user-attachments/assets/c225be64-92e3-4cc5-b75e-5e872f0b84fc" />
 <img width="1741" height="911" alt="image" src="https://github.com/user-attachments/assets/730e1250-de62-4599-82c3-0e951271e919" />
+<img width="1743" height="910" alt="image" src="https://github.com/user-attachments/assets/63d5879e-34c4-4ddc-abd1-ffd3aa412d1b" />
+<img width="1757" height="900" alt="image" src="https://github.com/user-attachments/assets/44a0368a-c670-47b8-9eb6-9d123bf6fd86" />
+
 <img width="1757" height="903" alt="image" src="https://github.com/user-attachments/assets/3327d8db-fdae-4867-a8da-b8dd67841c45" />
 <img width="1748" height="753" alt="image" src="https://github.com/user-attachments/assets/cb36378c-10ec-4120-ad42-61cf2b151520" />
 <img width="1739" height="899" alt="image" src="https://github.com/user-attachments/assets/336721f1-4a94-4757-8237-6413e2f01867" />
