@@ -183,7 +183,7 @@ screenshots/
 
 ## 📖 Learning Outcomes
 
-This project (built for IT3150) demonstrates practical experience in:
+This project demonstrates practical experience in:
 
 - Full-stack development across web and mobile (Node/Express, React, React Native/Expo)
 - MongoDB/Mongoose schema design
