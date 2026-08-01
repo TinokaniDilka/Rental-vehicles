@@ -211,22 +211,18 @@ feedback
 Edit profile
 <img width="1742" height="908" alt="image" src="https://github.com/user-attachments/assets/ac82b42b-6b18-4e48-8743-8e13cbe301e5" />
 
-
-
-
-
-
-
-
 ## Staff Dashboard
+
 <img width="1748" height="904" alt="image" src="https://github.com/user-attachments/assets/6d83a818-e8d2-4eed-b3bf-3ac00a4f5cb6" />
 
+vehicle Details
 <img width="1740" height="910" alt="image" src="https://github.com/user-attachments/assets/ccab31a1-9a6b-4fb9-8e57-d2d5da08be6a" />
 
+Vehicle management
 <img width="1742" height="905" alt="image" src="https://github.com/user-attachments/assets/aaae7a98-536b-4470-87df-4928e5ea1278" />
 
 <img width="1746" height="910" alt="image" src="https://github.com/user-attachments/assets/6c183675-d5b0-4e58-aa8e-f61089dc5558" />
-
+Booking Management
 <img width="1754" height="860" alt="image" src="https://github.com/user-attachments/assets/de911b83-5d0b-47ac-8991-242dfb0e0b25" />
 
 <img width="1740" height="887" alt="image" src="https://github.com/user-attachments/assets/a39c19d5-2e1e-400f-b544-ac0719427c58" />
