@@ -251,8 +251,10 @@ Review management
 
 User management
 <img width="1741" height="757" alt="image" src="https://github.com/user-attachments/assets/c225be64-92e3-4cc5-b75e-5e872f0b84fc" />
-Customer ID verification
+
 <img width="1741" height="911" alt="image" src="https://github.com/user-attachments/assets/730e1250-de62-4599-82c3-0e951271e919" />
+
+Customer ID verification
 <img width="1743" height="910" alt="image" src="https://github.com/user-attachments/assets/63d5879e-34c4-4ddc-abd1-ffd3aa412d1b" />
 
 New Registrations
