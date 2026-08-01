@@ -167,11 +167,19 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 <img width="1738" height="908" alt="image" src="https://github.com/user-attachments/assets/a2d0f9f3-f4df-4396-98dc-d9048685a15f" />
 
 ## Customer Dashboard 
+Home
+
 <img width="1733" height="907" alt="image" src="https://github.com/user-attachments/assets/eeaf1c36-ea2f-4f9e-aa2d-20938a1ec9ec" />
+
+Vehicle details
 
 <img width="1730" height="894" alt="image" src="https://github.com/user-attachments/assets/e192ab94-6813-482a-914c-4d4684aba5c3" />
 
+Booking flow
+
 <img width="1739" height="909" alt="image" src="https://github.com/user-attachments/assets/aa8122cf-20ef-414e-a77e-db5205f11356" />
+
+Payment
 
 <img width="1735" height="906" alt="image" src="https://github.com/user-attachments/assets/731691f4-7e5b-4ede-bcfd-b2862ef2fe03" />
 
