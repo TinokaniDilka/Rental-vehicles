@@ -102,8 +102,10 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.logoEmoji}>🚗</Text>
             </LinearGradient>
           </View>
-          <Text style={styles.brandName}>QuickRide</Text>
-          <Text style={styles.brandTagline}>Staff & Customer Portal</Text>
+<Text style={styles.brandName}>
+  Quick<Text style={styles.brandNameAccent}>Ride</Text>
+</Text>
+<Text style={styles.brandTagline}>Staff & Customer Portal</Text>          
         </View>
 
         <Animated.View
@@ -284,12 +286,15 @@ const styles = StyleSheet.create({
     fontSize: 46,
   },
   brandName: {
-    fontSize: 40,
-    fontWeight: '800',
-    color: '#1a1a1a',
-    letterSpacing: -1,
-    marginBottom: 4,
-  },
+  fontSize: 40,
+  fontWeight: '800',
+  color: '#1a1a1a',
+  letterSpacing: -1,
+  marginBottom: 4,
+},
+brandNameAccent: {
+  color: COLORS.primary, // swap in your theme's primary/orange color
+},
   brandTagline: {
     fontSize: 15,
     color: '#4a4a4a',

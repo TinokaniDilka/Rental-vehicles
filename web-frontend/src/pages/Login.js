@@ -73,7 +73,7 @@ export default function Login() {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
           <span style={{ fontSize: "45px", filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.3))" }}>🚗</span>
           <h1 style={{ color: "var(--text-primary)", fontSize: "28px", fontWeight: "800", margin: 0, letterSpacing: "-0.5px" }}>
-            QuickRide <span style={{ color: "var(--primary)" }}>Rentals</span>
+            Quick<span style={{ color: "var(--primary)" }}>Ride</span>
           </h1>
         </div>
         <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginBottom: "30px" }}>Log into the management platform</p>
