@@ -188,6 +188,11 @@ Customer Dashboard
 <img width="1732" height="508" alt="image" src="https://github.com/user-attachments/assets/098205ff-3d38-4540-b0f4-0fd946d5839c" />
 
 <img width="1742" height="908" alt="image" src="https://github.com/user-attachments/assets/ac82b42b-6b18-4e48-8743-8e13cbe301e5" />
+<img width="1741" height="912" alt="image" src="https://github.com/user-attachments/assets/ecab3301-4fbd-413c-a0ea-eb8626089bee" />
+<img width="1733" height="826" alt="image" src="https://github.com/user-attachments/assets/71837772-09dd-4fe5-8f09-4aca816af075" />
+<img width="1741" height="911" alt="image" src="https://github.com/user-attachments/assets/c46b0468-6e60-45d5-8d3f-9b6cab38e2e2" />
+
+
 
 Staff Dashboard
 <img width="1748" height="904" alt="image" src="https://github.com/user-attachments/assets/6d83a818-e8d2-4eed-b3bf-3ac00a4f5cb6" />
@@ -196,6 +201,9 @@ Staff Dashboard
 <img width="1746" height="910" alt="image" src="https://github.com/user-attachments/assets/6c183675-d5b0-4e58-aa8e-f61089dc5558" />
 <img width="1754" height="860" alt="image" src="https://github.com/user-attachments/assets/de911b83-5d0b-47ac-8991-242dfb0e0b25" />
 <img width="1740" height="887" alt="image" src="https://github.com/user-attachments/assets/a39c19d5-2e1e-400f-b544-ac0719427c58" />
+<img width="1736" height="916" alt="image" src="https://github.com/user-attachments/assets/59d73aab-d459-4402-b551-5c8b1fe481ac" />
+<img width="1737" height="903" alt="image" src="https://github.com/user-attachments/assets/4d14bbc6-3100-437d-b60e-5aacc8f74b9f" />
+
 
 _Add screenshots here, e.g.:_
 
