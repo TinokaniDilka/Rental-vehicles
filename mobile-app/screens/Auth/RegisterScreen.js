@@ -124,7 +124,9 @@ export default function RegisterScreen({ navigation }) {
           </View>
 
           {/* Brand name with gradient-style text via shadow trick */}
-          <Text style={styles.brandName}>QuickRide</Text>
+          <Text style={styles.brandName}>
+  Quick<Text style={styles.brandNameAccent}>Ride</Text>
+</Text>
           <Text style={styles.brandSubtitle}>Create Account</Text>
         </View>
 
@@ -432,16 +434,19 @@ const styles = StyleSheet.create({
     fontSize: 42,
   },
   brandName: {
-    fontSize: 38,
-    fontWeight: '800',
-    color: '#1a1a1a',
-    letterSpacing: -0.8,
-    marginBottom: 4,
+    fontSize: 40,
+  fontWeight: '800',
+  color: '#1a1a1a',
+  letterSpacing: -1,
+  marginBottom: 4,
     // "gradient text" effect simulated with a subtle text shadow
     textShadowColor: 'rgba(255, 140, 66, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 12,
   },
+  brandNameAccent: {
+  color: COLORS.primary, // swap in your theme's primary/orange color
+},
   brandSubtitle: {
     fontSize: 15,
     color: '#4a4a4a',
