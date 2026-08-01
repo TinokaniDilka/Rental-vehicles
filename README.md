@@ -179,9 +179,9 @@ Booking flow
 
 <img width="1739" height="909" alt="image" src="https://github.com/user-attachments/assets/aa8122cf-20ef-414e-a77e-db5205f11356" />
 
-Payment
-
 <img width="1735" height="906" alt="image" src="https://github.com/user-attachments/assets/731691f4-7e5b-4ede-bcfd-b2862ef2fe03" />
+
+Payment
 
 <img width="1743" height="900" alt="image" src="https://github.com/user-attachments/assets/1868df8e-9938-40ac-b303-78424532b91a" />
 
