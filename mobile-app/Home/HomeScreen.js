@@ -86,20 +86,7 @@ useFocusEffect(
   <View style={styles.overlay}>
 
     
-    <Text style={styles.title}>
-      Find Your{'\n'}Perfect Ride
-    </Text>
-
- 
-    <View style={styles.buttonsRow}>
-      <TouchableOpacity style={styles.primaryBtn}>
-        <Text style={styles.primaryText}>Rent Now</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.outlineBtn}>
-        <Text style={styles.outlineText}>Browse Vehicles</Text>
-      </TouchableOpacity>
-    </View>
+    
 
   </View>
 </ImageBackground>
