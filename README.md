@@ -307,7 +307,7 @@ Payment
 
 Booking History
 
-v<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/b478ab23-242d-44ac-82c4-b40b35ed64e6" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/b478ab23-242d-44ac-82c4-b40b35ed64e6" />
 
 Review / Comments
 
@@ -322,6 +322,33 @@ Edit Profile
 <img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/7636b795-d91f-4e8c-9e69-0a853c8261e7" />
 <img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/a0737739-d89c-48ee-8979-fdeeba00e545" />
 
+## Staff Dashboard
+
+Vehicle Fleet
+
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/09b7064f-fb47-4a16-95e1-fa4739074426" />
+
+Add Vehicle
+
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/4318707c-c770-47b1-b53e-b6666a585850" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/e3aa6c12-5ae0-4a55-bdd6-2b7cffe38f9c" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/c4eff9ba-839b-4244-a7ed-5408534bfa97" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/95ecefdf-c647-4a2f-9d44-71ac9d133fa1" />
+
+
+Booking details
+
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/719fb08b-3adc-4fd5-8a5a-cb4a49fd45e4" />
+
+Profile
+
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/f0a61e22-5775-4d9a-a066-96d68dc41b76" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/918cfcc2-a9b9-4587-9012-53bd20e1302a" />
+
+
+Edit Profile
+
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/b5075cc2-adf9-40c0-a91f-0a56a63035b5" />
 
 ## 🎯 Future Enhancements
 
