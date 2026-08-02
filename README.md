@@ -211,6 +211,7 @@ feedback
 <img width="1741" height="911" alt="image" src="https://github.com/user-attachments/assets/c46b0468-6e60-45d5-8d3f-9b6cab38e2e2" />
 
 Edit profile
+
 <img width="1742" height="908" alt="image" src="https://github.com/user-attachments/assets/ac82b42b-6b18-4e48-8743-8e13cbe301e5" />
 
 ## Staff Dashboard
@@ -239,6 +240,7 @@ Vehicle return
 <img width="1737" height="903" alt="image" src="https://github.com/user-attachments/assets/4d14bbc6-3100-437d-b60e-5aacc8f74b9f" />
 
 ## Admin Dashboard
+
 <img width="1745" height="772" alt="image" src="https://github.com/user-attachments/assets/c44b92f2-b91f-4877-9922-39de346937bd" />
 
 <img width="1752" height="828" alt="image" src="https://github.com/user-attachments/assets/2bcf4478-39ba-4347-bb82-c532c97eb784" />
@@ -246,35 +248,50 @@ Vehicle return
 <img width="1721" height="903" alt="image" src="https://github.com/user-attachments/assets/1054a057-9462-4c6e-8764-ebd6f1546685" />
 
 Booking management
+
 <img width="1739" height="912" alt="image" src="https://github.com/user-attachments/assets/134dbf15-a81c-4c28-811d-4a3d80324a82" />
+
 Payment management
+
 <img width="1766" height="907" alt="image" src="https://github.com/user-attachments/assets/bcddd255-a0b8-4340-8210-0dfcc9a131ff" />
+
 Vehicle management
+
 <img width="1741" height="910" alt="image" src="https://github.com/user-attachments/assets/7b5b332e-fee0-4ce1-b072-9e822671e54e" />
+
 Review management
+
 <img width="1745" height="908" alt="image" src="https://github.com/user-attachments/assets/b5cc101e-9128-4e56-ab81-063a8751557d" />
+
 <img width="1737" height="904" alt="image" src="https://github.com/user-attachments/assets/5410be61-5e39-44d7-8e78-a56a61c15c98" />
 
 User management
+
 <img width="1741" height="757" alt="image" src="https://github.com/user-attachments/assets/c225be64-92e3-4cc5-b75e-5e872f0b84fc" />
 
 <img width="1741" height="911" alt="image" src="https://github.com/user-attachments/assets/730e1250-de62-4599-82c3-0e951271e919" />
 
 Customer ID verification
+
 <img width="1743" height="910" alt="image" src="https://github.com/user-attachments/assets/63d5879e-34c4-4ddc-abd1-ffd3aa412d1b" />
 
 <img width="1757" height="900" alt="image" src="https://github.com/user-attachments/assets/44a0368a-c670-47b8-9eb6-9d123bf6fd86" />
 
 New Registrations
+
 <img width="1757" height="903" alt="image" src="https://github.com/user-attachments/assets/3327d8db-fdae-4867-a8da-b8dd67841c45" />
 
 
 Promotional / discount management
+
 <img width="1748" height="753" alt="image" src="https://github.com/user-attachments/assets/cb36378c-10ec-4120-ad42-61cf2b151520" />
+
 Edit profile
+
 <img width="1739" height="899" alt="image" src="https://github.com/user-attachments/assets/336721f1-4a94-4757-8237-6413e2f01867" />
 
 ## Mobile Application
+
 Login 
 
 <img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/35fbf9f1-1a1e-4b4d-84ee-92a5a5c53d76" />
@@ -282,6 +299,7 @@ Login
 Register
 
 <img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/211cd7c8-c88f-43fb-bf23-51dd5e28f14c" /> 
+
 <img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/31647a63-400c-45e6-bb10-6f651f75b49b" />
 
 Customer Dashboard
