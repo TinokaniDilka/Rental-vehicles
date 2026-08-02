@@ -162,14 +162,14 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 
  Login 
 
- 
 <img width="1732" height="908" alt="image" src="https://github.com/user-attachments/assets/8245f65f-7988-416b-b096-40eacd677901" />
 
-## Register
+Register
+
 <img width="1738" height="908" alt="image" src="https://github.com/user-attachments/assets/a2d0f9f3-f4df-4396-98dc-d9048685a15f" />
 
 ## Customer Dashboard 
-## Home
+Home
 
 <img width="1733" height="907" alt="image" src="https://github.com/user-attachments/assets/eeaf1c36-ea2f-4f9e-aa2d-20938a1ec9ec" />
 
@@ -219,19 +219,23 @@ Edit profile
 <img width="1736" height="916" alt="image" src="https://github.com/user-attachments/assets/59d73aab-d459-4402-b551-5c8b1fe481ac" />
 
 vehicle Details
+
 <img width="1740" height="910" alt="image" src="https://github.com/user-attachments/assets/ccab31a1-9a6b-4fb9-8e57-d2d5da08be6a" />
 
 Manage Vehicle
+
 <img width="1742" height="905" alt="image" src="https://github.com/user-attachments/assets/aaae7a98-536b-4470-87df-4928e5ea1278" />
 
 <img width="1746" height="910" alt="image" src="https://github.com/user-attachments/assets/6c183675-d5b0-4e58-aa8e-f61089dc5558" />
 
 Booking approval / status update
+
 <img width="1754" height="860" alt="image" src="https://github.com/user-attachments/assets/de911b83-5d0b-47ac-8991-242dfb0e0b25" />
 
 <img width="1740" height="887" alt="image" src="https://github.com/user-attachments/assets/a39c19d5-2e1e-400f-b544-ac0719427c58" />
 
 Vehicle return
+
 <img width="1737" height="903" alt="image" src="https://github.com/user-attachments/assets/4d14bbc6-3100-437d-b60e-5aacc8f74b9f" />
 
 ## Admin Dashboard
