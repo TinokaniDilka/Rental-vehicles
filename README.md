@@ -169,7 +169,7 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 <img width="1738" height="908" alt="image" src="https://github.com/user-attachments/assets/a2d0f9f3-f4df-4396-98dc-d9048685a15f" />
 
 ## Customer Dashboard 
-Home
+## Home
 
 <img width="1733" height="907" alt="image" src="https://github.com/user-attachments/assets/eeaf1c36-ea2f-4f9e-aa2d-20938a1ec9ec" />
 
