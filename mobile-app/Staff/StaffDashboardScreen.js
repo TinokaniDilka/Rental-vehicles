@@ -587,7 +587,7 @@ const getGreeting = () => {
      <View style={{ width: '100%', height: 220, borderRadius: 20, overflow: 'hidden', marginTop: 12, marginBottom: 16 }}>
   <ImageBackground
     source={{
-      uri: 'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=800'
+      uri: 'https://www.topgear.com/sites/default/files/2023/06/_DSF4308_ret_lores.jpg'
     }}
     style={{ width: '100%', height: '100%' }}
     imageStyle={{ borderRadius: 20 }}
