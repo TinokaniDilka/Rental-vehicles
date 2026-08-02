@@ -158,11 +158,11 @@ Building QuickRide across three platforms surfaced a number of real-world integr
 - Admin Dashboard & Reporting Module
 - Staff Module (scoped vehicle/booking management)
 
-## 📷 Screenshots
+## 📷 Screenshots web Application
 
-## web Application
+ Login 
 
-## Login 
+ 
 <img width="1732" height="908" alt="image" src="https://github.com/user-attachments/assets/8245f65f-7988-416b-b096-40eacd677901" />
 
 ## Register
