@@ -275,8 +275,7 @@ Login
 <img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/35fbf9f1-1a1e-4b4d-84ee-92a5a5c53d76" />
 
 Register
-<img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/211cd7c8-c88f-43fb-bf23-51dd5e28f14c" />
-<img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/31647a63-400c-45e6-bb10-6f651f75b49b" />
+<img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/211cd7c8-c88f-43fb-bf23-51dd5e28f14c" /> <img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/31647a63-400c-45e6-bb10-6f651f75b49b" />
 
 Customer Dashboard
 <img width="720" height="1474" alt="image" src="https://github.com/user-attachments/assets/54a9f833-12cb-4d46-8604-8c9e60fd061e" />
