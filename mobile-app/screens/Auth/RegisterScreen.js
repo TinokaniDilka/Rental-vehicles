@@ -51,22 +51,23 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     // Validate name
-    const nameValidation = validateName(name);
-    if (!nameValidation.isValid) {
-      Alert.alert('Error', nameValidation.message);
+    const nameError = validateName(name);
+    if (nameError) {
+      Alert.alert('Error', nameError);
       return;
     }
-    
+
     // Validate email
-    if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    const emailError = validateEmail(email);
+    if (emailError) {
+      Alert.alert('Error', emailError);
       return;
     }
-    
+
     // Validate password
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      Alert.alert('Error', passwordValidation.message);
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      Alert.alert('Error', passwordError);
       return;
     }
 

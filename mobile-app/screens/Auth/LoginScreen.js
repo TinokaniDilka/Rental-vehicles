@@ -49,14 +49,15 @@ export default function LoginScreen({ navigation }) {
   }, []);
 
   const handleLogin = async () => {
-    if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    const emailError = validateEmail(email);
+    if (emailError) {
+      Alert.alert('Error', emailError);
       return;
     }
-    
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      Alert.alert('Error', passwordValidation.message);
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      Alert.alert('Error', passwordError);
       return;
     }
 
