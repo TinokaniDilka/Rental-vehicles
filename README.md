@@ -276,40 +276,40 @@ Login
 <img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/35fbf9f1-1a1e-4b4d-84ee-92a5a5c53d76" />
 
 Register
-<img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/211cd7c8-c88f-43fb-bf23-51dd5e28f14c" /> <img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/31647a63-400c-45e6-bb10-6f651f75b49b" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/211cd7c8-c88f-43fb-bf23-51dd5e28f14c" /> <img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/31647a63-400c-45e6-bb10-6f651f75b49b" />
 
 Customer Dashboard
-<img width="720" height="1474" alt="image" src="https://github.com/user-attachments/assets/54a9f833-12cb-4d46-8604-8c9e60fd061e" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/54a9f833-12cb-4d46-8604-8c9e60fd061e" />
 
 Available Vehicles
-<img width="720" height="1466" alt="image" src="https://github.com/user-attachments/assets/73f6c4bf-8fba-467b-93a3-1445b8ddad4a" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/73f6c4bf-8fba-467b-93a3-1445b8ddad4a" />
 
 Vehicle Details
-<img width="720" height="1449" alt="image" src="https://github.com/user-attachments/assets/1205663e-8f82-4b0c-aa9f-c398eb68882a" />
-<img width="720" height="1558" alt="image" src="https://github.com/user-attachments/assets/3316136c-327c-48dc-8e1c-0cccf0a01d13" />
-<img width="720" height="1563" alt="image" src="https://github.com/user-attachments/assets/5bf02bbb-7583-4359-8324-fa9442fd7b78" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/1205663e-8f82-4b0c-aa9f-c398eb68882a" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/3316136c-327c-48dc-8e1c-0cccf0a01d13" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/5bf02bbb-7583-4359-8324-fa9442fd7b78" />
 
 Booking vehicle
-<img width="720" height="1557" alt="image" src="https://github.com/user-attachments/assets/031030e0-0e24-4637-a931-418eeff8caa5" />
-<img width="720" height="1419" alt="image" src="https://github.com/user-attachments/assets/bb50a638-71f1-45f1-8e85-c5063864a9a0" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/031030e0-0e24-4637-a931-418eeff8caa5" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/bb50a638-71f1-45f1-8e85-c5063864a9a0" />
 
 Payment
-<img width="720" height="1561" alt="image" src="https://github.com/user-attachments/assets/cef6b4d0-7850-409c-a562-c8c94b8020c6" />
-<img width="720" height="1363" alt="image" src="https://github.com/user-attachments/assets/cb55fab3-75e2-44e0-9a0a-d9a29129d691" />
-<img width="720" height="1433" alt="image" src="https://github.com/user-attachments/assets/ed493f9b-2598-4c80-acb0-70d8ee5ebd14" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/cef6b4d0-7850-409c-a562-c8c94b8020c6" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/cb55fab3-75e2-44e0-9a0a-d9a29129d691" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/ed493f9b-2598-4c80-acb0-70d8ee5ebd14" />
 
 Booking History
-v<img width="220" height="1554" alt="image" src="https://github.com/user-attachments/assets/b478ab23-242d-44ac-82c4-b40b35ed64e6" />
+v<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/b478ab23-242d-44ac-82c4-b40b35ed64e6" />
 
 Review / Comments
-<img width="720" height="1464" alt="image" src="https://github.com/user-attachments/assets/a08079e6-0780-4c86-9e87-13c9d6b1304e" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/a08079e6-0780-4c86-9e87-13c9d6b1304e" />
 
 Profile
-<img width="720" height="1563" alt="image" src="https://github.com/user-attachments/assets/4c294dc2-7773-421b-949e-925808c566c9" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/4c294dc2-7773-421b-949e-925808c566c9" />
 
 Edit Profile
-<img width="720" height="1554" alt="image" src="https://github.com/user-attachments/assets/7636b795-d91f-4e8c-9e69-0a853c8261e7" />
-<img width="720" height="1463" alt="image" src="https://github.com/user-attachments/assets/a0737739-d89c-48ee-8979-fdeeba00e545" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/7636b795-d91f-4e8c-9e69-0a853c8261e7" />
+<img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/a0737739-d89c-48ee-8979-fdeeba00e545" />
 
 
 ## 🎯 Future Enhancements
