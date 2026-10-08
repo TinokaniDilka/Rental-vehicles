@@ -372,14 +372,6 @@ Edit Profile
 
 <img width="280" height="594" alt="image" src="https://github.com/user-attachments/assets/b5075cc2-adf9-40c0-a91f-0a56a63035b5" />
 
-## 🎯 Future Enhancements
-
-- Switch to bcrypt password hashing (currently plaintext — see Known Issues)
-- Add PayHere as the primary payment gateway for LKR support
-- Push notifications on mobile for booking status updates
-- Rate limiting on auth endpoints
-- Automated tests for backend routes
-- CI/CD pipeline for deployment
 
 ## 📖 Learning Outcomes
 
